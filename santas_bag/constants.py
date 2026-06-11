@@ -20,6 +20,8 @@ ALL_DIRECTIONS = (
     *DIAGONAL_DIRECTIONS,
 )
 
+ARROW_DIRECTIONS  = dict(zip('^>v<', CARDINAL_DIRECTIONS))
+
 NUMS_TO_ALPHAS_LOWERCASE = {i: v for i, v in enumerate(ascii_lowercase)}
 NUMS_TO_ALPHAS_UPPERCASE = {i: v for i, v in enumerate(ascii_uppercase)}
 ALPHAS_TO_NUMS = {
