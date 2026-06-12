@@ -37,6 +37,15 @@ class TestGridHelpers(unittest.TestCase):
         ]
         self.assertEqual(transpose_grid(self.sample_grid), expected)
 
+    def test_neighbors4(self):
+        self.assertEqual(sorted(neighbors4(0, 1, self.sample_grid)), sorted([(0, 0), (0, 2), (1, 1)]))
+        self.assertEqual(sorted(neighbors4(0, 0, self.sample_grid)), sorted([(0, 1), (1, 0)]))
+
+    def test_neighbors8(self):
+        expected = [(0, 0), (0, 2), (1, 0), (1, 1), (1, 2)]
+        self.assertEqual(sorted(neighbors8(0, 1, self.sample_grid)), sorted(expected))
+        self.assertEqual(sorted(neighbors8(0, 0, self.sample_grid)), sorted([(0, 1), (1, 0), (1, 1)]))
+
     def test_empty_grid(self):
         empty = []
         self.assertFalse(inbounds(0, 0, empty))
