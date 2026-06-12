@@ -1,5 +1,7 @@
 from typing import Iterable, List, Callable, Dict, Tuple, Any
 
+from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
+
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
     for row in grid:
@@ -21,3 +23,11 @@ def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Tuple[int, int], Any]:
 
 def transpose_grid(grid: Iterable[Iterable]) -> Iterable:
     return [list(row) for row in zip(*grid)]
+
+
+def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
+    return [(y + dy, x + dx) for dx, dy in CARDINAL_DIRECTIONS if inbounds(y + dy, x + dx, grid)]
+
+
+def neighbors8(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
+    return [(y + dy, x + dx) for dx, dy in ALL_DIRECTIONS if inbounds(y + dy, x + dx, grid)]
