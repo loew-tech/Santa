@@ -22,7 +22,7 @@ def read_input(
         testing: bool = False
 ) -> List[Any] | str:
     target_dir = TESTS_PATH if testing else INPUTS_PATH
-    target_file = target_dir / f"{day}.txt"
+    target_file = target_dir / f'{day}.txt'
 
     if target_file.exists():
         return _process_input(target_file.read_text(), delim, parse)
@@ -30,7 +30,7 @@ def read_input(
     target_file.parent.mkdir(parents=True, exist_ok=True)
     if testing:
         text = _fetch_test_input(day, year)
-        print(f"⚠️ Scraped test input for Day {day}. Verify it in {target_file}")
+        print(f'⚠️ Scraped test input for Day {day}. Verify it in {target_file}')
     else:
         text = _fetch_official_input(day, year)
 
@@ -69,7 +69,7 @@ def _fetch_test_input(day: int | str, year: int | str) -> str:
     soup = BeautifulSoup(response.content, 'html.parser')
     code_block = soup.find('pre')
     if not code_block:
-        raise Exception(f"Could not automatically find a test case (<pre> block) on Day {day} page.")
+        raise Exception(f'Could not automatically find a test case (<pre> block) on Day {day} page.')
 
     return code_block.get_text()
 
