@@ -31,22 +31,30 @@ def bfs(start: Any,
         search_space: Any,
         is_terminal: Callable[[Any, Any, Any], bool],
         get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+        get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs) -> Tuple[Any | None, int | float | None]:
+    if is_terminal(start, search_space, *args, **kwargs):
+        return start, 0
+
     q = deque([(start, 0)])
-    return _search(q, search_space, q.popleft, q.append,
-                   is_terminal, get_neighbors, *args, **kwargs)
+    return _search(q, search_space, q.popleft, q.append, is_terminal,
+                   get_neighbors, get_state, *args, **kwargs)
 
 
 def dfs(start: Any,
         search_space: Any,
         is_terminal: Callable[[Any, Any, Any], bool],
         get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+        get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs) -> Tuple[Any | None, int | float | None]:
+    if is_terminal(start, search_space, *args, **kwargs):
+        return start, 0
+
     q = deque([(start, 0)])
     return _search(q, search_space, q.pop, q.append, is_terminal,
-                   get_neighbors, *args, **kwargs)
+                   get_neighbors, get_state, *args, **kwargs)
 
 
 def a_star(start: Any,
@@ -54,20 +62,24 @@ def a_star(start: Any,
            is_terminal: Callable[..., bool],
            get_neighbors: Callable[..., Iterable[Any]],
            heuristic: Callable[[Any, Any], int],
+           get_state: Callable[[Any], Any] = lambda n: n,
            *args,
            **kwargs) -> Tuple[Any | None, int | float | None]:
-    q_data = [(heuristic(start, search_space), 0, start)]
-    heapq.heapify(q_data)
+    if is_terminal(start, search_space, *args, **kwargs):
+        return start, 0
+
+    q = [(heuristic(start, search_space), 0, start)]
+    heapq.heapify(q)
 
     def priority_pop():
-        f, steps, node = heapq.heappop(q_data)
+        f, steps, node = heapq.heappop(q)
         return node, steps
 
     def priority_append(item):
         node, steps = item
         f = steps + heuristic(node, search_space)
-        heapq.heappush(q_data, (f, steps, node))
+        heapq.heappush(q, (f, steps, node))
 
-    return _search(q_data, search_space, priority_pop, priority_append,
-                   is_terminal, get_neighbors, *args, **kwargs)
+    return _search(q, search_space, priority_pop, priority_append,
+                   is_terminal, get_neighbors, get_state, *args, **kwargs)
 
