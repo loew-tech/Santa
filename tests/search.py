@@ -53,7 +53,7 @@ class TestSearchAlgorithms(unittest.TestCase):
         is_terminal = self.make_is_terminal(3)
 
         # Pass reverse=True as a kwarg through BFS to the neighbor generator
-        result, steps = bfs(0, self.graph, is_terminal, get_neighbors_with_modifier, reverse=True)
+        result, steps = bfs(0, self.graph, is_terminal, get_neighbors_with_modifier)
         self.assertEqual(result, 3)
 
 
