@@ -12,6 +12,23 @@ def _search(q: deque[Tuple[Any, int]] | Any,
             get_state: Callable[[Any], Any] = lambda n: n,
             *args,
             **kwargs) -> Tuple[Any | None, int | float | None]:
+    """
+        A polymorphic engine for state-space traversal.
+
+        Args:
+            q: A queue-like object used to hold nodes to be explored.
+            search_space: The environment, map, or rulebook to navigate.
+            pop: A function to extract a (node, steps) tuple from q.
+            push: A function to add a (node, steps) tuple to q.
+            is_terminal: A predicate to identify the goal state.
+            get_neighbors: A generator function returning adjacent nodes.
+            get_state: An optional function to transform a node into its hashable
+                       state representation for cycle detection.
+            *args, **kwargs: Contextual data passed through to callbacks.
+
+        Returns:
+            A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+        """
     visited = set()
     while q:
         node, steps = pop()
@@ -34,6 +51,7 @@ def bfs(start: Any,
         get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs) -> Tuple[Any | None, int | float | None]:
+    """Performs a Breadth-First Search to find the shortest path in an unweighted graph."""
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
 
@@ -49,6 +67,7 @@ def dfs(start: Any,
         get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs) -> Tuple[Any | None, int | float | None]:
+    """Performs an iterative Depth-First Search for pathfinding."""
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
 
@@ -65,6 +84,11 @@ def a_star(start: Any,
            get_state: Callable[[Any], Any] = lambda n: n,
            *args,
            **kwargs) -> Tuple[Any | None, int | float | None]:
+    """
+        Performs A* search to find the shortest path in a weighted graph.
+
+        :param heuristic: a function calculating the estimated cost from a node to the goal.
+        """
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
 
@@ -89,10 +113,10 @@ def topological_sort(nodes: Iterable[Any],
                      in_degrees: Dict[Any, int]):
     """
     Kahn's Algorithm implementation using the search engine.
-    graph: Adjacency list where graph[u] = [v, ...] (u -> v)
-    in_degrees: dict tracking how many dependencies each node has
+    :param nodes: the nodes in the graph.
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+    :param in_degrees: dict tracking how many dependencies each node has
     """
-
     initial_nodes = [n for n in nodes if in_degrees.get(n, 0) == 0]
     q = deque([(n, 0) for n in initial_nodes])
     sorted_order = initial_nodes[:]
