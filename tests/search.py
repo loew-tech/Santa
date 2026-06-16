@@ -118,6 +118,45 @@ class TestSearchAlgorithms(unittest.TestCase):
         self.assertEqual(result, 2)
         self.assertEqual(steps, 2)  # 0->1 (1) + 1->2 (1) = 2
 
+    def test_bidirectional_simple_path(self):
+        """
+        Verify bidirectional search finds the path 0-1-2-3-4.
+        """
+        graph = {
+            0: [1], 1: [0, 2], 2: [1, 3],
+            3: [2, 4], 4: [3]
+        }
+
+        q_f, q_b = deque(), deque()
+
+        def push_f(item): q_f.append(item)
+
+        def push_b(item): q_b.append(item)
+
+        result, steps = bidirectional_search(
+            start=0, goal=4, search_space=graph,
+            get_neighbors=self.get_neighbors,
+            q_f=q_f, pop_f=q_f.popleft, push_f=push_f,
+            q_b=q_b, pop_b=q_b.popleft, push_b=push_b
+        )
+
+        # In a 4-step path, bidirectional will meet at a middle node
+        self.assertEqual(steps, 4)
+
+    def test_bidirectional_no_path(self):
+        """Verify returns None if no path exists."""
+        graph = {0: [1], 1: [], 2: [3], 3: []}
+        q_f, q_b = deque(), deque()
+
+        result, steps = bidirectional_search(
+            start=0, goal=4, search_space=graph,
+            get_neighbors=self.get_neighbors,
+            q_f=q_f, pop_f=q_f.popleft, push_f=q_f.append,
+            q_b=q_b, pop_b=q_b.popleft, push_b=q_b.append
+        )
+        self.assertIsNone(result)
+        self.assertEqual(steps, float('inf'))
+
 
 if __name__ == '__main__':
     unittest.main()

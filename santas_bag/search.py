@@ -78,25 +78,30 @@ def bidirectional_search(
         if q_f:
             node_f, steps_f = pop_f()
             state_f = get_state(node_f)
+
+            # Check for intersection BEFORE marking as visited
+            # This is the "safe" way to detect a meeting point
+            if state_f in visited_b:
+                return node_f, steps_f + visited_b[state_f]
+
             if state_f not in visited_f:
                 visited_f[state_f] = steps_f
-                if state_f in visited_b:
-                    return node_f, steps_f + visited_b[state_f]
-
                 for nghbr in get_neighbors(node_f, search_space, *args, **kwargs):
-                    push_f((nghbr, steps_f))
+                    push_f((nghbr, steps_f + 1))
 
         # Backward Step
         if q_b:
             node_b, steps_b = pop_b()
             state_b = get_state(node_b)
+
+            # Check for intersection BEFORE marking as visited
+            if state_b in visited_f:
+                return node_b, steps_b + visited_f[state_b]
+
             if state_b not in visited_b:
                 visited_b[state_b] = steps_b
-                if state_b in visited_f:
-                    return node_b, steps_b + visited_f[state_b]
-
                 for nghbr in get_neighbors(node_b, search_space, *args, **kwargs):
-                    push_b((nghbr, steps_b))
+                    push_b((nghbr, steps_b + 1))
 
     return None, float('inf')
 
