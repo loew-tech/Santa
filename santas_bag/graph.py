@@ -5,14 +5,17 @@ from santas_bag.search import _search
 
 
 def topological_sort(nodes: Iterable[Any],
-                     graph: Dict[Any, List[Any]],
-                     in_degrees: Dict[Any, int]):
+                     graph: Dict[Any, List[Any]]):
     """
     Kahn's Algorithm implementation using the search engine.
     :param nodes: the nodes in the graph.
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
-    :param in_degrees: dict tracking how many dependencies each node has
     """
+    in_degrees = {n: 0 for n in nodes}
+    for u in graph:
+        for v in graph[u]:
+            in_degrees[v] = in_degrees.get(v, 0) + 1
+
     initial_nodes = [n for n in nodes if in_degrees.get(n, 0) == 0]
     q = deque([(n, 0) for n in initial_nodes])
     sorted_order = initial_nodes[:]
