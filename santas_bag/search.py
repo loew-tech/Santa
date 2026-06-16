@@ -3,15 +3,15 @@ from collections import deque
 from typing import Any, Tuple, Callable, Iterable
 
 
-def _search(q: deque[Tuple[Any, int]] | Any,
-            search_space: Any,
-            pop: Callable[[], Tuple[Any, int]],
-            push: Callable[[Any], None],
-            is_terminal: Callable[[Any, Any, Any], bool],
-            get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-            get_state: Callable[[Any], Any] = lambda n: n,
-            *args,
-            **kwargs) -> Tuple[Any | None, int | float | None]:
+def search(q: deque[Tuple[Any, int]] | Any,
+           search_space: Any,
+           pop: Callable[[], Tuple[Any, int]],
+           push: Callable[[Any], None],
+           is_terminal: Callable[[Any, Any, Any], bool],
+           get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+           get_state: Callable[[Any], Any] = lambda n: n,
+           *args,
+           **kwargs) -> Tuple[Any | None, int | float | None]:
     """
         A polymorphic engine for state-space traversal.
 
@@ -45,6 +45,55 @@ def _search(q: deque[Tuple[Any, int]] | Any,
     return None, float('inf')
 
 
+from typing import Any, Tuple, Callable, Iterable, Deque, Dict
+
+
+def bidirectional_search(
+        start: Any,
+        goal: Any,
+        search_space: Any,
+        q_f: Deque[Tuple[Any, int]],
+        pop_f: Callable[[], Tuple[Any, int]],
+        push_f: Callable[[Any], None],
+        q_b: Deque[Tuple[Any, int]],
+        pop_b: Callable[[], Tuple[Any, int]],
+        push_b: Callable[[Any], None],
+        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+        get_state: Callable[[Any], Any] = lambda n: n,
+        *args,
+        **kwargs
+) -> Tuple[Any | None, int | float | None]:
+    """
+    Polymorphic bidirectional search.
+    """
+    visited_f: Dict[Any, int] = {}  # {state: steps}
+    visited_b: Dict[Any, int] = {}  # {state: steps}
+
+    # Initialize frontiers
+    push_f((start, 0))
+    push_b((goal, 0))
+
+    search_elements = (
+        (q_f, pop_f, push_f, visited_f, visited_b),
+        (q_b, pop_b, push_b, visited_b, visited_f)
+    )
+
+    while q_f and q_b:
+        for q, pop, push, visited, other_visited in search_elements:
+            node, steps = pop()
+            state = get_state(node)
+
+            if state in other_visited:
+                return node, steps + other_visited[state]
+
+            if state not in visited:
+                visited[state] = steps
+                for nghbr in get_neighbors(node, search_space, *args, **kwargs):
+                    push((nghbr, steps + 1))
+
+    return None, float('inf')
+
+
 def bfs(start: Any,
         search_space: Any,
         is_terminal: Callable[[Any, Any, Any], bool],
@@ -61,8 +110,8 @@ def bfs(start: Any,
         neighbor, steps = item
         q.append((neighbor, steps + 1))
 
-    return _search(q, search_space, q.popleft, push, is_terminal,
-                   get_neighbors, get_state, *args, **kwargs)
+    return search(q, search_space, q.popleft, push, is_terminal,
+                  get_neighbors, get_state, *args, **kwargs)
 
 
 def dfs(start: Any,
@@ -81,8 +130,8 @@ def dfs(start: Any,
         neighbor, steps = item
         q.append((neighbor, steps + 1))
 
-    return _search(q, search_space, q.pop, push, is_terminal,
-                   get_neighbors, get_state, *args, **kwargs)
+    return search(q, search_space, q.pop, push, is_terminal,
+                  get_neighbors, get_state, *args, **kwargs)
 
 
 def a_star(start: Any,
@@ -121,8 +170,8 @@ def a_star(start: Any,
         f = new_total_steps + heuristic(neighbor, search_space)
         heapq.heappush(q, (f, new_total_steps, neighbor))
 
-    return _search(q, search_space, priority_pop, priority_push,
-                   is_terminal, get_neighbors, get_state, *args, **kwargs)
+    return search(q, search_space, priority_pop, priority_push,
+                  is_terminal, get_neighbors, get_state, *args, **kwargs)
 
 
 def dijkstra(start, search_space, is_terminal, get_neighbors, *args, **kwargs):
