@@ -26,10 +26,8 @@ def search(
     :param get_state: Function to map a node to a hashable state for pruning.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
-    :return: A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
 
-    Returns:
-        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    :return: A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     visited = set()
     while q:
@@ -82,8 +80,7 @@ def bidirectional_search(
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
-    Returns:
-        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     visited_f: Dict[Any, int] = {}  # {state: steps}
     visited_b: Dict[Any, int] = {}  # {state: steps}
@@ -133,8 +130,7 @@ def bfs(
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
-    Returns:
-        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
@@ -172,8 +168,7 @@ def greedy_best_first_search(
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
-    Returns:
-        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     q = [(heuristic(start, search_space), start, 0)]
     heapq.heapify(q)
@@ -213,8 +208,7 @@ def dfs(
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
-    Returns:
-        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
@@ -250,8 +244,7 @@ def a_star(
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
-    Returns:
-        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
@@ -298,7 +291,6 @@ def dijkstra(
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
-    Returns:
-        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     return a_star(start, search_space, is_terminal, get_neighbors, lambda n, s: 0, *args, **kwargs)
