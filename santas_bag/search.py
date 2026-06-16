@@ -37,10 +37,11 @@ def _search(q: deque[Tuple[Any, int]] | Any,
             continue
         visited.add(state)
 
+        if is_terminal(node, search_space, *args, **kwargs):
+            return node, steps
+
         for nghbr in get_neighbors(node, search_space, *args, **kwargs):
-            if is_terminal(nghbr, search_space, *args, **kwargs):
-                return nghbr, steps + 1
-            push((nghbr, steps + 1))
+            push((nghbr, steps))
     return None, float('inf')
 
 
@@ -56,7 +57,11 @@ def bfs(start: Any,
         return start, 0
 
     q = deque([(start, 0)])
-    return _search(q, search_space, q.popleft, q.append, is_terminal,
+    def push(item):
+        neighbor, steps = item
+        q.append((neighbor, steps + 1))
+
+    return _search(q, search_space, q.popleft, push, is_terminal,
                    get_neighbors, get_state, *args, **kwargs)
 
 
@@ -72,7 +77,11 @@ def dfs(start: Any,
         return start, 0
 
     q = deque([(start, 0)])
-    return _search(q, search_space, q.pop, q.append, is_terminal,
+    def push(item):
+        neighbor, steps = item
+        q.append((neighbor, steps + 1))
+
+    return _search(q, search_space, q.pop, push, is_terminal,
                    get_neighbors, get_state, *args, **kwargs)
 
 
@@ -99,10 +108,23 @@ def a_star(start: Any,
         f, steps, node = heapq.heappop(q)
         return node, steps
 
-    def priority_append(item):
-        node, steps = item
-        f = steps + heuristic(node, search_space)
-        heapq.heappush(q, (f, steps, node))
+    def priority_push(item):
+        neighbor_info, current_steps = item
 
-    return _search(q, search_space, priority_pop, priority_append,
+        # Robust unpacking: handle raw node OR (node, weight) tuple
+        if isinstance(neighbor_info, tuple) and len(neighbor_info) == 2:
+            neighbor, weight = neighbor_info
+        else:
+            neighbor, weight = neighbor_info, 1
+
+        new_total_steps = current_steps + weight
+        f = new_total_steps + heuristic(neighbor, search_space)
+        heapq.heappush(q, (f, new_total_steps, neighbor))
+
+    return _search(q, search_space, priority_pop, priority_push,
                    is_terminal, get_neighbors, get_state, *args, **kwargs)
+
+
+def dijkstra(start, search_space, is_terminal, get_neighbors, *args, **kwargs):
+    """Dijsktra algorithm to find the shortest path in a weighted graph."""
+    return a_star(start, search_space, is_terminal, get_neighbors, lambda n, s: 0, *args, **kwargs)

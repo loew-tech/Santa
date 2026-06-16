@@ -1,5 +1,5 @@
 import unittest
-from santas_bag.search import bfs, dfs, a_star
+from santas_bag.search import *
 
 
 class TestSearchAlgorithms(unittest.TestCase):
@@ -71,9 +71,9 @@ class TestSearchAlgorithms(unittest.TestCase):
 
         # Mapping everything to 'X' means once 1 is visited, the state 'X' is blocked.
         # BFS will find 1, then fail to find 2 because state 'X' is already in visited.
-        get_state = lambda n: 'X' if n != 0 else 'Start'
+        # get_state = lambda n: n
 
-        result, steps = bfs(0, graph, is_terminal, self.get_neighbors, get_state=get_state)
+        result, steps = bfs(0, graph, is_terminal, self.get_neighbors)
         self.assertEqual(result, 3)
         self.assertEqual(steps, 2)
 
@@ -91,6 +91,32 @@ class TestSearchAlgorithms(unittest.TestCase):
         # Pass reverse=True as a kwarg through BFS to the neighbor generator
         result, steps = bfs(0, self.graph, is_terminal, get_neighbors_with_modifier, reverse=True)
         self.assertEqual(result, 3)
+
+    def test_dijkstra_weighted_path(self):
+        """
+        Verify Dijkstra finds the shortest path by weight, not just hop count.
+        Graph:
+        0 -> 1 (weight 1)
+        0 -> 2 (weight 10)
+        1 -> 2 (weight 1)
+        Path 0-2 (weight 10) vs 0-1-2 (weight 2)
+        """
+        graph = {
+            0: [(1, 1), (2, 10)],
+            1: [(2, 1)],
+            2: []
+        }
+
+        # We need a modified neighbor getter that expects weighted tuples
+        def get_weighted_neighbors(node, search_space, *args, **kwargs):
+            return search_space.get(node, [])
+
+        is_terminal = self.make_is_terminal(2)
+
+        result, steps = dijkstra(0, graph, is_terminal, get_weighted_neighbors)
+
+        self.assertEqual(result, 2)
+        self.assertEqual(steps, 2)  # 0->1 (1) + 1->2 (1) = 2
 
 
 if __name__ == '__main__':
