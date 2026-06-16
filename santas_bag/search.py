@@ -1,17 +1,34 @@
 import heapq
 from collections import deque
-from typing import Any, Tuple, Callable, Iterable, List
+from typing import Any, Tuple, Callable, Iterable
 
 
 def _search(q: deque[Tuple[Any, int]] | Any,
-        search_space: Any,
-        pop: Callable[[], Tuple[Any, int]],
-        append: Callable[[Any], None],
-        is_terminal: Callable[[Any, Any, Any], bool],
-        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-        get_state: Callable[[Any], Any] = lambda n: n,
-        *args,
-        **kwargs) -> Tuple[Any | None, int | float | None]:
+            search_space: Any,
+            pop: Callable[[], Tuple[Any, int]],
+            push: Callable[[Any], None],
+            is_terminal: Callable[[Any, Any, Any], bool],
+            get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+            get_state: Callable[[Any], Any] = lambda n: n,
+            *args,
+            **kwargs) -> Tuple[Any | None, int | float | None]:
+    """
+        A polymorphic engine for state-space traversal.
+
+        Args:
+            q: A queue-like object used to hold nodes to be explored.
+            search_space: The environment, map, or rulebook to navigate.
+            pop: A function to extract a (node, steps) tuple from q.
+            push: A function to add a (node, steps) tuple to q.
+            is_terminal: A predicate to identify the goal state.
+            get_neighbors: A generator function returning adjacent nodes.
+            get_state: An optional function to transform a node into its hashable
+                       state representation for cycle detection.
+            *args, **kwargs: Contextual data passed through to callbacks.
+
+        Returns:
+            A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+        """
     visited = set()
     while q:
         node, steps = pop()
@@ -23,7 +40,7 @@ def _search(q: deque[Tuple[Any, int]] | Any,
         for nghbr in get_neighbors(node, search_space, *args, **kwargs):
             if is_terminal(nghbr, search_space, *args, **kwargs):
                 return nghbr, steps + 1
-            append((nghbr, steps + 1))
+            push((nghbr, steps + 1))
     return None, float('inf')
 
 
@@ -34,6 +51,7 @@ def bfs(start: Any,
         get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs) -> Tuple[Any | None, int | float | None]:
+    """Performs a Breadth-First Search to find the shortest path in an unweighted graph."""
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
 
@@ -49,6 +67,7 @@ def dfs(start: Any,
         get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs) -> Tuple[Any | None, int | float | None]:
+    """Performs an iterative Depth-First Search for pathfinding."""
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
 
@@ -65,6 +84,11 @@ def a_star(start: Any,
            get_state: Callable[[Any], Any] = lambda n: n,
            *args,
            **kwargs) -> Tuple[Any | None, int | float | None]:
+    """
+        Performs A* search to find the shortest path in a weighted graph.
+
+        :param heuristic: a function calculating the estimated cost from a node to the goal.
+        """
     if is_terminal(start, search_space, *args, **kwargs):
         return start, 0
 
@@ -82,4 +106,3 @@ def a_star(start: Any,
 
     return _search(q, search_space, priority_pop, priority_append,
                    is_terminal, get_neighbors, get_state, *args, **kwargs)
-
