@@ -7,21 +7,38 @@ from bs4 import BeautifulSoup
 import requests
 
 ADVENT_URI = 'https://adventofcode.com/'
-# @TODO: have these be overridable from config
-ENV_PATH = '.env'
 INPUTS_PATH = Path('inputs/')
 TESTS_PATH = Path('tests/')
 
 
 def read_input(
-        day: int | str,
-        # @TODO: set this default better; datetime.now.year or read from config.
         year: int | str,
+        day: int | str,
+        session_id: str,
+        inputs_path: Path | None = None,
+        tests_path: Path | None = None,
         delim: str | None = '\n',
         parse: Callable[[List[str] | str], Any] | None = None,
         testing: bool = False
 ) -> List[Any] | str:
-    target_dir = TESTS_PATH if testing else INPUTS_PATH
+    """
+    Retrieves and parses Advent of Code input data.
+
+    :param year: The puzzle year (e.g., 2024).
+    :param day: The puzzle day.
+    :param session_id: The session cookie for authentication.
+    :param inputs_path: Directory to store official input files.
+    :param tests_path: Directory to store test/scraped input files.
+    :param delim: String to split input text; defaults to newline.
+    :param parse: A callable to transform input lines or the entire text.
+    :param testing: Whether to fetch from the test path and scrape test cases.
+
+    :return: A list of parsed items or the raw input string.
+    """
+    inputs_path = inputs_path or INPUTS_PATH
+    tests_path = tests_path or TESTS_PATH
+
+    target_dir = tests_path if testing else inputs_path
     target_file = target_dir / f'{day}.txt'
 
     if target_file.exists():
@@ -29,24 +46,25 @@ def read_input(
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
     if testing:
-        text = _fetch_test_input(day, year)
+        text = _fetch_test_input(year, day)
         print(f'⚠️ Scraped test input for Day {day}. Verify it in {target_file}')
     else:
-        text = _fetch_official_input(day, year)
+        text = _fetch_official_input(year, day, session_id)
 
     target_file.write_text(text)
     return _process_input(text, delim, parse)
 
-def _fetch_official_input(day: int | str, year: int | str) -> str:
-    # @TODO: look into better way of doing this
-    session_id = None
-    if os.path.exists('.env'):
-        with open('.env') as f:
-            for line in f:
-                if line.startswith('session='):
-                    session_id = line.strip().split('=', 1)[1]
-                    break
+def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> str:
+    """
+    Fetches the official puzzle input from the Advent of Code website.
 
+    :param day: The puzzle day.
+    :param year: The puzzle year.
+    :raises ValueError: If the session ID is missing from the .env file.
+    :raises Exception: If the HTTP request fails.
+
+    :return: The raw string content of the puzzle input.
+    """
     if not session_id:
         raise ValueError("Could not find 'session=' variable in your .env file.")
 
@@ -61,7 +79,16 @@ def _fetch_official_input(day: int | str, year: int | str) -> str:
 
     return response.text
 
-def _fetch_test_input(day: int | str, year: int | str) -> str:
+def _fetch_test_input(year: int | str, day: int | str) -> str:
+    """
+    Scrapes the example input from the puzzle page <pre> blocks.
+
+    :param day: The puzzle day.
+    :param year: The puzzle year.
+    :raises Exception: If the page fetch fails or no <pre> block is found.
+
+    :return: The extracted text content from the first code block.
+    """
     response = requests.get(f'{ADVENT_URI}{year}/day/{day}')
     if response.status_code != HTTPStatus.OK:
         raise Exception(f'Failed to fetch puzzle page for scraping.')
@@ -75,6 +102,15 @@ def _fetch_test_input(day: int | str, year: int | str) -> str:
 
 
 def _process_input(text: str, delim: str | None, parse: Callable[[List[str] | str], Any] | None) -> Any:
+    """
+    Processes the raw input text based on the provided delimiter and parser.
+
+    :param text: The raw input string.
+    :param delim: The delimiter to split the text, or None for raw processing.
+    :param parse: An optional transformation function applied to data.
+
+    :return: A list of processed data, or a single parsed value if delim is None.
+    """
     if delim == '\n':
         raw_data = text.splitlines()
     elif delim:
