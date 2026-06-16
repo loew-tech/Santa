@@ -3,15 +3,15 @@ from collections import deque
 from typing import Any, Tuple, Callable, Iterable
 
 
-def _search(q: deque[Tuple[Any, int]] | Any,
-            search_space: Any,
-            pop: Callable[[], Tuple[Any, int]],
-            push: Callable[[Any], None],
-            is_terminal: Callable[[Any, Any, Any], bool],
-            get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-            get_state: Callable[[Any], Any] = lambda n: n,
-            *args,
-            **kwargs) -> Tuple[Any | None, int | float | None]:
+def search(q: deque[Tuple[Any, int]] | Any,
+           search_space: Any,
+           pop: Callable[[], Tuple[Any, int]],
+           push: Callable[[Any], None],
+           is_terminal: Callable[[Any, Any, Any], bool],
+           get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+           get_state: Callable[[Any], Any] = lambda n: n,
+           *args,
+           **kwargs) -> Tuple[Any | None, int | float | None]:
     """
         A polymorphic engine for state-space traversal.
 
@@ -45,6 +45,62 @@ def _search(q: deque[Tuple[Any, int]] | Any,
     return None, float('inf')
 
 
+from typing import Any, Tuple, Callable, Iterable, Deque, Dict
+
+
+def bidirectional_search(
+        start: Any,
+        goal: Any,
+        search_space: Any,
+        q_f: Deque[Tuple[Any, int]],
+        pop_f: Callable[[], Tuple[Any, int]],
+        push_f: Callable[[Any], None],
+        q_b: Deque[Tuple[Any, int]],
+        pop_b: Callable[[], Tuple[Any, int]],
+        push_b: Callable[[Any], None],
+        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+        get_state: Callable[[Any], Any] = lambda n: n,
+        *args,
+        **kwargs
+) -> Tuple[Any | None, int | float | None]:
+    """
+    Polymorphic bidirectional search.
+    """
+    visited_f: Dict[Any, int] = {}  # {state: steps}
+    visited_b: Dict[Any, int] = {}  # {state: steps}
+
+    # Initialize frontiers
+    push_f((start, 0))
+    push_b((goal, 0))
+
+    while q_f and q_b:
+        # Forward Step
+        if q_f:
+            node_f, steps_f = pop_f()
+            state_f = get_state(node_f)
+            if state_f not in visited_f:
+                visited_f[state_f] = steps_f
+                if state_f in visited_b:
+                    return node_f, steps_f + visited_b[state_f]
+
+                for nghbr in get_neighbors(node_f, search_space, *args, **kwargs):
+                    push_f((nghbr, steps_f))
+
+        # Backward Step
+        if q_b:
+            node_b, steps_b = pop_b()
+            state_b = get_state(node_b)
+            if state_b not in visited_b:
+                visited_b[state_b] = steps_b
+                if state_b in visited_f:
+                    return node_b, steps_b + visited_f[state_b]
+
+                for nghbr in get_neighbors(node_b, search_space, *args, **kwargs):
+                    push_b((nghbr, steps_b))
+
+    return None, float('inf')
+
+
 def bfs(start: Any,
         search_space: Any,
         is_terminal: Callable[[Any, Any, Any], bool],
@@ -61,8 +117,8 @@ def bfs(start: Any,
         neighbor, steps = item
         q.append((neighbor, steps + 1))
 
-    return _search(q, search_space, q.popleft, push, is_terminal,
-                   get_neighbors, get_state, *args, **kwargs)
+    return search(q, search_space, q.popleft, push, is_terminal,
+                  get_neighbors, get_state, *args, **kwargs)
 
 
 def dfs(start: Any,
@@ -81,8 +137,8 @@ def dfs(start: Any,
         neighbor, steps = item
         q.append((neighbor, steps + 1))
 
-    return _search(q, search_space, q.pop, push, is_terminal,
-                   get_neighbors, get_state, *args, **kwargs)
+    return search(q, search_space, q.pop, push, is_terminal,
+                  get_neighbors, get_state, *args, **kwargs)
 
 
 def a_star(start: Any,
@@ -121,8 +177,8 @@ def a_star(start: Any,
         f = new_total_steps + heuristic(neighbor, search_space)
         heapq.heappush(q, (f, new_total_steps, neighbor))
 
-    return _search(q, search_space, priority_pop, priority_push,
-                   is_terminal, get_neighbors, get_state, *args, **kwargs)
+    return search(q, search_space, priority_pop, priority_push,
+                  is_terminal, get_neighbors, get_state, *args, **kwargs)
 
 
 def dijkstra(start, search_space, is_terminal, get_neighbors, *args, **kwargs):

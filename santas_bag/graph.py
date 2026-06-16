@@ -1,7 +1,7 @@
 from collections import deque
 from typing import Iterable, Dict, Any, List
 
-from santas_bag.search import _search
+from santas_bag.search import search
 
 
 def topological_sort(nodes: Iterable[Any],
@@ -31,6 +31,6 @@ def topological_sort(nodes: Iterable[Any],
             if in_degrees[neighbor] == 0:
                 yield neighbor
 
-    _search(q, graph, q.popleft, push, lambda *args: False, get_neighbors)
+    search(q, graph, q.popleft, push, lambda *args: False, get_neighbors)
 
     return sorted_order
