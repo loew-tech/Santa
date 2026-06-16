@@ -148,6 +148,51 @@ def bfs(
                   get_neighbors, get_state, *args, **kwargs)
 
 
+import heapq
+
+def greedy_best_first_search(
+    start: Any,
+    search_space: Any,
+    is_terminal: Callable[..., bool],
+    get_neighbors: Callable[..., Iterable[Any]],
+    heuristic: Callable[[Any, Any], int],
+    get_state: Callable[[Any], Any] = lambda n: n,
+    *args,
+    **kwargs
+) -> Tuple[Optional[Any], int | float]:
+    """
+    Performs a Greedy Best-First Search to find a path quickly.
+
+    :param start: The starting node.
+    :param search_space: The environment or graph to navigate.
+    :param is_terminal: Predicate to identify the goal state.
+    :param get_neighbors: Generator for adjacent nodes.
+    :param heuristic: A function calculating the estimated cost to the goal.
+    :param get_state: Function to map a node to a hashable state.
+    :param args: Additional positional arguments for callbacks.
+    :param kwargs: Additional keyword arguments for callbacks.
+
+    Returns:
+        A tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    """
+    q = [(heuristic(start, search_space), start, 0)]
+    heapq.heapify(q)
+
+    def priority_pop():
+        h, node, steps = heapq.heappop(q)
+        return node, steps
+
+    def priority_push(item):
+        neighbor, steps = item
+        priority = heuristic(neighbor, search_space)
+        heapq.heappush(q, (priority, neighbor, steps + 1))
+
+    return search(
+        q, search_space, priority_pop, priority_push,
+        is_terminal, get_neighbors, get_state, *args, **kwargs
+    )
+
+
 def dfs(
         start: Any,
         search_space: Any,

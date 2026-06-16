@@ -29,6 +29,33 @@ class TestSearchAlgorithms(unittest.TestCase):
         self.assertEqual(result, 0)
         self.assertEqual(steps, 0)
 
+    def test_greedy_best_first_search(self):
+        """
+        Verify greedy search prioritizes heuristic over actual path cost.
+        Graph: 0 -> 1 (H=5), 0 -> 2 (H=8). Goal is 3.
+        1 -> 3 (H=10), 2 -> 3 (H=0).
+        """
+        graph = {0: [1, 2], 1: [3], 2: [3], 3: []}
+
+        # Greedy should go 0 -> 1 -> 3 because 1 (H=5) looks better than 2 (H=8)
+        # even though 0 -> 2 -> 3 is the path with lower heuristic at the goal.
+        def heuristic(node, search_space):
+            h_map = {0: 10, 1: 5, 2: 8, 3: 0}
+            return h_map.get(node, 100)
+
+        is_terminal = self.make_is_terminal(3)
+
+        result, steps = greedy_best_first_search(
+            start=0,
+            search_space=graph,
+            is_terminal=is_terminal,
+            get_neighbors=self.get_neighbors,
+            heuristic=heuristic
+        )
+
+        self.assertEqual(result, 3)
+        self.assertEqual(steps, 2)
+
     def test_dfs_start_is_terminal(self):
         is_terminal = self.make_is_terminal(0)
         result, steps = dfs(0, self.graph, is_terminal, self.get_neighbors)
