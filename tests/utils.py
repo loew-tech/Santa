@@ -1,6 +1,7 @@
 import unittest
 from unittest.mock import patch, mock_open, MagicMock
 from pathlib import Path
+import time
 
 from santas_bag.utils import *
 
@@ -53,6 +54,41 @@ class TestUtils(unittest.TestCase):
         text = "1\n2\n3"
         result = _process_input(text, '\n', int)
         self.assertEqual(result, [1, 2, 3])
+
+
+    @patch('time.perf_counter')
+    def test_time_execution(self, mock_perf):
+        """Verify the decorator calls the function and logs the correct duration."""
+        # 1. Setup mock time: return 1.0 on first call, 2.5 on second call
+        mock_perf.side_effect = [1.0, 2.5]
+
+        # 2. Define a test function to be decorated
+        @time_execution
+        def sample_func(x, y=0):
+            return x + y
+
+        # 3. Call the decorated function
+        with patch('builtins.print') as mock_print:
+            result = sample_func(10, y=5)
+
+            # Verify result is passed through correctly
+            self.assertEqual(result, 15)
+
+            # Verify the print statement happened (the time calculation)
+            # Duration should be 2.5 - 1.0 = 1.5
+            mock_print.assert_called_with("⏱️ Execution time for sample_func: 1.5000 seconds")
+
+
+    def test_time_execution_args_forwarding(self):
+        """Verify that args and kwargs are passed transparently."""
+
+        @time_execution
+        def check_args(*args, **kwargs):
+            return args, kwargs
+
+        args, kwargs = check_args(1, 2, key='value')
+        self.assertEqual(args, (1, 2))
+        self.assertEqual(kwargs, {'key': 'value'})
 
 
 if __name__ == '__main__':

@@ -1,4 +1,6 @@
 import os
+import time
+from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any, Callable, List
@@ -119,3 +121,20 @@ def _process_input(text: str, delim: str | None, parse: Callable[[List[str] | st
         return parse(text) if parse else text
 
     return [parse(item) for item in raw_data] if parse else raw_data
+
+
+def time_execution(func):
+    """
+    Decorator to log the execution time of a function.
+
+    :param func: The function to be wrapped and timed.
+    :return: A wrapper function that prints the execution duration.
+    """
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start = time.perf_counter()
+        result = func(*args, **kwargs)
+        end = time.perf_counter()
+        print(f"⏱️ Execution time for {func.__name__}: {end - start:.4f} seconds")
+        return result
+    return wrapper
