@@ -2,7 +2,7 @@ import unittest
 from santas_bag.search import *
 
 
-class TestSearchAlgorithms(unittest.TestCase):
+class TestSearch(unittest.TestCase):
 
     def setUp(self):
         # A simple graph: 0 -> 1 -> 2 -> 3

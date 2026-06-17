@@ -2,7 +2,7 @@ import unittest
 
 from santas_bag.grid import *
 
-class TestGridHelpers(unittest.TestCase):
+class TestGrid(unittest.TestCase):
 
     def setUp(self):
         self.sample_grid = [

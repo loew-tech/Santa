@@ -1,15 +1,89 @@
-from collections import deque
-from typing import Iterable, Dict, Any, List
+from collections import deque, defaultdict
+from typing import Iterable, Dict, Any, List, Tuple
 
 from santas_bag.search import search
 
 
+def adjacency_matrix_to_dict(
+        adjacency_lists: List[List],
+        weighted=False
+) -> Dict[int, List[int]]:
+    """
+    Transform a list of adjacency matrix into a graph dictionary mapping node -> neighbors.
+    :param weighted: Bool flag if graph is weighted or not. Default is False
+    :param adjacency_lists: List of adjacency
+
+    :return: Dictionary mapping node -> list of neighbors
+    """
+    graph = {}
+    for y, adjacency_list in enumerate(adjacency_lists):
+        neighbors = []
+        for x, val in enumerate(adjacency_list):
+            if val:
+                neighbors.append(x if not weighted else (x, val))
+        graph[y] = neighbors
+    return graph
+
+
+def edge_list_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List[Any]]:
+    """
+    Transform a list of edges into a graph dictionary mapping node -> neighbors.
+    Supports unweighted graphs and weighted graphs in form (vertex1, vertex2, weight).
+
+    :param edge_list: List of tuples of (node1, node2) where nodes are connected
+    :param undirected: Bool for if graph is undirected or not. Default is True
+
+    :return: Dictionary mapping node -> list of neighbors
+    """
+    graph = defaultdict(list)
+    for u, v, *wght in edge_list:
+        if wght:
+            w = wght[0]
+            graph[u].append((v, w))
+            if undirected:
+                graph[v].append((u, w))
+            continue
+
+        graph[u].append(v)
+        if undirected:
+            graph[v].append(u)
+    return graph
+
+
+def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
+    """
+    Take a graph and reverse the edges
+
+    :param graph: The graph represented as dictionary mapping node -> list of neighbors
+
+    :return: Dictionary mapping node -> list of neighbors
+    """
+    transposed = defaultdict(list)
+    # Ensure all nodes from original graph are in the new dict
+    for node in graph:
+        if node not in transposed:
+            transposed[node] = []
+
+    for u, neighbors in graph.items():
+        for neighbor in neighbors:
+            # Handle both weighted and unweighted
+            if isinstance(neighbor, tuple):
+                v, w = neighbor
+                transposed[v].append((u, w))
+            else:
+                transposed[neighbor].append(u)
+    return dict(transposed)
+
+
 def topological_sort(nodes: Iterable[Any],
-                     graph: Dict[Any, List[Any]]):
+                     graph: Dict[Any, List[Any]]) -> List[Any]:
     """
     Kahn's Algorithm implementation using the search engine.
-    :param nodes: the nodes in the graph.
+
+    :param nodes: The nodes in the graph.
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+
+    :return: List of nodes in topological order
     """
     in_degrees = {n: 0 for n in nodes}
     for u in graph:
