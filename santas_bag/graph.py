@@ -1,7 +1,41 @@
-from collections import deque
-from typing import Iterable, Dict, Any, List
+from collections import deque, defaultdict
+from typing import Iterable, Dict, Any, List, Tuple
 
 from santas_bag.search import search
+
+
+def adjacency_matrix_to_dict(adjacency_lists: List[List]) -> Dict[int, List[int]]:
+    """
+    Transform a list of adjacency matrix into a graph dictionary mapping node -> neighbors.
+    :param adjacency_lists: list of adjacency
+
+    :return: Dictionary mapping node -> list of neighbors
+    """
+    graph = {}
+    for y, adjacency_list in enumerate(adjacency_lists):
+        neighbors = []
+        for x, val in enumerate(adjacency_list):
+            if val:
+                neighbors.append(x)
+        graph[y] = neighbors
+    return graph
+
+
+def edge_list_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List[Any]]:
+    """
+    Transform a list of edges into a graph dictionary mapping node -> neighbors.
+    :param edge_list: List of tuples of (node1, node2) where nodes are connected
+    :param undirected: Bool for if graph is undirected or not. Default is True
+    :param adjacency_lists: list of adjacency
+
+    :return: Dictionary mapping node -> list of neighbors
+    """
+    graph = defaultdict(list)
+    for u, v in edge_list:
+        graph[u].append(v)
+        if undirected:
+            graph[v].append(u)
+    return graph
 
 
 def topological_sort(nodes: Iterable[Any],
