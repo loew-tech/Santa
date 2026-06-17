@@ -55,7 +55,7 @@ def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
     """
     Take a graph and reverse the edges
 
-    :param graph: The graph represented as dictionary mapping node -> list of neighbors
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
 
     :return: Dictionary mapping node -> list of neighbors
     """
@@ -116,9 +116,6 @@ def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
 
     :return: List of Sets of nodes where each set is a component
     """
-    def is_terminal(node, graph_, *args, **kwargs):
-        return False
-
     unvisited = set(graph.keys())
     for neighbors in graph.values():
         for n in neighbors:
@@ -182,3 +179,74 @@ def spanning_tree(graph: Dict[Any, List[Tuple[Any, int]]]) -> List[Tuple[Any, An
                     heapq.heappush(edges, (next_weight, v, next_neighbor))
 
     return mst_edges
+
+
+def network_flow(graph: Dict[Any, List[Any]], source: Any, sink: Any) -> int:
+    """
+    Adapter function that transforms the standard graph representation
+    into the format required by Edmonds-Karp.
+    """
+    # 1. Transform: Dict[Any, List[Any]] -> Dict[Any, Dict[Any, int]]
+    # We create a mapping of node -> {neighbor: capacity}
+    adj_map = defaultdict(dict)
+    for u, neighbors in graph.items():
+        for neighbor in neighbors:
+            # Handle both list/tuple inputs like [v, capacity]
+            if isinstance(neighbor, (list, tuple)):
+                v, cap = neighbor
+                adj_map[u][v] = cap
+            else:
+                # Handle cases where capacity might be implicit (e.g., 1)
+                adj_map[u][neighbor] = 1
+
+    # 2. Call the core algorithm
+    return edmonds_karp( source, sink, adj_map)
+
+
+def edmonds_karp(source: Any, sink: Any, graph: Dict[Any, Dict[Any, int]]) -> int:
+    # 1. Initialize residual graph with capacities
+    # residual[u][v] is the remaining capacity
+    residual = defaultdict(lambda: defaultdict(int))
+    for u, neighbors in graph.items():
+        for v, cap in neighbors.items():
+            residual[u][v] = cap
+
+    max_flow = 0
+    while True:
+        # 2. BFS to find the shortest augmenting path
+        parent = {source: None}
+        queue = deque([source])
+        path_found = False
+
+        while queue:
+            u = queue.popleft()
+            if u == sink:
+                path_found = True
+                break
+            for v, capacity in residual[u].items():
+                if v not in parent and capacity > 0:
+                    parent[v] = u
+                    queue.append(v)
+
+        if not path_found:
+            break
+
+        # 3. Find bottleneck capacity along the path
+        path_flow = float('inf')
+        v = sink
+        while v != source:
+            u = parent[v]
+            path_flow = min(path_flow, residual[u][v])
+            v = u
+
+        # 4. Update residual capacities
+        v = sink
+        while v != source:
+            u = parent[v]
+            residual[u][v] -= path_flow
+            residual[v][u] += path_flow
+            v = u
+
+        max_flow += path_flow
+
+    return max_flow

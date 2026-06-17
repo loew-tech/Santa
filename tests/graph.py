@@ -159,6 +159,18 @@ class TestGraph(unittest.TestCase):
         actual = spanning_tree({})
         self.assertEqual(expected, actual)
 
+    def test_network_flow(self):
+        # Graph: 0 -> 1 (cap 10), 0 -> 2 (cap 5), 1 -> 2 (cap 15)
+        graph = {
+            0: [(1, 10), (2, 5)],
+            1: [(2, 15)],
+            2: []
+        }
+        # Expected max flow from 0 to 2 is 15
+        expected = 15
+        actual = network_flow(graph, 0, 2)
+        self.assertEqual(expected, actual)
+
 
 if __name__ == '__main__':
     unittest.main()

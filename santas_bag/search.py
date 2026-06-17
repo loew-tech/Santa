@@ -1,3 +1,4 @@
+import heapq
 from collections import deque
 from typing import Any, Tuple, Callable, Iterable, Optional, List
 
@@ -142,8 +143,6 @@ def bfs(
     return search(q, search_space, q.popleft, push, is_terminal,
                   get_neighbors, get_state, *args, **kwargs)
 
-
-import heapq
 
 def greedy_best_first_search(
     start: Any,
