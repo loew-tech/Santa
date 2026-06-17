@@ -144,8 +144,6 @@ def bfs(
                   get_neighbors, get_state, *args, **kwargs)
 
 
-import heapq
-
 def greedy_best_first_search(
     start: Any,
     search_space: Any,

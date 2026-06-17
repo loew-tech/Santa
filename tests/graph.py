@@ -127,6 +127,91 @@ class TestGraph(unittest.TestCase):
         result = topological_sort([0], graph)
         self.assertEqual(result, [0])
 
+    def test_get_components(self):
+        # Two separate clusters: (0, 1) and (2, 3)
+        graph = {0: [1], 1: [0], 2: [3], 3: [2]}
+        actual = get_components(graph)
+        expected = [{0, 1}, {2, 3}]
+
+        # Sort for comparison since set order is arbitrary
+        actual_sorted = sorted([sorted(list(c)) for c in actual])
+        expected_sorted = sorted([sorted(list(c)) for c in expected])
+
+        self.assertEqual(expected_sorted, actual_sorted)
+
+    def test_prims_algorithm(self):
+        # A triangle: 0-1 (1), 1-2 (2), 0-2 (3)
+        graph = {
+            0: [(1, 1), (2, 3)],
+            1: [(0, 1), (2, 2)],
+            2: [(0, 3), (1, 2)]
+        }
+
+        expected = [(0, 1, 1), (1, 2, 2)]
+        actual = spanning_tree(graph)
+
+        # Normalize edges: sort vertices within each tuple, then sort the list of edges
+        actual_normalized = sorted([tuple(sorted((u, v))) + (w,) for u, v, w in actual])
+        self.assertEqual(expected, actual_normalized)
+
+    def test_prims_empty(self):
+        expected = []
+        actual = spanning_tree({})
+        self.assertEqual(expected, actual)
+
+    def test_network_flow(self):
+        # Graph: 0 -> 1 (cap 10), 0 -> 2 (cap 5), 1 -> 2 (cap 15)
+        graph = {
+            0: [(1, 10), (2, 5)],
+            1: [(2, 15)],
+            2: []
+        }
+        # Expected max flow from 0 to 2 is 15
+        expected = 15
+        actual = network_flow(graph, 0, 2)
+        self.assertEqual(expected, actual)
+
+    def test_min_cut_simple_bottleneck(self):
+        # A simple path: 0 -> 1 -> 2
+        # Max flow is 5, cut should be the edge (1, 2) or (0, 1)
+        graph = {
+            0: [(1, 5)],
+            1: [(2, 5)],
+            2: []
+        }
+
+        cut = min_cut(0, 2, graph)
+        self.assertEqual([(0, 1)], cut)
+
+    def test_min_cut_diamond_graph(self):
+        # 0 -> 1 (cap 10), 0 -> 2 (cap 5)
+        # 1 -> 3 (cap 5), 2 -> 3 (cap 10)
+        # Source 0, Sink 3
+        graph = {
+            0: [(1, 10), (2, 5)],
+            1: [(3, 5)],
+            2: [(3, 10)],
+            3: []
+        }
+        cut = min_cut(0, 3, graph)
+        capacity = sum(
+            cap
+            for u, neighbors in graph.items()
+            for v, cap in neighbors
+            if (u, v) in cut
+        )
+        self.assertEqual(capacity, 10)
+
+    def test_min_cut_disconnected_graph(self):
+        # No path exists
+        graph = {
+            0: [(1, 10)],
+            2: [(3, 10)]
+        }
+        cut = min_cut(0, 3, graph)
+        # No edges should be returned because no flow can pass
+        self.assertEqual(cut, [])
+
 
 if __name__ == '__main__':
     unittest.main()

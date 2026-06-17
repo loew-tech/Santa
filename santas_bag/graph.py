@@ -1,7 +1,8 @@
+import heapq
 from collections import deque, defaultdict
-from typing import Iterable, Dict, Any, List, Tuple
+from typing import Iterable, Dict, Any, List, Tuple, Set
 
-from santas_bag.search import search
+from santas_bag.search import search, bfs
 
 
 def adjacency_matrix_to_dict(
@@ -54,7 +55,7 @@ def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
     """
     Take a graph and reverse the edges
 
-    :param graph: The graph represented as dictionary mapping node -> list of neighbors
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
 
     :return: Dictionary mapping node -> list of neighbors
     """
@@ -108,3 +109,221 @@ def topological_sort(nodes: Iterable[Any],
     search(q, graph, q.popleft, push, lambda *args: False, get_neighbors)
 
     return sorted_order
+
+def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
+    """
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+
+    :return: List of Sets of nodes where each set is a component
+    """
+    unvisited = set(graph.keys())
+    for neighbors in graph.values():
+        for n in neighbors:
+            v = n[0] if isinstance(n, tuple) else n
+            unvisited.add(v)
+
+    def get_neighbors(node, graph_, *args, **kwargs):
+        for n_ in graph_.get(node, []):
+            v_ = n_[0] if isinstance(n_, tuple) else n_
+            if v_ in unvisited:
+                yield v_
+
+    components = []
+    while unvisited:
+        start_node = unvisited.pop()
+        component = {start_node}
+
+        def on_visit(node, _, *args, **kwargs):
+            if node in unvisited:
+                unvisited.remove(node)
+                component.add(node)
+            return False
+
+        bfs(start_node, graph, on_visit, get_neighbors)
+        components.append(component)
+
+    return components
+
+
+def spanning_tree(graph: Dict[Any, List[Tuple[Any, int]]]) -> List[Tuple[Any, Any, int]]:
+    """
+    Computes the Minimum Spanning Tree using Prim's algorithm.
+
+    :param graph: Dict mapping node -> list of (neighbor, weight)
+
+    :return: List of edges (u, v, weight) forming the MST
+    """
+    if not graph:
+        return []
+
+    # Start from an arbitrary node
+    start_node = next(iter(graph))
+    visited = {start_node}
+
+    # Priority queue stores (weight, u, v) - ordered by weight
+    edges = [
+        (weight, start_node, neighbor)
+        for neighbor, weight in graph[start_node]
+    ]
+    heapq.heapify(edges)
+    mst_edges = []
+    while edges:
+        weight, u, v = heapq.heappop(edges)
+        if v not in visited:
+            visited.add(v)
+            mst_edges.append((u, v, weight))
+
+            # Add all edges from the newly added node to the queue
+            for next_neighbor, next_weight in graph.get(v, []):
+                if next_neighbor not in visited:
+                    heapq.heappush(edges, (next_weight, v, next_neighbor))
+
+    return mst_edges
+
+
+def network_flow(graph: Dict[Any, List[Any]], source: Any, sink: Any) -> int:
+    """
+    Adapter function that transforms the standard graph representation
+    into the format required by Edmonds-Karp.
+
+    :param graph: Dict mapping node -> list of (neighbor, weight)
+    :param source: Source node
+    :param sink: Sink node
+
+    :return: int representing maximum flow
+    """
+    # 1. Transform: Dict[Any, List[Any]] -> Dict[Any, Dict[Any, int]]
+    # We create a mapping of node -> {neighbor: capacity}
+    adj_map = defaultdict(dict)
+    for u, neighbors in graph.items():
+        for neighbor in neighbors:
+            # Handle both list/tuple inputs like [v, capacity]
+            if isinstance(neighbor, (list, tuple)):
+                v, cap = neighbor
+                adj_map[u][v] = cap
+            else:
+                # Handle cases where capacity might be implicit (e.g., 1)
+                adj_map[u][neighbor] = 1
+
+    # 2. Call the core algorithm
+    return edmonds_karp( source, sink, adj_map)[0]
+
+
+def edmonds_karp(
+    source: Any,
+    sink: Any,
+    graph: Dict[Any, Dict[Any, int]],
+) -> Tuple[int, Dict[Any, Dict[Any, int]]]:
+    """
+    Edmonds Karp network flow algorithm.
+
+    :param source: Source node
+    :param sink: Sink node
+    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
+
+    :return: int representing maximum flow
+    """
+    residual = defaultdict(lambda: defaultdict(int))
+
+    # Build residual graph
+    for u, neighbors in graph.items():
+        for v, cap in neighbors.items():
+            residual[u][v] += cap
+
+            # Ensure reverse edge exists
+            _ = residual[v][u]
+
+    max_flow = 0
+
+    while True:
+        parent = {source: None}
+        queue = deque([source])
+
+        while queue and sink not in parent:
+            u = queue.popleft()
+
+            for v, cap in residual[u].items():
+                if cap > 0 and v not in parent:
+                    parent[v] = u
+                    queue.append(v)
+
+        if sink not in parent:
+            break
+
+        # Find bottleneck
+        path_flow = float("inf")
+        v = sink
+
+        while v != source:
+            u = parent[v]
+            path_flow = min(path_flow, residual[u][v])
+            v = u
+
+        # Update residual graph
+        v = sink
+
+        while v != source:
+            u = parent[v]
+
+            residual[u][v] -= path_flow
+            residual[v][u] += path_flow
+
+            v = u
+
+        max_flow += path_flow
+
+    return max_flow, residual
+
+
+
+def min_cut(
+    source: Any,
+    sink: Any,
+    graph: Dict[Any, List[Any]],
+) -> List[Tuple[Any, Any]]:
+    """
+    Return edges crossing a minimum s-t cut.
+
+    :param source: Source node
+    :param sink: Sink node
+    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
+
+    :return: List of edges (u, v) forming the min cut
+    """
+
+    # Normalize into adjacency map with capacities
+    adj_map = defaultdict(lambda: defaultdict(int))
+    for u, neighbors in graph.items():
+        for entry in neighbors:
+            v, cap = (
+                entry
+                if isinstance(entry, (tuple, list))
+                else (entry, 1)
+            )
+
+            # IMPORTANT: accumulate duplicate edges
+            adj_map[u][v] += cap
+    max_flow, residual = edmonds_karp(source, sink, adj_map)
+
+    # Find vertices reachable from source in residual graph
+    reachable = {source}
+    queue = deque([source])
+
+    while queue:
+        u = queue.popleft()
+
+        for v, cap in residual[u].items():
+            if cap > 0 and v not in reachable:
+                reachable.add(v)
+                queue.append(v)
+
+    # Every original edge from reachable -> non-reachable
+    # belongs to a minimum cut
+    cut_edges = []
+
+    for u in reachable:
+        for v, cap in adj_map[u].items():
+            if cap > 0 and v not in reachable:
+                cut_edges.append((u, v))
+
+    return cut_edges
