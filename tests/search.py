@@ -9,6 +9,16 @@ class TestSearchAlgorithms(unittest.TestCase):
         #                   \-> 4 -> 3
         self.graph = {0: [1, 4], 1: [2], 2: [3], 4: [3], 3: []}
 
+        # Coordinates for 3 "cities"
+        self.cities = [(0, 0), (0, 1), (1, 1)]
+
+        # Precomputed distances (e.g., from Floyd-Warshall)
+        self.dist_matrix = {
+            ((0, 0), (0, 1)): 10, ((0, 1), (0, 0)): 10,
+            ((0, 1), (1, 1)): 5, ((1, 1), (0, 1)): 5,
+            ((0, 0), (1, 1)): 20, ((1, 1), (0, 0)): 20
+        }
+
     @staticmethod
     def get_neighbors(node, search_space, *args, **kwargs):
         return search_space.get(node, [])
@@ -184,7 +194,7 @@ class TestSearchAlgorithms(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(steps, float('inf'))
 
-    def test_tsp_basic(self):
+    def test_tsp_s_star_basic(self):
         # Define a simple 3-city graph
         cities = ['A', 'B', 'C']
 
@@ -200,21 +210,74 @@ class TestSearchAlgorithms(unittest.TestCase):
 
         # Expected path: A -> B -> C (10+20 = 30) or A -> C -> B (15+20 = 35)
         # Optimal: 30
-        result_node, total_steps = solve_tsp(cities, dist_matrix)
+        result_node, total_steps = solve_tsp_a_star(cities, dist_matrix)
 
         self.assertEqual(total_steps, 30)
         self.assertEqual(result_node[0], 'C')  # Ended at C
 
-    def test_tsp_no_path(self):
+    def test_tsp_a_star_no_path(self):
         # Cities that cannot reach each other
         cities = ['A', 'B']
 
         def dist_matrix(c1, c2):
             return float('inf')
 
-        result_node, total_steps = solve_tsp(cities, dist_matrix)
+        result_node, total_steps = solve_tsp_a_star(cities, dist_matrix)
         self.assertEqual(total_steps, float('inf'))
         self.assertIsNone(result_node)
+
+    def test_solve_tsp_optimized(self):
+        # A -> B (10) + B -> C (5) = 15
+        result_node, total_steps = solve_tsp_optimized(self.cities, self.dist_matrix)
+        self.assertEqual(total_steps, 15)
+        # Check that all cities were visited (visited set length is 3)
+        self.assertEqual(len(result_node[1]), 3)
+
+    def test_solve_tsp(self):
+        # Using the same setup, but passing a weight function for solve_tsp
+        def dist_func(c1, c2):
+            return self.dist_matrix.get((c1, c2), float('inf'))
+
+        result_node, total_steps = solve_tsp(self.cities, dist_func)
+        self.assertEqual(total_steps, 15)
+
+    def test_tsp_no_path(self):
+        # Cities with no connections
+        cities = [(0, 0), (5, 5)]
+        dist_matrix = {}
+        result_node, total_steps = solve_tsp_optimized(cities, dist_matrix)
+        self.assertEqual(total_steps, float('inf'))
+        self.assertIsNone(result_node)
+
+    def test_floyd_warshall_basic(self):
+        nodes = ['A', 'B', 'C']
+        # Define distances where A -> B -> C is shorter than direct A -> C
+        distances = {
+            ('A', 'B'): 2, ('B', 'A'): 2,
+            ('B', 'C'): 3, ('C', 'B'): 3,
+            ('A', 'C'): 10, ('C', 'A'): 10
+        }
+
+        def get_weight(n1, n2):
+            if n1 == n2: return 0
+            return distances.get((n1, n2), float('inf'))
+
+        results = floyd_warshall(nodes, get_weight)
+
+        # A -> C should now be 5 (2 + 3)
+        self.assertEqual(results[('A', 'C')], 5)
+        self.assertEqual(results[('A', 'B')], 2)
+        self.assertEqual(results[('B', 'C')], 3)
+
+    def test_floyd_warshall_disconnected(self):
+        nodes = ['A', 'B', 'C']
+
+        # No paths exist
+        def get_weight(n1, n2):
+            return 0 if n1 == n2 else float('inf')
+
+        results = floyd_warshall(nodes, get_weight)
+        self.assertEqual(results[('A', 'C')], float('inf'))
 
 if __name__ == '__main__':
     unittest.main()

@@ -227,7 +227,7 @@ def a_star(
         search_space: Any,
         is_terminal: Callable[..., bool],
         get_neighbors: Callable[..., Iterable[Any]],
-        heuristic: Callable[[Any, Any], int],
+        heuristic: Callable[[Any, Any], int | float],
         get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs
@@ -295,49 +295,49 @@ def dijkstra(
     """
     return a_star(start, search_space, is_terminal, get_neighbors, lambda n, s: 0, *args, **kwargs)
 
-def solve_tsp(destinations: List[str], distance_func: Callable[[str, str], int]):
+def solve_tsp_a_star(destinations: List[Any], distance_func: Callable[[Any, Any], int | float]):
     """
     Solves TSP using A*.
-    State = (current_city, frozenset(visited_cities))
+    State = (current_destination, frozenset(visited_destination))
 
-    :param destinations: List of cities to visit.
-    :param distance_func: Function to calculate the distance between two cities.
+    :param destinations: List of destinations to visit.
+    :param distance_func: Function to calculate the distance between two destinations.
 
     :return: A tuple of (terminal_node, total_steps). Returns (None, inf) if no path
     """
-    start_city = destinations[0]
+    start_destination = destinations[0]
 
-    # 1. Terminal condition: Visited all cities and returned to start (or just visited all)
+    # 1. Terminal condition: Visited all destinations and returned to start (or just visited all)
     def is_terminal(state_node, _):
-        current_city, visited = state_node
+        current_destination, visited = state_node
         return len(visited) == len(destinations)
 
-    # 2. Neighbors: Move to any unvisited city
+    # 2. Neighbors: Move to any unvisited destination
     def get_neighbors(state_node, _):
-        current_city, visited = state_node
-        for next_city in destinations:
-            if next_city not in visited:
-                weight = distance_func(current_city, next_city)
+        current_destination, visited = state_node
+        for next_destination in destinations:
+            if next_destination not in visited:
+                weight = distance_func(current_destination, next_destination)
                 # Only yield if a valid path exists
                 if weight != float('inf'):
-                    yield (next_city, visited | {next_city}), weight
+                    yield (next_destination, visited | {next_destination}), weight
 
     # 3. Heuristic: A simple MST or Minimum Outgoing Edge heuristic
     # (Here we use 0, making it effectively Dijkstra's, but you can improve this)
     def heuristic(state_node, _):
-        current_city, visited = state_node
+        current_destination, visited = state_node
         unvisited = [d for d in destinations if d not in visited]
         if not unvisited:
             return 0
-        # Estimate: the shortest distance to any unvisited city
-        return min(distance_func(current_city, c) for c in unvisited)
+        # Estimate: the shortest distance to any unvisited destination
+        return min(distance_func(current_destination, c) for c in unvisited)
 
     # 4. State mapping: Used for the 'visited' set to prune cycles
     def get_state(state_node):
         return state_node  # (current, frozenset_visited) is already hashable
 
     # Initial state
-    start_state = (start_city, frozenset([start_city]))
+    start_state = (start_destination, frozenset([start_destination]))
 
     return a_star(
         start=start_state,
@@ -347,3 +347,50 @@ def solve_tsp(destinations: List[str], distance_func: Callable[[str, str], int])
         heuristic=heuristic,
         get_state=get_state
     )
+
+
+def solve_tsp_optimized(destinations: List[Tuple[int, int]],
+                        distance_matrix: Dict[Tuple[Tuple[int, int], Tuple[int, int]], float]):
+    """
+    Solves TSP using A* to find the shortest path in a weighted graph.
+
+    :param destinations: List of destinations to visit.
+    :param distance_matrix: dictionary mapping (start, end) to distance.
+
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path
+    """
+    def dist_func(c1, c2):
+        return distance_matrix.get((c1, c2), float('inf'))
+    return solve_tsp_a_star(destinations, dist_func)
+
+
+def solve_tsp(destinations: List[Any], distance_func: Callable[[Any, Any], int | float]):
+    """
+    Solves TSP using floyd-warshall algorithm to find dictionary (start, stop): shortest_distance and then use
+    that dictionary as distance_matrix for solve_tsp_optimized.
+
+    :param destinations: list of destinations to visit.
+    :param distance_func:
+    :return:
+    """
+    distances = floyd_warshall(destinations, distance_func)
+    return solve_tsp_optimized(destinations, distances)
+
+
+def floyd_warshall(nodes: List[Any],
+                   get_weight: Callable[[Any, Any], int | float]) -> Dict[Tuple[Any, Any], float]:
+    """
+    Computes all-pairs shortest paths using the Floyd-Warshall algorithm.
+
+    :param nodes: A list of all nodes in the graph.
+    :param get_weight: A function returning the direct weight between two nodes.
+
+    :return: A dictionary mapping (start, end) to shortest path distance.
+    """
+    dist = {(i, j): get_weight(i, j) for i in nodes for j in nodes}
+    for k in nodes:
+        for i in nodes:
+            for j in nodes:
+                if dist[(i, k)] + dist[(k, j)] < dist[(i, j)]:
+                    dist[(i, j)] = dist[(i, k)] + dist[(k, j)]
+    return dist
