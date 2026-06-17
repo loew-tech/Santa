@@ -227,7 +227,7 @@ def a_star(
         search_space: Any,
         is_terminal: Callable[..., bool],
         get_neighbors: Callable[..., Iterable[Any]],
-        heuristic: Callable[[Any, Any], int | float],
+        heuristic: Callable[[Any, Any], int | float | Any],
         get_state: Callable[[Any], Any] = lambda n: n,
         *args,
         **kwargs
@@ -295,7 +295,7 @@ def dijkstra(
     """
     return a_star(start, search_space, is_terminal, get_neighbors, lambda n, s: 0, *args, **kwargs)
 
-def solve_tsp_a_star(destinations: List[Any], distance_func: Callable[[Any, Any], int | float]):
+def solve_tsp_a_star(destinations: List[Any], distance_func: Callable[[Any, Any], int | float | Any]):
     """
     Solves TSP using A*.
     State = (current_destination, frozenset(visited_destination))
@@ -350,7 +350,7 @@ def solve_tsp_a_star(destinations: List[Any], distance_func: Callable[[Any, Any]
 
 
 def solve_tsp_optimized(destinations: List[Tuple[int, int]],
-                        distance_matrix: Dict[Tuple[Tuple[int, int], Tuple[int, int]], float]):
+                        distance_matrix: Dict[Tuple[Tuple[int, int], Tuple[int, int]], int | float | Any]):
     """
     Solves TSP using A* to find the shortest path in a weighted graph.
 
@@ -364,7 +364,7 @@ def solve_tsp_optimized(destinations: List[Tuple[int, int]],
     return solve_tsp_a_star(destinations, dist_func)
 
 
-def solve_tsp(destinations: List[Any], distance_func: Callable[[Any, Any], int | float]):
+def solve_tsp(destinations: List[Any], distance_func: Callable[[Any, Any], int | float | Any]):
     """
     Solves TSP using floyd-warshall algorithm to find dictionary (start, stop): shortest_distance and then use
     that dictionary as distance_matrix for solve_tsp_optimized.
@@ -378,7 +378,7 @@ def solve_tsp(destinations: List[Any], distance_func: Callable[[Any, Any], int |
 
 
 def floyd_warshall(nodes: List[Any],
-                   get_weight: Callable[[Any, Any], int | float]) -> Dict[Tuple[Any, Any], float]:
+                   get_weight: Callable[[Any, Any], int | float]) -> Dict[Tuple[Any, Any], int | float | Any]:
     """
     Computes all-pairs shortest paths using the Floyd-Warshall algorithm.
 
