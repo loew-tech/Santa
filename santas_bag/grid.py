@@ -282,7 +282,6 @@ def grid_bfs_from_value(
     return grid_bfs_from_point(y, x, goal, grid, impassable, cardinal_directions)
 
 
-# @TODO: known logical flaw in function
 def grid_dfs_from_point(
         start_y, start_x: int,
         goal: Any,

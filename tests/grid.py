@@ -137,8 +137,13 @@ class TestGridHelpers(unittest.TestCase):
 
     def test_grid_dfs_from_point(self):
         # DFS might take a longer path, but should still reach the goal
-        goal_pos, steps = grid_dfs_from_point(0, 0, 3, self.sample_grid, self.impassable)
-        self.assertEqual(3, self.search_grid[goal_pos[0]][goal_pos[1]])
+        goal_pos, steps = grid_dfs_from_point(0, 0, 3, self.search_grid, self.impassable)
+        self.assertEqual(self.search_grid[goal_pos[0]][goal_pos[1]], 3)
+
+    def test_grid_dfs_from_value(self):
+        # Starts at '2', which is (0,0)
+        goal_pos, steps = grid_dfs_from_value(2, 3, self.search_grid, self.impassable)
+        self.assertEqual(goal_pos, (2, 2))
 
     def test_no_path_found(self):
         grid_with_wall = [
