@@ -197,6 +197,7 @@ def area(loop: List[Tuple[int, int]]) -> int:
     and Pick's Theorem.
 
     :param loop: An ordered list of (y, x) coordinates forming the pipe loop.
+
     :return: The number of interior integer points.
     """
     # 1. Calculate the Area using the Shoelace Formula
@@ -247,8 +248,7 @@ def grid_bfs_from_point(
     :param grid: The 2D grid context.
     :param goal: Target value to terminate search
     :param impassable: Values that act as impassable walls.
-    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true else
-                                check all 8 directions.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true else check all 8 directions.
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
@@ -270,11 +270,10 @@ def grid_bfs_from_value(
     Perform a breadth-first search from first location of start value searching for goal.
 
     :param grid: The 2D grid context.
-    :param start: Value from which to start searching.
+    :param start: Value to search from first location of
     :param goal: Target value to terminate search.
     :param impassable: Values that act as impassable walls.
-    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true else
-                                check all 8 directions.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true else check all 8 directions.
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
@@ -297,8 +296,7 @@ def grid_dfs_from_point(
     :param grid: 2D grid context.
     :param impassable: Values that act as impassable walls.
     :param goal: Target value to terminate search.
-    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else
-                                check all 8 directions.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else check all 8 directions.
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
@@ -325,18 +323,78 @@ def grid_dfs_from_value(
     """
     Perform a depth-first search from first location of start value searching for goal
 
-    :param start: Start value to search from
+    :param start: Value to search from first location of
     :param grid: 2D grid context.
     :param impassable: Values that act as impassable walls.
     :param goal: Target value to terminate search.
-    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else
-                                check all 8 directions.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else check all 8 directions.
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
     y, x = find_all_in_grid(start, grid)[0]
 
     return grid_dfs_from_point(y, x, goal, grid, impassable, cardinal_directions)
+
+
+def grid_find_all_paths_from_point(
+        start_y: int, start_x: int,
+        goal: Any,
+        grid: List[List],
+        impassable: Container,
+        cardinal_directions=True
+) -> List[List[Tuple[int, int]]]:
+    """
+    Finds all paths from a starting point to a goal value in the grid.
+
+    :param start_y: Row index.
+    :param start_x: Column index.
+    :param goal: Target value to terminate search.
+    :param grid: 2D grid context.
+    :param impassable: Values that act as impassable walls.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else check all 8 directions.
+
+    :return: A list of paths, where each path is a list of (y, x) coordinates.
+    """
+    all_paths = []
+    nghbr_f = neighbors4 if cardinal_directions else neighbors8
+
+    def find_paths(current_node, current_path):
+        y, x = current_node
+
+        if grid[y][x] == goal:
+            all_paths.append(list(current_path))
+            return
+
+        for ny, nx in nghbr_f(y, x, grid):
+            if grid[ny][nx] not in impassable and (ny, nx) not in current_path:
+                current_path.append((ny, nx))
+                find_paths((ny, nx), current_path)
+                current_path.pop()  # Backtrack
+
+    find_paths((start_y, start_x), [(start_y, start_x)])
+    return all_paths
+
+
+def grid_find_all_paths_from_value(
+        start: Any,
+        goal: Any,
+        grid: List[List],
+        impassable: Container,
+        cardinal_directions=True
+) -> List[List[Tuple[int, int]]]:
+    """
+    Finds all paths from a starting point to a goal value in the grid.
+
+    :param start: Value to search from first location of
+    :param goal: Target value to terminate search.
+    :param grid: 2D grid context.
+    :param impassable: Values that act as impassable walls.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else check all 8 directions.
+
+    :return: A list of paths, where each path is a list of (y, x) coordinates.
+    """
+    y, x = find_all_in_grid(start, grid)[0]
+    return grid_find_all_paths_from_point(y, x, goal, grid, impassable, cardinal_directions)
 
 
 class Grid:
