@@ -22,6 +22,16 @@ class TestGraph(unittest.TestCase):
         expected = {0: [1, 2], 1: [], 2: []}
         self.assertEqual(adjacency_matrix_to_dict(matrix), expected)
 
+    def test_adjacency_matrix_to_dict_weighted(self):
+        # Node 0 connects to 1 (weight 5) and 2 (weight 10)
+        matrix = [
+            [0, 5, 10],
+            [0, 0, 0],
+            [0, 0, 0]
+        ]
+        expected = {0: [(1, 5), (2, 10)], 1: [], 2: []}
+        self.assertEqual(adjacency_matrix_to_dict(matrix, weighted=True), expected)
+
     def test_edge_list_dict_undirected(self):
         edges = [(0, 1), (1, 2)]
         # Expected: 0 connects to 1, 1 connects to 0 and 2, 2 connects to 1
@@ -36,6 +46,27 @@ class TestGraph(unittest.TestCase):
         edges = [(0, 1), (1, 2)]
         expected = {0: [1], 1: [2]}
         self.assertEqual(edge_list_dict(edges, undirected=False), expected)
+
+    def test_edge_list_dict_weighted_undirected(self):
+        # Weighted edges: (u, v, weight)
+        edges = [(0, 1, 5), (1, 2, 10)]
+        expected = {
+            0: [(1, 5)],
+            1: [(0, 5), (2, 10)],
+            2: [(1, 10)]
+        }
+        result = edge_list_dict(edges, undirected=True)
+        self.assertEqual(result, expected)
+
+    def test_edge_list_dict_weighted_directed(self):
+        # Weighted edges: (u, v, weight)
+        edges = [(0, 1, 5), (1, 2, 10)]
+        expected = {
+            0: [(1, 5)],
+            1: [(2, 10)]
+        }
+        result = edge_list_dict(edges, undirected=False)
+        self.assertEqual(result, expected)
 
     def test_empty_graph_transforms(self):
         self.assertEqual(adjacency_matrix_to_dict([]), {})

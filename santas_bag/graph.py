@@ -4,10 +4,14 @@ from typing import Iterable, Dict, Any, List, Tuple
 from santas_bag.search import search
 
 
-def adjacency_matrix_to_dict(adjacency_lists: List[List]) -> Dict[int, List[int]]:
+def adjacency_matrix_to_dict(
+        adjacency_lists: List[List],
+        weighted=False
+) -> Dict[int, List[int]]:
     """
     Transform a list of adjacency matrix into a graph dictionary mapping node -> neighbors.
-    :param adjacency_lists: list of adjacency
+    :param weighted: Bool flag if graph is weighted or not. Default is False
+    :param adjacency_lists: List of adjacency
 
     :return: Dictionary mapping node -> list of neighbors
     """
@@ -16,7 +20,7 @@ def adjacency_matrix_to_dict(adjacency_lists: List[List]) -> Dict[int, List[int]
         neighbors = []
         for x, val in enumerate(adjacency_list):
             if val:
-                neighbors.append(x)
+                neighbors.append(x if not weighted else (x, val))
         graph[y] = neighbors
     return graph
 
@@ -24,14 +28,22 @@ def adjacency_matrix_to_dict(adjacency_lists: List[List]) -> Dict[int, List[int]
 def edge_list_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List[Any]]:
     """
     Transform a list of edges into a graph dictionary mapping node -> neighbors.
+    Supports unweighted graphs and weighted graphs in form (vertex1, vertex2, weight).
+
     :param edge_list: List of tuples of (node1, node2) where nodes are connected
     :param undirected: Bool for if graph is undirected or not. Default is True
-    :param adjacency_lists: list of adjacency
 
     :return: Dictionary mapping node -> list of neighbors
     """
     graph = defaultdict(list)
-    for u, v in edge_list:
+    for u, v, *wght in edge_list:
+        if wght:
+            w = wght[0]
+            graph[u].append((v, w))
+            if undirected:
+                graph[v].append((u, w))
+            continue
+
         graph[u].append(v)
         if undirected:
             graph[v].append(u)
@@ -39,11 +51,14 @@ def edge_list_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List[An
 
 
 def topological_sort(nodes: Iterable[Any],
-                     graph: Dict[Any, List[Any]]):
+                     graph: Dict[Any, List[Any]]) -> List[Any]:
     """
     Kahn's Algorithm implementation using the search engine.
-    :param nodes: the nodes in the graph.
+
+    :param nodes: The nodes in the graph.
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+
+    :return: List of nodes in topological order
     """
     in_degrees = {n: 0 for n in nodes}
     for u in graph:
