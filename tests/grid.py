@@ -52,6 +52,75 @@ class TestGridHelpers(unittest.TestCase):
         self.assertEqual(grid_to_dict(empty), {})
         self.assertEqual(transpose_grid(empty), [])
 
+    def test_taxi_distance(self):
+        self.assertEqual(taxi_distance(0, 0, 3, 4), 7)
+        self.assertEqual(taxi_distance(1, 1, 1, 1), 0)
+
+    def test_rotate_clockwise(self):
+        expected = [[4, 1], [5, 2], [6, 3]]
+        self.assertEqual(rotate_clockwise(self.sample_grid), expected)
+
+    def test_flip_horizontal(self):
+        expected = [[3, 2, 1], [6, 5, 4]]
+        self.assertEqual(flip_horizontal(self.sample_grid), expected)
+
+    def test_find_all_in_grid(self):
+        grid = [['A', 'B'], ['A', 'C']]
+        self.assertEqual(find_all_in_grid(grid, 'A'), [(0, 0), (1, 0)])
+        self.assertEqual(find_all_in_grid(grid, 'Z'), [])
+
+    def test_is_enclosed(self):
+        # A proper closed loop: (1,1) is trapped inside
+        grid = [
+            ['|', '|', '|'],
+            ['|', '.', '|'],
+            ['|', '|', '|']
+        ]
+        # perimeter is now a complete box
+        perimeter = {
+            (0, 0), (0, 1), (0, 2),
+            (1, 0), (1, 2),
+            (2, 0), (2, 1), (2, 2)
+        }
+
+        # (1, 1) is inside
+        self.assertTrue(is_enclosed(1, 1, grid, perimeter))
+
+        # (0, 0) is ON the perimeter, so it returns False per your function's
+        # first line: if (y, x) in perimeter: return False
+        self.assertFalse(is_enclosed(0, 0, grid, perimeter))
+
+    def test_get_is_enclosed(self):
+        # A single pipe segment is not an enclosure.
+        # To be "enclosed", the ray must be able to escape to the outside.
+        grid = [
+            ['.', '|', '.', '|', '.']
+        ]
+        # Here, index 2 is enclosed by walls at 1 and 3
+        perimeter = {(0, 1), (0, 3)}
+        enclosed_check = get_is_enclosed(grid, perimeter)
+
+        # (0, 0) is outside: crosses 0 walls (Even) -> False
+        self.assertFalse(enclosed_check(0, 0))
+
+        # (0, 2) is inside: crosses 1 wall (Odd) -> True
+        self.assertTrue(enclosed_check(0, 2))
+
+        # (0, 4) is outside: crosses 2 walls (Even) -> False
+        self.assertFalse(enclosed_check(0, 4)) # Outside
+
+    def test_area_picks_theorem(self):
+        # A 3x3 square loop has 8 boundary points
+        # The points are (0,0), (0,1), (0,2), (1,2), (2,2), (2,1), (2,0), (1,0)
+        loop = [(0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 1), (2, 0), (1, 0)]
+        # I = Area - (B/2) + 1 => I = 4 - (8/2) + 1 = 1
+        self.assertEqual(area(loop), 1)
+
+    def test_grid_class(self):
+        g = Grid(self.sample_grid)
+        self.assertEqual(g[(1, 1)], 5)
+        self.assertTrue(g.is_inbounds(1, 2))
+        self.assertFalse(g.is_inbounds(5, 5))
 
 if __name__ == '__main__':
     unittest.main()
