@@ -127,6 +127,19 @@ class TestGraph(unittest.TestCase):
         result = topological_sort([0], graph)
         self.assertEqual(result, [0])
 
+    def test_get_components(self):
+        # Two separate clusters: (0, 1) and (2, 3)
+        graph = {0: [1], 1: [0], 2: [3], 3: [2]}
+        actual = get_components(graph)
+        expected = [{0, 1}, {2, 3}]
+
+        # Sort for comparison since set order is arbitrary
+        actual_sorted = sorted([sorted(list(c)) for c in actual])
+        expected_sorted = sorted([sorted(list(c)) for c in expected])
+
+        self.assertEqual(actual_sorted, expected_sorted,
+                         msg=f"Expected {expected_sorted} but got {actual_sorted}")
+
 
 if __name__ == '__main__':
     unittest.main()

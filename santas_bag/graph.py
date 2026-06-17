@@ -1,7 +1,7 @@
 from collections import deque, defaultdict
-from typing import Iterable, Dict, Any, List, Tuple
+from typing import Iterable, Dict, Any, List, Tuple, Set
 
-from santas_bag.search import search
+from santas_bag.search import search, bfs
 
 
 def adjacency_matrix_to_dict(
@@ -108,3 +108,39 @@ def topological_sort(nodes: Iterable[Any],
     search(q, graph, q.popleft, push, lambda *args: False, get_neighbors)
 
     return sorted_order
+
+def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
+    """
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+
+    :return: List of Sets of nodes where each set is a component
+    """
+    def is_terminal(node, graph_, *args, **kwargs):
+        return False
+
+    unvisited = set(graph.keys())
+    for neighbors in graph.values():
+        for n in neighbors:
+            v = n[0] if isinstance(n, tuple) else n
+            unvisited.add(v)
+
+    components = []
+    while unvisited:
+        start_node = unvisited.pop()
+        component = {start_node}
+
+        # Simple BFS/DFS to find all reachable nodes
+        stack = [start_node]
+        while stack:
+            curr = stack.pop()
+            # Get neighbors from original graph (handling weighted/unweighted)
+            neighbors = graph.get(curr, [])
+            for n in neighbors:
+                v = n[0] if isinstance(n, tuple) else n
+                if v in unvisited:
+                    unvisited.remove(v)
+                    component.add(v)
+                    stack.append(v)
+        components.append(component)
+
+    return components
