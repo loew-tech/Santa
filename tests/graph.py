@@ -171,6 +171,47 @@ class TestGraph(unittest.TestCase):
         actual = network_flow(graph, 0, 2)
         self.assertEqual(expected, actual)
 
+    def test_min_cut_simple_bottleneck(self):
+        # A simple path: 0 -> 1 -> 2
+        # Max flow is 5, cut should be the edge (1, 2) or (0, 1)
+        graph = {
+            0: [(1, 5)],
+            1: [(2, 5)],
+            2: []
+        }
+
+        cut = min_cut(0, 2, graph)
+        self.assertEqual([(0, 1)], cut)
+
+    def test_min_cut_diamond_graph(self):
+        # 0 -> 1 (cap 10), 0 -> 2 (cap 5)
+        # 1 -> 3 (cap 5), 2 -> 3 (cap 10)
+        # Source 0, Sink 3
+        graph = {
+            0: [(1, 10), (2, 5)],
+            1: [(3, 5)],
+            2: [(3, 10)],
+            3: []
+        }
+        cut = min_cut(0, 3, graph)
+        capacity = sum(
+            cap
+            for u, neighbors in graph.items()
+            for v, cap in neighbors
+            if (u, v) in cut
+        )
+        self.assertEqual(capacity, 10)
+
+    def test_min_cut_disconnected_graph(self):
+        # No path exists
+        graph = {
+            0: [(1, 10)],
+            2: [(3, 10)]
+        }
+        cut = min_cut(0, 3, graph)
+        # No edges should be returned because no flow can pass
+        self.assertEqual(cut, [])
+
 
 if __name__ == '__main__':
     unittest.main()
