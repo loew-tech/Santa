@@ -10,6 +10,13 @@ class TestGridHelpers(unittest.TestCase):
             [4, 5, 6]
         ]
 
+        self.search_grid = [
+            [2, 0, 1],
+            [1, 0, 0],
+            [4, 1, 3]
+        ]
+        self.impassable = {1}
+
     def test_inbounds(self):
         self.assertTrue(inbounds(0, 0, self.sample_grid))
         self.assertTrue(inbounds(1, 2, self.sample_grid))
@@ -66,8 +73,8 @@ class TestGridHelpers(unittest.TestCase):
 
     def test_find_all_in_grid(self):
         grid = [['A', 'B'], ['A', 'C']]
-        self.assertEqual(find_all_in_grid(grid, 'A'), [(0, 0), (1, 0)])
-        self.assertEqual(find_all_in_grid(grid, 'Z'), [])
+        self.assertEqual(find_all_in_grid('A', grid), [(0, 0), (1, 0)])
+        self.assertEqual(find_all_in_grid('Z', grid), [])
 
     def test_is_enclosed(self):
         # A proper closed loop: (1,1) is trapped inside
@@ -115,6 +122,39 @@ class TestGridHelpers(unittest.TestCase):
         loop = [(0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 1), (2, 0), (1, 0)]
         # I = Area - (B/2) + 1 => I = 4 - (8/2) + 1 = 1
         self.assertEqual(area(loop), 1)
+
+    def test_grid_bfs_from_point(self):
+        # BFS should find the shortest path: (0,0) -> (0,1) -> (1,0) ... path is blocked
+        # Actually, let's verify finding goal (2,2)
+        goal_pos, steps = grid_bfs_from_point(0, 0, 3, self.search_grid, self.impassable)
+        self.assertEqual((2, 2), goal_pos)
+        self.assertLess(steps, 10)  # Simple check for path existence
+
+    def test_grid_bfs_from_value(self):
+        # Starts at '2', which is (0,0)
+        goal_pos, steps = grid_bfs_from_value(2, 3, self.search_grid, self.impassable)
+        self.assertEqual(goal_pos, (2, 2))
+
+    def test_grid_dfs_from_point(self):
+        # DFS might take a longer path, but should still reach the goal
+        goal_pos, steps = grid_dfs_from_point(0, 0, 3, self.search_grid, self.impassable)
+        self.assertEqual(self.search_grid[goal_pos[0]][goal_pos[1]], 3)
+
+    def test_grid_dfs_from_value(self):
+        # Starts at '2', which is (0,0)
+        goal_pos, steps = grid_dfs_from_value(2, 3, self.search_grid, self.impassable)
+        self.assertEqual(goal_pos, (2, 2))
+
+    def test_no_path_found(self):
+        grid_with_wall = [
+            [2, 1, 0],
+            [1, 1, 0],
+            [0, 0, 3]
+        ]
+        # Start at (0,0) is blocked by walls from (2,2)
+        goal_pos, steps = grid_bfs_from_point(0, 0, 3, grid_with_wall, {1})
+        self.assertIsNone(goal_pos)
+        self.assertEqual(steps, float('inf'))
 
     def test_grid_class(self):
         g = Grid(self.sample_grid)
