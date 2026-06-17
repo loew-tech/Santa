@@ -184,6 +184,37 @@ class TestSearchAlgorithms(unittest.TestCase):
         self.assertIsNone(result)
         self.assertEqual(steps, float('inf'))
 
+    def test_tsp_basic(self):
+        # Define a simple 3-city graph
+        cities = ['A', 'B', 'C']
+
+        # Distances: A-B=10, A-C=15, B-C=20
+        distances = {
+            ('A', 'B'): 10, ('B', 'A'): 10,
+            ('A', 'C'): 15, ('C', 'A'): 15,
+            ('B', 'C'): 20, ('C', 'B'): 20
+        }
+
+        def dist_matrix(c1, c2):
+            return distances.get((c1, c2), 0)
+
+        # Expected path: A -> B -> C (10+20 = 30) or A -> C -> B (15+20 = 35)
+        # Optimal: 30
+        result_node, total_steps = solve_tsp(cities, dist_matrix)
+
+        self.assertEqual(total_steps, 30)
+        self.assertEqual(result_node[0], 'C')  # Ended at C
+
+    def test_tsp_no_path(self):
+        # Cities that cannot reach each other
+        cities = ['A', 'B']
+
+        def dist_matrix(c1, c2):
+            return float('inf')
+
+        result_node, total_steps = solve_tsp(cities, dist_matrix)
+        self.assertEqual(total_steps, float('inf'))
+        self.assertIsNone(result_node)
 
 if __name__ == '__main__':
     unittest.main()

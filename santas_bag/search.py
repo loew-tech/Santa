@@ -1,6 +1,6 @@
 import heapq
 from collections import deque
-from typing import Any, Tuple, Callable, Iterable, Optional
+from typing import Any, Tuple, Callable, Iterable, Optional, List
 
 
 def search(
@@ -294,3 +294,56 @@ def dijkstra(
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     return a_star(start, search_space, is_terminal, get_neighbors, lambda n, s: 0, *args, **kwargs)
+
+def solve_tsp(destinations: List[str], distance_func: Callable[[str, str], int]):
+    """
+    Solves TSP using A*.
+    State = (current_city, frozenset(visited_cities))
+
+    :param destinations: List of cities to visit.
+    :param distance_func: Function to calculate the distance between two cities.
+
+    :return: A tuple of (terminal_node, total_steps). Returns (None, inf) if no path
+    """
+    start_city = destinations[0]
+
+    # 1. Terminal condition: Visited all cities and returned to start (or just visited all)
+    def is_terminal(state_node, _):
+        current_city, visited = state_node
+        return len(visited) == len(destinations)
+
+    # 2. Neighbors: Move to any unvisited city
+    def get_neighbors(state_node, _):
+        current_city, visited = state_node
+        for next_city in destinations:
+            if next_city not in visited:
+                weight = distance_func(current_city, next_city)
+                # Only yield if a valid path exists
+                if weight != float('inf'):
+                    yield (next_city, visited | {next_city}), weight
+
+    # 3. Heuristic: A simple MST or Minimum Outgoing Edge heuristic
+    # (Here we use 0, making it effectively Dijkstra's, but you can improve this)
+    def heuristic(state_node, _):
+        current_city, visited = state_node
+        unvisited = [d for d in destinations if d not in visited]
+        if not unvisited:
+            return 0
+        # Estimate: the shortest distance to any unvisited city
+        return min(distance_func(current_city, c) for c in unvisited)
+
+    # 4. State mapping: Used for the 'visited' set to prune cycles
+    def get_state(state_node):
+        return state_node  # (current, frozenset_visited) is already hashable
+
+    # Initial state
+    start_state = (start_city, frozenset([start_city]))
+
+    return a_star(
+        start=start_state,
+        search_space=None,
+        is_terminal=is_terminal,
+        get_neighbors=get_neighbors,
+        heuristic=heuristic,
+        get_state=get_state
+    )
