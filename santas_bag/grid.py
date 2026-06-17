@@ -1,7 +1,8 @@
 from collections.abc import Container
-from typing import Iterable, List, Callable, Dict, Tuple, Any, Set
+from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Generator
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
+from santas_bag.search import bfs, dfs
 
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
@@ -125,7 +126,7 @@ def flip_horizontal(grid: List[List]) -> List[List]:
     return [row[::-1] for row in grid]
 
 
-def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
+def find_all_in_grid(target: Any, grid: List[List]) -> List[Tuple[int, int]]:
     """
     Returns a list of all coordinates matching the target.
 
@@ -201,21 +202,142 @@ def area(loop: List[Tuple[int, int]]) -> int:
     # 1. Calculate the Area using the Shoelace Formula
     # Area = 0.5 * |sum(y_i * x_{i+1} - x_i * y_{i+1})|
     n = len(loop)
-    area = 0
+    area_ = 0
     for i in range(n):
         y1, x1 = loop[i]
         y2, x2 = loop[(i + 1) % n]
-        area += (y1 * x2) - (x1 * y2)
+        area_ += (y1 * x2) - (x1 * y2)
 
-    area = abs(area) / 2
+    area_ = abs(area_) / 2
 
     # 2. Use Pick's Theorem: Area = I + (B / 2) - 1
     # Rearranged to solve for Interior points (I): I = Area - (B / 2) + 1
     # B is the number of integer points on the boundary (length of the loop)
     boundary_points = len(loop)
-    interior_points = area - (boundary_points / 2) + 1
+    interior_points = area_ - (boundary_points / 2) + 1
 
     return int(interior_points)
+
+
+def _get_get_neighbors(
+        impassable: Container,
+        cardinal_directions: bool
+) -> Callable[..., Generator[tuple[int, int], Any, None]]:
+    nghbr_f = neighbors4 if cardinal_directions else neighbors8
+    def get_neighbors(node, search_space, *args, **kwargs):
+        y_, x_ = node
+        for ny, nx in nghbr_f(y_, x_, search_space):
+            if search_space[ny][nx] not in impassable:
+                yield ny, nx
+    return get_neighbors
+
+
+def grid_bfs_from_point(
+        start_y, start_x: int,
+        goal: Any,
+        grid: List[List],
+        impassable: Container,
+        cardinal_directions=True
+) -> tuple[Any | None, int | float]:
+    """
+    Perform a breadth-first search from starting point searching for goal.
+
+    :param start_y: Starting row index.
+    :param start_x: Starting column index.
+    :param grid: The 2D grid context.
+    :param goal: Target value to terminate search
+    :param impassable: Values that act as impassable walls.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true else
+                                check all 8 directions.
+
+    :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
+    """
+    def is_terminal(node, search_space, *args, **kwargs):
+        y_, x_ = node
+        return search_space[y_][x_] == goal
+
+    return bfs((start_y, start_x), grid, is_terminal, _get_get_neighbors(impassable, cardinal_directions))
+
+
+def grid_bfs_from_value(
+        start: Any,
+        goal: Any,
+        grid: List[List],
+        impassable: Container,
+        cardinal_directions=True
+) -> tuple[Any | None, int | float]:
+    """
+    Perform a breadth-first search from first location of start value searching for goal.
+
+    :param grid: The 2D grid context.
+    :param start: Value from which to start searching.
+    :param goal: Target value to terminate search.
+    :param impassable: Values that act as impassable walls.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true else
+                                check all 8 directions.
+
+    :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
+    """
+    y, x = find_all_in_grid(start, grid)[0]
+    return grid_bfs_from_point(y, x, goal, grid, impassable, cardinal_directions)
+
+
+# @TODO: known logical flaw in function
+def grid_dfs_from_point(
+        start_y, start_x: int,
+        goal: Any,
+        grid: List[List],
+        impassable: Container,
+        cardinal_directions=True
+) -> tuple[Any | None, int | float]:
+    """
+    Perform a depth-first search from starting point searching for goal.
+
+    :param start_y: Row index.
+    :param start_x: Column index.
+    :param grid: 2D grid context.
+    :param impassable: Values that act as impassable walls.
+    :param goal: Target value to terminate search.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else
+                                check all 8 directions.
+
+    :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
+    """
+    def is_terminal(node, search_space, *args, **kwargs):
+        y_, x_ = node
+        return search_space[y_][x_] == goal
+
+    nghbr_f = _get_get_neighbors(impassable, cardinal_directions)
+    def get_neighbors(node, search_space, *args, **kwargs):
+        neighbors = list(nghbr_f(node, search_space, *args, **kwargs))
+        for n in reversed(neighbors):
+            yield n
+
+    return dfs((start_y, start_x), grid, is_terminal, get_neighbors)
+
+
+def grid_dfs_from_value(
+        start: Any,
+        goal: Any,
+        grid: List[List],
+        impassable: Container,
+        cardinal_directions=True
+) -> tuple[Any | None, int | float]:
+    """
+    Perform a depth-first search from first location of start value searching for goal
+
+    :param start: Start value to search from
+    :param grid: 2D grid context.
+    :param impassable: Values that act as impassable walls.
+    :param goal: Target value to terminate search.
+    :param cardinal_directions: boolean flag. Use neighbors in cardinal directions if true (default) else
+                                check all 8 directions.
+
+    :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
+    """
+    y, x = find_all_in_grid(start, grid)[0]
+
+    return grid_dfs_from_point(y, x, goal, grid, impassable, cardinal_directions)
 
 
 class Grid:
