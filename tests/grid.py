@@ -15,6 +15,11 @@ class TestGridHelpers(unittest.TestCase):
             [1, 0, 0],
             [4, 1, 3]
         ]
+        self.all_paths_grid = [
+            [2, 0, 3],
+            [0, 1, 0],
+            [0, 0, 3]
+        ]
         self.impassable = {1}
 
     def test_inbounds(self):
@@ -155,6 +160,43 @@ class TestGridHelpers(unittest.TestCase):
         goal_pos, steps = grid_bfs_from_point(0, 0, 3, grid_with_wall, {1})
         self.assertIsNone(goal_pos)
         self.assertEqual(steps, float('inf'))
+
+    def test_grid_find_all_paths_from_point(self):
+        # Starting at (0,0), there are paths to both 3s:
+        # Path 1: (0,0) -> (0,1) -> (1,1) -> (2, 1) ->  [Goal]
+        # Path 2: (0,0) -> (1,0) -> (2,0) -> (2,1) -> (2,2) [Goal]
+        paths = grid_find_all_paths_from_point(0, 0, 3, self.all_paths_grid, self.impassable)
+
+        self.assertEqual(2, len(paths))
+
+        # Verify specific path endpoints
+        endpoints = [p[-1] for p in paths]
+        self.assertIn((0, 2), endpoints)
+        self.assertIn((2, 2), endpoints)
+
+    def test_grid_find_all_paths_from_value(self):
+        # Uses the '2' at (0,0) to start
+        paths = grid_find_all_paths_from_value(2, 3, self.all_paths_grid, self.impassable)
+        self.assertEqual(len(paths), 2)
+
+    def test_no_paths(self):
+        blocked_grid = [
+            [2, 1, 3],
+            [1, 1, 0],
+            [0, 0, 0]
+        ]
+        paths = grid_find_all_paths_from_point(0, 0, 3, blocked_grid, {1})
+        self.assertEqual(len(paths), 0)
+
+    def test_cycle_prevention(self):
+        # Ensure it doesn't get stuck in an infinite loop
+        grid = [
+            [2, 0],
+            [0, 3]
+        ]
+        paths = grid_find_all_paths_from_point(0, 0, 3, grid, set())
+        # Should finish execution successfully
+        self.assertTrue(len(paths) > 0)
 
     def test_grid_class(self):
         g = Grid(self.sample_grid)
