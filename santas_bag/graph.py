@@ -55,6 +55,7 @@ def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
     Take a graph and reverse the edges
 
     :param graph: The graph represented as dictionary mapping node -> list of neighbors
+
     :return: Dictionary mapping node -> list of neighbors
     """
     transposed = defaultdict(list)
