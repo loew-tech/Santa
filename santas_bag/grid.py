@@ -1,33 +1,232 @@
-from typing import Iterable, List, Callable, Dict, Tuple, Any
+from collections.abc import Container
+from typing import Iterable, List, Callable, Dict, Tuple, Any, Set
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
+    """
+    Prints a 2D grid to the console, joining elements by the specified separator.
+
+    :param grid: The 2D structure to print.
+    :param sep: String used to separate elements in a row.
+    :param end: String to append after the entire grid is printed.
+    """
     for row in grid:
         print(sep.join(str(i) for i in row))
     print(end=end)
 
 
 def get_inbounds(grid: List[List]) -> Callable[[int, int], bool]:
+    """
+    Returns a closure function to check if coordinates are within the grid bounds.
+
+    :param grid: The 2D grid context.
+
+    :return: A function that takes (y, x) and returns True if valid.
+    """
     return lambda y, x: inbounds(y, x, grid)
 
 
 def inbounds(y, x: int, grid: List[List]) -> bool:
+    """
+    Checks if given coordinates are within the bounds of the provided grid.
+
+    :param y: Row index.
+    :param x: Column index.
+    :param grid: The 2D grid to check against.
+
+    :return: True if coordinates are valid, False otherwise.
+    """
     return 0 <= y < len(grid) and 0 <= x < len(grid[y])
 
 
 def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Tuple[int, int], Any]:
+    """
+    Converts a 2D grid into a coordinate-to-value dictionary.
+
+    :param grid: The 2D structure.
+
+    :return: A dictionary where keys are (y, x) tuples and values are grid cells.
+    """
     return {(y, x): v for y, row in enumerate(grid) for x, v in enumerate(row)}
 
 
 def transpose_grid(grid: Iterable[Iterable]) -> Iterable:
+    """
+    Transposes a 2D grid (rows become columns and vice versa).
+
+    :param grid: The 2D structure to transpose.
+
+    :return: The transposed grid as a list of lists.
+    """
     return [list(row) for row in zip(*grid)]
 
 
 def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
+    """
+    Returns a list of valid (y, x) coordinates adjacent (cardinal) to the given point.
+
+    :param y: Row index.
+    :param x: Column index.
+    :param grid: The 2D grid context.
+
+    :return: A list of valid neighbor coordinates.
+    """
     return [(y + dy, x + dx) for dx, dy in CARDINAL_DIRECTIONS if inbounds(y + dy, x + dx, grid)]
 
 
 def neighbors8(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
+    """
+    Returns a list of valid (y, x) coordinates adjacent (including diagonals) to the point.
+
+    :param y: Row index.
+    :param x: Column index.
+    :param grid: The 2D grid context.
+
+    :return: A list of valid neighbor coordinates.
+    """
     return [(y + dy, x + dx) for dx, dy in ALL_DIRECTIONS if inbounds(y + dy, x + dx, grid)]
+
+
+def taxi_distance(y, x, y1, x1: int) -> int:
+    """
+    Calculates the Manhattan (Taxicab) distance between two points.
+
+    :param y: Starting row.
+    :param x: Starting column.
+    :param y1: Target row.
+    :param x1: Target column.
+
+    :return: The calculated Manhattan distance.
+    """
+    return abs(y1 - y) + abs(x1 - x)
+
+
+def rotate_clockwise(grid: List[List]) -> List[List]:
+    """
+    Rotates a grid 90 degrees clockwise.
+
+    :param grid: The 2D grid context.
+
+    :return: A rotated 2D grid.
+    """
+    return [list(row) for row in zip(*grid[::-1])]
+
+
+def flip_horizontal(grid: List[List]) -> List[List]:
+    """
+    Flips the grid horizontally.
+
+    :param grid: The 2D grid context.
+
+    :return: A rotated 2D grid.
+    """
+    return [row[::-1] for row in grid]
+
+
+def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
+    """
+    Returns a list of all coordinates matching the target.
+
+    :param grid: The 2D grid context.
+    :param target: The target row.
+
+    :return: A list of coordinates matching the target.
+    """
+    return [(y, x) for y, row in enumerate(grid)
+            for x, val in enumerate(row) if val == target]
+
+
+# @TODO: test against advent of code 2023 day 10
+def get_is_enclosed(
+        grid: List[List],
+        perimeter: Set[Tuple[int, int]],
+        vertical_barriers: Container[str] = ('|', 'L', 'J')
+    ) -> Callable[[int, int], bool]:
+    """
+    Returns a closure function to check if coordinates are within the grid bounds.
+
+    :param grid: The 2D grid context.
+    :param perimeter: The perimeter of the grid.
+    :param vertical_barriers: The vertical barriers of the grid.
+
+    :return: A function that takes (y, x) and returns True if location is enclosed within walls, False otherwise.
+    """
+    return lambda y, x: is_enclosed(y, x, grid, perimeter, vertical_barriers)
+
+
+def is_enclosed(
+        y: int,
+        x: int,
+        grid: List[List],
+        perimeter: Set[Tuple[int, int]],
+        vertical_barriers: Container[str] = ('|', 'L', 'J')
+) -> bool:
+    """
+    Checks if a point (y, x) is enclosed by the pipe loop using horizontal ray casting.
+
+    :param y: Row index.
+    :param x: Column index.
+    :param grid: The 2D grid structure.
+    :param perimeter: A set of (y, x) coordinates forming the pipe loop.
+    :param vertical_barriers: Characters that act as vertical walls when intersected.
+
+    :return: True if the point is enclosed, False otherwise.
+    """
+    if (y, x) in perimeter:
+        return False
+
+    cross_count = 0
+    # Cast a ray to the right
+    for x_test in range(x + 1, len(grid[0])):
+        if (y, x_test) in perimeter:
+            if grid[y][x_test] in vertical_barriers:
+                cross_count += 1
+
+    return cross_count % 2 == 1
+
+
+from typing import List, Tuple
+
+
+def area(loop: List[Tuple[int, int]]) -> int:
+    """
+    Calculates the number of interior tiles using the Shoelace Formula
+    and Pick's Theorem.
+
+    :param loop: An ordered list of (y, x) coordinates forming the pipe loop.
+    :return: The number of interior integer points.
+    """
+    # 1. Calculate the Area using the Shoelace Formula
+    # Area = 0.5 * |sum(y_i * x_{i+1} - x_i * y_{i+1})|
+    n = len(loop)
+    area = 0
+    for i in range(n):
+        y1, x1 = loop[i]
+        y2, x2 = loop[(i + 1) % n]
+        area += (y1 * x2) - (x1 * y2)
+
+    area = abs(area) / 2
+
+    # 2. Use Pick's Theorem: Area = I + (B / 2) - 1
+    # Rearranged to solve for Interior points (I): I = Area - (B / 2) + 1
+    # B is the number of integer points on the boundary (length of the loop)
+    boundary_points = len(loop)
+    interior_points = area - (boundary_points / 2) + 1
+
+    return int(interior_points)
+
+
+class Grid:
+    def __init__(self, grid: List[List]):
+        self.data = grid
+        self.height = len(grid)
+        self.width = len(grid[0])
+
+    def __getitem__(self, pos):
+        y, x = pos
+        return self.data[y][x]
+
+    def is_inbounds(self, y, x):
+        return inbounds(y, x, self.data)
