@@ -1,3 +1,4 @@
+import heapq
 from collections import deque, defaultdict
 from typing import Iterable, Dict, Any, List, Tuple, Set
 
@@ -124,23 +125,60 @@ def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
             v = n[0] if isinstance(n, tuple) else n
             unvisited.add(v)
 
+    def get_neighbors(node, graph_, *args, **kwargs):
+        for n_ in graph_.get(node, []):
+            v_ = n_[0] if isinstance(n_, tuple) else n_
+            if v_ in unvisited:
+                yield v_
+
     components = []
     while unvisited:
         start_node = unvisited.pop()
         component = {start_node}
 
-        # Simple BFS/DFS to find all reachable nodes
-        stack = [start_node]
-        while stack:
-            curr = stack.pop()
-            # Get neighbors from original graph (handling weighted/unweighted)
-            neighbors = graph.get(curr, [])
-            for n in neighbors:
-                v = n[0] if isinstance(n, tuple) else n
-                if v in unvisited:
-                    unvisited.remove(v)
-                    component.add(v)
-                    stack.append(v)
+        def on_visit(node, _, *args, **kwargs):
+            if node in unvisited:
+                unvisited.remove(node)
+                component.add(node)
+            return False
+
+        bfs(start_node, graph, on_visit, get_neighbors)
         components.append(component)
 
     return components
+
+
+def spanning_tree(graph: Dict[Any, List[Tuple[Any, int]]]) -> List[Tuple[Any, Any, int]]:
+    """
+    Computes the Minimum Spanning Tree using Prim's algorithm.
+
+    :param graph: Dict mapping node -> list of (neighbor, weight)
+
+    :return: List of edges (u, v, weight) forming the MST
+    """
+    if not graph:
+        return []
+
+    # Start from an arbitrary node
+    start_node = next(iter(graph))
+    visited = {start_node}
+
+    # Priority queue stores (weight, u, v) - ordered by weight
+    edges = [
+        (weight, start_node, neighbor)
+        for neighbor, weight in graph[start_node]
+    ]
+    heapq.heapify(edges)
+    mst_edges = []
+    while edges:
+        weight, u, v = heapq.heappop(edges)
+        if v not in visited:
+            visited.add(v)
+            mst_edges.append((u, v, weight))
+
+            # Add all edges from the newly added node to the queue
+            for next_neighbor, next_weight in graph.get(v, []):
+                if next_neighbor not in visited:
+                    heapq.heappush(edges, (next_weight, v, next_neighbor))
+
+    return mst_edges

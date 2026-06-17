@@ -137,8 +137,27 @@ class TestGraph(unittest.TestCase):
         actual_sorted = sorted([sorted(list(c)) for c in actual])
         expected_sorted = sorted([sorted(list(c)) for c in expected])
 
-        self.assertEqual(actual_sorted, expected_sorted,
-                         msg=f"Expected {expected_sorted} but got {actual_sorted}")
+        self.assertEqual(expected_sorted, actual_sorted)
+
+    def test_prims_algorithm(self):
+        # A triangle: 0-1 (1), 1-2 (2), 0-2 (3)
+        graph = {
+            0: [(1, 1), (2, 3)],
+            1: [(0, 1), (2, 2)],
+            2: [(0, 3), (1, 2)]
+        }
+
+        expected = [(0, 1, 1), (1, 2, 2)]
+        actual = spanning_tree(graph)
+
+        # Normalize edges: sort vertices within each tuple, then sort the list of edges
+        actual_normalized = sorted([tuple(sorted((u, v))) + (w,) for u, v, w in actual])
+        self.assertEqual(expected, actual_normalized)
+
+    def test_prims_empty(self):
+        expected = []
+        actual = spanning_tree({})
+        self.assertEqual(expected, actual)
 
 
 if __name__ == '__main__':
