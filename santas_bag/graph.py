@@ -50,6 +50,30 @@ def edge_list_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List[An
     return graph
 
 
+def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
+    """
+    Take a graph and reverse the edges
+
+    :param graph: The graph represented as dictionary mapping node -> list of neighbors
+    :return: Dictionary mapping node -> list of neighbors
+    """
+    transposed = defaultdict(list)
+    # Ensure all nodes from original graph are in the new dict
+    for node in graph:
+        if node not in transposed:
+            transposed[node] = []
+
+    for u, neighbors in graph.items():
+        for neighbor in neighbors:
+            # Handle both weighted and unweighted
+            if isinstance(neighbor, tuple):
+                v, w = neighbor
+                transposed[v].append((u, w))
+            else:
+                transposed[neighbor].append(u)
+    return dict(transposed)
+
+
 def topological_sort(nodes: Iterable[Any],
                      graph: Dict[Any, List[Any]]) -> List[Any]:
     """

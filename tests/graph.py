@@ -69,14 +69,40 @@ class TestGraph(unittest.TestCase):
         self.assertEqual(result, expected)
 
     def test_empty_graph_transforms(self):
-        self.assertEqual(adjacency_matrix_to_dict([]), {})
-        self.assertEqual(edge_list_dict([]), {})
+        self.assertEqual({}, adjacency_matrix_to_dict([]))
+        self.assertEqual({}, edge_list_dict([]))
+
+    def test_transpose_unweighted(self):
+        # 0 -> 1 -> 2
+        graph = {0: [1], 1: [2], 2: []}
+        expected = {0: [], 1: [0], 2: [1]}
+        self.assertEqual(expected, transpose_graph(graph))
+
+    def test_transpose_weighted(self):
+        # 0 --(5)--> 1 --(10)--> 2
+        graph = {0: [(1, 5)], 1: [(2, 10)], 2: []}
+        expected = {0: [], 1: [(0, 5)], 2: [(1, 10)]}
+        self.assertEqual(expected, transpose_graph(graph))
+
+    def test_transpose_complex(self):
+        # A cycle: 0 -> 1, 1 -> 0
+        graph = {0: [1], 1: [0]}
+        expected = {0: [1], 1: [0]}
+        self.assertEqual(expected, transpose_graph(graph))
+
+    def test_transpose_disconnected(self):
+        graph = {0: [1], 2: [3]}
+        expected = {0: [], 1: [0], 2: [], 3: [2]}
+        self.assertEqual(expected, transpose_graph(graph))
+
+    def test_transpose_empty(self):
+        self.assertEqual({}, transpose_graph({}))
 
     def test_basic_topological_sort(self):
         """Standard DAG test where order must be [0, 1, 2, 3] or [0, 2, 1, 3]."""
         result = topological_sort(self.nodes, self.graph)
         # Verify length
-        self.assertEqual(len(result), 4)
+        self.assertEqual(4, len(result))
 
         # Verify dependencies (0 must come before 1 and 2, 1 and 2 before 3)
         self.assertTrue(result.index(0) < result.index(1))
@@ -91,7 +117,7 @@ class TestGraph(unittest.TestCase):
 
         result = topological_sort(nodes, graph)
 
-        self.assertEqual(len(result), 4)
+        self.assertEqual(4, len(result))
         self.assertTrue(result.index(0) < result.index(1))
         self.assertTrue(result.index(2) < result.index(3))
 
