@@ -32,4 +32,6 @@ ALPHAS_TO_NUMS = {
 OPS_DICT = {'+': add, '*': mul, '-': sub, '/': truediv, '//': floordiv, '%': mod, '**': pow}
 
 REGEX_WORDS = r'\b[a-zA-Z]+\b'
-REGEX_DIGITS = r'-?\d+'
+REGEX_DIGITS = r'\d+'
+REGEX_INTS = r'-?\d+'
+REGEX_NUMBERS = r'-?\d+(?:\.\d+)?'
