@@ -25,5 +25,14 @@ class TestParse(unittest.TestCase):
         with self.assertRaises(ValueError):
             range_("Just one number 5")
 
+    def test_interval_exclusive(self):
+        r = interval_tuple("1 to 5")
+        self.assertEqual(1, r[0])
+        self.assertEqual(5, r[1])
+
+    def test_interval_error(self):
+        with self.assertRaises(ValueError):
+            interval_tuple("Just one number 5")
+
 if __name__ == '__main__':
     unittest.main()
