@@ -2,6 +2,7 @@ import re
 from typing import List, Tuple
 
 from santas_bag.constants import REGEX_INTS, REGEX_NUMBERS
+from santas_bag.types import Interval
 
 
 def ints(s: str) -> List[int]:
@@ -44,7 +45,7 @@ def range_(s: str, inclusive=True) -> range:
     return range(start, stop + inclusive)
 
 
-def interval_tuple(s: str) -> Tuple[int, int]:
+def interval_tuple(s: str) -> Interval:
     """
     Parses a string for two integers and returns a tuple (start, stop).
 
