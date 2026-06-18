@@ -23,11 +23,11 @@ class TestGrid(unittest.TestCase):
         self.impassable = {1}
 
     def test_inbounds(self):
-        self.assertTrue(inbounds(0, 0, self.sample_grid))
-        self.assertTrue(inbounds(1, 2, self.sample_grid))
-        self.assertFalse(inbounds(-1, 0, self.sample_grid))
-        self.assertFalse(inbounds(0, 3, self.sample_grid))
-        self.assertFalse(inbounds(2, 0, self.sample_grid))
+        self.assertTrue(inbounds(self.sample_grid, 0, 0))
+        self.assertTrue(inbounds(self.sample_grid, 1, 2))
+        self.assertFalse(inbounds(self.sample_grid, -1, 0))
+        self.assertFalse(inbounds(self.sample_grid, 0, 3))
+        self.assertFalse(inbounds(self.sample_grid, 2, 0))
 
     def test_get_inbounds(self):
         check = get_inbounds(self.sample_grid)
@@ -60,9 +60,9 @@ class TestGrid(unittest.TestCase):
 
     def test_empty_grid(self):
         empty = []
-        self.assertFalse(inbounds(0, 0, empty))
-        self.assertEqual(grid_to_dict(empty), {})
-        self.assertEqual(transpose_grid(empty), [])
+        self.assertFalse(inbounds(empty, 0, 0))
+        self.assertEqual({}, grid_to_dict(empty))
+        self.assertEqual([], transpose_grid(empty))
 
     def test_taxi_distance(self):
         self.assertEqual(taxi_distance(0, 0, 3, 4), 7)
@@ -78,8 +78,8 @@ class TestGrid(unittest.TestCase):
 
     def test_find_all_in_grid(self):
         grid = [['A', 'B'], ['A', 'C']]
-        self.assertEqual(find_all_in_grid('A', grid), [(0, 0), (1, 0)])
-        self.assertEqual(find_all_in_grid('Z', grid), [])
+        self.assertEqual([(0, 0), (1, 0)], find_all_in_grid(grid, 'A'))
+        self.assertEqual([], find_all_in_grid(grid, 'Z'))
 
     def test_is_enclosed(self):
         # A proper closed loop: (1,1) is trapped inside
@@ -96,11 +96,11 @@ class TestGrid(unittest.TestCase):
         }
 
         # (1, 1) is inside
-        self.assertTrue(is_enclosed(1, 1, grid, perimeter))
+        self.assertTrue(is_enclosed(grid, perimeter, 1, 1))
 
         # (0, 0) is ON the perimeter, so it returns False per your function's
         # first line: if (y, x) in perimeter: return False
-        self.assertFalse(is_enclosed(0, 0, grid, perimeter))
+        self.assertFalse(is_enclosed(grid, perimeter, 0, 0))
 
     def test_get_is_enclosed(self):
         # A single pipe segment is not an enclosure.
@@ -126,29 +126,29 @@ class TestGrid(unittest.TestCase):
         # The points are (0,0), (0,1), (0,2), (1,2), (2,2), (2,1), (2,0), (1,0)
         loop = [(0, 0), (0, 1), (0, 2), (1, 2), (2, 2), (2, 1), (2, 0), (1, 0)]
         # I = Area - (B/2) + 1 => I = 4 - (8/2) + 1 = 1
-        self.assertEqual(area(loop), 1)
+        self.assertEqual(1, area(loop))
 
     def test_grid_bfs_from_point(self):
         # BFS should find the shortest path: (0,0) -> (0,1) -> (1,0) ... path is blocked
         # Actually, let's verify finding goal (2,2)
-        goal_pos, steps = grid_bfs_from_point(0, 0, 3, self.search_grid, self.impassable)
+        goal_pos, steps = grid_bfs_from_point(self.search_grid, self.impassable, 0, 0, 3)
         self.assertEqual((2, 2), goal_pos)
-        self.assertLess(steps, 10)  # Simple check for path existence
+        self.assertEqual(4, steps)  # Simple check for path existence
 
     def test_grid_bfs_from_value(self):
         # Starts at '2', which is (0,0)
-        goal_pos, steps = grid_bfs_from_value(2, 3, self.search_grid, self.impassable)
-        self.assertEqual(goal_pos, (2, 2))
+        goal_pos, steps = grid_bfs_from_value(self.search_grid, self.impassable, 2, 3)
+        self.assertEqual((2, 2), goal_pos)
 
     def test_grid_dfs_from_point(self):
         # DFS might take a longer path, but should still reach the goal
-        goal_pos, steps = grid_dfs_from_point(0, 0, 3, self.search_grid, self.impassable)
-        self.assertEqual(self.search_grid[goal_pos[0]][goal_pos[1]], 3)
+        goal_pos, steps = grid_dfs_from_point(self.search_grid, self.impassable, 0, 0, 3)
+        self.assertEqual(3, self.search_grid[goal_pos[0]][goal_pos[1]])
 
     def test_grid_dfs_from_value(self):
         # Starts at '2', which is (0,0)
-        goal_pos, steps = grid_dfs_from_value(2, 3, self.search_grid, self.impassable)
-        self.assertEqual(goal_pos, (2, 2))
+        goal_pos, steps = grid_dfs_from_value(self.search_grid, self.impassable, 2, 3)
+        self.assertEqual((2, 2), goal_pos)
 
     def test_no_path_found(self):
         grid_with_wall = [
@@ -157,15 +157,15 @@ class TestGrid(unittest.TestCase):
             [0, 0, 3]
         ]
         # Start at (0,0) is blocked by walls from (2,2)
-        goal_pos, steps = grid_bfs_from_point(0, 0, 3, grid_with_wall, {1})
+        goal_pos, steps = grid_bfs_from_point(grid_with_wall, {1}, 0, 0, 3)
         self.assertIsNone(goal_pos)
-        self.assertEqual(steps, float('inf'))
+        self.assertEqual(float('inf'), steps)
 
     def test_grid_find_all_paths_from_point(self):
         # Starting at (0,0), there are paths to both 3s:
         # Path 1: (0,0) -> (0,1) -> (1,1) -> (2, 1) ->  [Goal]
         # Path 2: (0,0) -> (1,0) -> (2,0) -> (2,1) -> (2,2) [Goal]
-        paths = grid_find_all_paths_from_point(0, 0, 3, self.all_paths_grid, self.impassable)
+        paths = grid_find_all_paths_from_point(self.all_paths_grid, self.impassable, 0, 0, 3)
 
         self.assertEqual(2, len(paths))
 
@@ -176,7 +176,7 @@ class TestGrid(unittest.TestCase):
 
     def test_grid_find_all_paths_from_value(self):
         # Uses the '2' at (0,0) to start
-        paths = grid_find_all_paths_from_value(2, 3, self.all_paths_grid, self.impassable)
+        paths = grid_find_all_paths_from_value(self.all_paths_grid, self.impassable, 2, 3)
         self.assertEqual(len(paths), 2)
 
     def test_no_paths(self):
@@ -185,8 +185,8 @@ class TestGrid(unittest.TestCase):
             [1, 1, 0],
             [0, 0, 0]
         ]
-        paths = grid_find_all_paths_from_point(0, 0, 3, blocked_grid, {1})
-        self.assertEqual(len(paths), 0)
+        paths = grid_find_all_paths_from_point(blocked_grid, {1}, 0, 0, 3)
+        self.assertEqual(0, len(paths))
 
     def test_cycle_prevention(self):
         # Ensure it doesn't get stuck in an infinite loop
@@ -194,15 +194,17 @@ class TestGrid(unittest.TestCase):
             [2, 0],
             [0, 3]
         ]
-        paths = grid_find_all_paths_from_point(0, 0, 3, grid, set())
+        paths = grid_find_all_paths_from_point(grid, set(), 0, 0, 3)
         # Should finish execution successfully
         self.assertTrue(len(paths) > 0)
 
     def test_grid_class(self):
-        g = Grid(self.sample_grid)
+        g = Grid(self.sample_grid, impassable={6})
         self.assertEqual(g[(1, 1)], 5)
         self.assertTrue(g.is_inbounds(1, 2))
         self.assertFalse(g.is_inbounds(5, 5))
+        self.assertTrue(g.is_valid(1, 1))
+        self.assertFalse(g.is_valid(1, 2))
 
 if __name__ == '__main__':
     unittest.main()
