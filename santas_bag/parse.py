@@ -46,11 +46,11 @@ def range_(s: str, inclusive=True) -> range:
 
 def interval_tuple(s: str) -> Tuple[int, int]:
     """
-    Parses a string for two integers and returns a range object.
+    Parses a string for two integers and returns a tuple (start, stop).
 
     :param s: String containing at least two integers (start and stop).
 
-    :return: A python range object.
+    :return: A tuple (start, stop)
 
     :raises ValueError: If fewer than two integers are found in the string.
     """
