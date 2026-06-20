@@ -11,6 +11,7 @@ def adjacency_matrix_to_dict(
 ) -> Dict[int, List[int]]:
     """
     Transform a list of adjacency matrix into a graph dictionary mapping node -> neighbors.
+
     :param weighted: Bool flag if graph is weighted or not. Default is False
     :param adjacency_lists: List of adjacency
 
@@ -76,13 +77,13 @@ def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
     return dict(transposed)
 
 
-def topological_sort(nodes: Iterable[Any],
-                     graph: Dict[Any, List[Any]]) -> List[Any]:
+def topological_sort(graph: Dict[Any, List[Any]],
+                     nodes: Iterable[Any]) -> List[Any]:
     """
     Kahn's Algorithm implementation using the search engine.
 
-    :param nodes: The nodes in the graph.
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+    :param nodes: The nodes in the graph.
 
     :return: List of nodes in topological order
     """
@@ -112,6 +113,8 @@ def topological_sort(nodes: Iterable[Any],
 
 def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
     """
+    Returns a list of sets where each set is a connected component of the graph
+
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
 
     :return: List of Sets of nodes where each set is a component
@@ -206,20 +209,20 @@ def network_flow(graph: Dict[Any, List[Any]], source: Any, sink: Any) -> int:
                 adj_map[u][neighbor] = 1
 
     # 2. Call the core algorithm
-    return edmonds_karp( source, sink, adj_map)[0]
+    return edmonds_karp(adj_map, source, sink, )[0]
 
 
 def edmonds_karp(
-    source: Any,
-    sink: Any,
     graph: Dict[Any, Dict[Any, int]],
+    source: Any,
+    sink: Any
 ) -> Tuple[int, Dict[Any, Dict[Any, int]]]:
     """
     Edmonds Karp network flow algorithm.
 
+    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
     :param source: Source node
     :param sink: Sink node
-    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
 
     :return: int representing maximum flow
     """
@@ -276,17 +279,13 @@ def edmonds_karp(
 
 
 
-def min_cut(
-    source: Any,
-    sink: Any,
-    graph: Dict[Any, List[Any]],
-) -> List[Tuple[Any, Any]]:
+def min_cut(graph: Dict[Any, List[Any]], source, sink: Any) -> List[Tuple[Any, Any]]:
     """
     Return edges crossing a minimum s-t cut.
 
+    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
     :param source: Source node
     :param sink: Sink node
-    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
 
     :return: List of edges (u, v) forming the min cut
     """
@@ -303,7 +302,7 @@ def min_cut(
 
             # IMPORTANT: accumulate duplicate edges
             adj_map[u][v] += cap
-    max_flow, residual = edmonds_karp(source, sink, adj_map)
+    max_flow, residual = edmonds_karp(adj_map, source, sink)
 
     # Find vertices reachable from source in residual graph
     reachable = {source}

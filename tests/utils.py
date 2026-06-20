@@ -18,7 +18,7 @@ class TestUtils(unittest.TestCase):
 
         result = read_input(2026, 1, "test_session", delim='\n')
 
-        self.assertEqual(result, ["line1", "line2"])
+        self.assertEqual(["line1", "line2"], result)
         mock_fetch.assert_not_called()
 
     @patch('requests.get')
@@ -34,7 +34,7 @@ class TestUtils(unittest.TestCase):
             with patch('builtins.open', mock_open(read_data='session=secret')):
                 from santas_bag.utils import _fetch_official_input
                 result = _fetch_official_input(1, 2026, "123")
-                self.assertEqual(result, "data")
+                self.assertEqual("data", result)
 
     @patch('requests.get')
     def test_fetch_test_input_parsing(self, mock_get):
@@ -46,14 +46,14 @@ class TestUtils(unittest.TestCase):
 
         from santas_bag.utils  import _fetch_test_input
         result = _fetch_test_input(1, 2026)
-        self.assertEqual(result, "test_data")
+        self.assertEqual("test_data", result)
 
     def test_process_input_parsing(self):
         """Verify the parser callback is applied correctly."""
         from santas_bag.utils  import _process_input
         text = "1\n2\n3"
         result = _process_input(text, '\n', int)
-        self.assertEqual(result, [1, 2, 3])
+        self.assertEqual([1, 2, 3], result)
 
 
     @patch('time.perf_counter')
@@ -72,7 +72,7 @@ class TestUtils(unittest.TestCase):
             result = sample_func(10, y=5)
 
             # Verify result is passed through correctly
-            self.assertEqual(result, 15)
+            self.assertEqual(15, result)
 
             # Verify the print statement happened (the time calculation)
             # Duration should be 2.5 - 1.0 = 1.5
@@ -87,8 +87,8 @@ class TestUtils(unittest.TestCase):
             return args, kwargs
 
         args, kwargs = check_args(1, 2, key='value')
-        self.assertEqual(args, (1, 2))
-        self.assertEqual(kwargs, {'key': 'value'})
+        self.assertEqual((1, 2), args)
+        self.assertEqual({'key': 'value'}, kwargs)
 
 
 if __name__ == '__main__':

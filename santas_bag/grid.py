@@ -3,6 +3,7 @@ from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Ge
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
+from santas_bag.types import Point
 
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
@@ -26,16 +27,16 @@ def get_inbounds(grid: List[List]) -> Callable[[int, int], bool]:
 
     :return: A function that takes (y, x) and returns True if valid.
     """
-    return lambda y, x: inbounds(y, x, grid)
+    return lambda y, x: inbounds(grid, y, x)
 
 
-def inbounds(y, x: int, grid: List[List]) -> bool:
+def inbounds(grid: List[List], y, x: int) -> bool:
     """
     Checks if given coordinates are within the bounds of the provided grid.
 
+    :param grid: The 2D grid to check against.
     :param y: Row index.
     :param x: Column index.
-    :param grid: The 2D grid to check against.
 
     :return: True if coordinates are valid, False otherwise.
     """
@@ -74,10 +75,10 @@ def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
 
     :return: A list of valid neighbor coordinates.
     """
-    return [(y + dy, x + dx) for dx, dy in CARDINAL_DIRECTIONS if inbounds(y + dy, x + dx, grid)]
+    return [(y + dy, x + dx) for dx, dy in CARDINAL_DIRECTIONS if inbounds(grid, y + dy, x + dx)]
 
 
-def neighbors8(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
+def neighbors8(y, x: int, grid: List[List])-> List[Tuple[int, int]]:
     """
     Returns a list of valid (y, x) coordinates adjacent (including diagonals) to the point.
 
@@ -87,7 +88,7 @@ def neighbors8(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
 
     :return: A list of valid neighbor coordinates.
     """
-    return [(y + dy, x + dx) for dx, dy in ALL_DIRECTIONS if inbounds(y + dy, x + dx, grid)]
+    return [(y + dy, x + dx) for dx, dy in ALL_DIRECTIONS if inbounds(grid, y + dy, x + dx)]
 
 
 def taxi_distance(y, x, y1, x1: int) -> int:
@@ -126,7 +127,7 @@ def flip_horizontal(grid: List[List]) -> List[List]:
     return [row[::-1] for row in grid]
 
 
-def find_all_in_grid(target: Any, grid: List[List]) -> List[Tuple[int, int]]:
+def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
     """
     Returns a list of all coordinates matching the target.
 
@@ -154,23 +155,23 @@ def get_is_enclosed(
 
     :return: A function that takes (y, x) and returns True if location is enclosed within walls, False otherwise.
     """
-    return lambda y, x: is_enclosed(y, x, grid, perimeter, vertical_barriers)
+    return lambda y, x: is_enclosed(grid, perimeter, y, x, vertical_barriers)
 
 
 def is_enclosed(
-        y: int,
-        x: int,
         grid: List[List],
         perimeter: Set[Tuple[int, int]],
+        y: int,
+        x: int,
         vertical_barriers: Container[str] = ('|', 'L', 'J')
 ) -> bool:
     """
     Checks if a point (y, x) is enclosed by the pipe loop using horizontal ray casting.
 
-    :param y: Row index.
-    :param x: Column index.
     :param grid: The 2D grid structure.
     :param perimeter: A set of (y, x) coordinates forming the pipe loop.
+    :param y: Row index.
+    :param x: Column index.
     :param vertical_barriers: Characters that act as vertical walls when intersected.
 
     :return: True if the point is enclosed, False otherwise.
@@ -186,9 +187,6 @@ def is_enclosed(
                 cross_count += 1
 
     return cross_count % 2 == 1
-
-
-from typing import List, Tuple
 
 
 def area(loop: List[Tuple[int, int]]) -> int:
@@ -234,10 +232,10 @@ def _get_get_neighbors(
 
 
 def grid_bfs_from_point(
+        grid: List[List],
         start_y, start_x: int,
         goal: Any,
-        grid: List[List],
-        impassable: Container,
+        impassable: Container=(),
         cardinal_directions=True
 ) -> tuple[Any | None, int | float]:
     """
@@ -260,10 +258,10 @@ def grid_bfs_from_point(
 
 
 def grid_bfs_from_value(
+        grid: List[List],
         start: Any,
         goal: Any,
-        grid: List[List],
-        impassable: Container,
+        impassable: Container=(),
         cardinal_directions=True
 ) -> tuple[Any | None, int | float]:
     """
@@ -277,17 +275,15 @@ def grid_bfs_from_value(
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
-    y, x = find_all_in_grid(start, grid)[0]
-    return grid_bfs_from_point(y, x, goal, grid, impassable, cardinal_directions)
+    y, x = find_all_in_grid(grid, start)[0]
+    return grid_bfs_from_point(grid, y, x, goal, impassable, cardinal_directions)
 
 
-def grid_dfs_from_point(
-        start_y, start_x: int,
-        goal: Any,
-        grid: List[List],
-        impassable: Container,
-        cardinal_directions=True
-) -> tuple[Any | None, int | float]:
+def grid_dfs_from_point(grid: List[List],
+                        start_y, start_x: int,
+                        goal: Any,
+                        impassable: Container=(),
+                        cardinal_directions=True) -> tuple[Any | None, int | float]:
     """
     Perform a depth-first search from starting point searching for goal.
 
@@ -314,10 +310,10 @@ def grid_dfs_from_point(
 
 
 def grid_dfs_from_value(
+        grid: List[List],
         start: Any,
         goal: Any,
-        grid: List[List],
-        impassable: Container,
+        impassable: Container=(),
         cardinal_directions=True
 ) -> tuple[Any | None, int | float]:
     """
@@ -331,16 +327,16 @@ def grid_dfs_from_value(
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
-    y, x = find_all_in_grid(start, grid)[0]
+    y, x = find_all_in_grid(grid, start)[0]
 
-    return grid_dfs_from_point(y, x, goal, grid, impassable, cardinal_directions)
+    return grid_dfs_from_point(grid, y, x, goal, impassable, cardinal_directions)
 
 
 def grid_find_all_paths_from_point(
+        grid: List[List],
         start_y: int, start_x: int,
         goal: Any,
-        grid: List[List],
-        impassable: Container,
+        impassable: Container=(),
         cardinal_directions=True
 ) -> List[List[Tuple[int, int]]]:
     """
@@ -376,10 +372,10 @@ def grid_find_all_paths_from_point(
 
 
 def grid_find_all_paths_from_value(
+        grid: List[List],
         start: Any,
         goal: Any,
-        grid: List[List],
-        impassable: Container,
+        impassable: Container=(),
         cardinal_directions=True
 ) -> List[List[Tuple[int, int]]]:
     """
@@ -393,19 +389,23 @@ def grid_find_all_paths_from_value(
 
     :return: A list of paths, where each path is a list of (y, x) coordinates.
     """
-    y, x = find_all_in_grid(start, grid)[0]
-    return grid_find_all_paths_from_point(y, x, goal, grid, impassable, cardinal_directions)
+    y, x = find_all_in_grid(grid, start)[0]
+    return grid_find_all_paths_from_point(grid, y, x, goal, impassable, cardinal_directions)
 
 
 class Grid:
-    def __init__(self, grid: List[List]):
+    def __init__(self, grid: List[List], impassable: Optional[Container] = None):
         self.data = grid
         self.height = len(grid)
         self.width = len(grid[0])
+        self.impassable = impassable if impassable is not None else set()
 
-    def __getitem__(self, pos):
+    def __getitem__(self, pos: Point) -> Any:
         y, x = pos
         return self.data[y][x]
 
-    def is_inbounds(self, y, x):
-        return inbounds(y, x, self.data)
+    def is_inbounds(self, y, x: int) -> bool:
+        return inbounds(self.data, y, x)
+
+    def is_valid(self, y, x: int) -> bool:
+        return self.is_inbounds(y, x) and self.data[y][x] not in self.impassable

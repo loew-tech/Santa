@@ -30,7 +30,7 @@ class TestGraph(unittest.TestCase):
             [0, 0, 0]
         ]
         expected = {0: [(1, 5), (2, 10)], 1: [], 2: []}
-        self.assertEqual(adjacency_matrix_to_dict(matrix, weighted=True), expected)
+        self.assertEqual(expected, adjacency_matrix_to_dict(matrix, weighted=True))
 
     def test_edge_list_dict_undirected(self):
         edges = [(0, 1), (1, 2)]
@@ -40,12 +40,12 @@ class TestGraph(unittest.TestCase):
         # Sort values to ensure comparison works regardless of list order
         for node in result:
             result[node].sort()
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     def test_edge_list_dict_directed(self):
         edges = [(0, 1), (1, 2)]
         expected = {0: [1], 1: [2]}
-        self.assertEqual(edge_list_dict(edges, undirected=False), expected)
+        self.assertEqual(expected, edge_list_dict(edges, undirected=False))
 
     def test_edge_list_dict_weighted_undirected(self):
         # Weighted edges: (u, v, weight)
@@ -56,7 +56,7 @@ class TestGraph(unittest.TestCase):
             2: [(1, 10)]
         }
         result = edge_list_dict(edges, undirected=True)
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     def test_edge_list_dict_weighted_directed(self):
         # Weighted edges: (u, v, weight)
@@ -66,7 +66,7 @@ class TestGraph(unittest.TestCase):
             1: [(2, 10)]
         }
         result = edge_list_dict(edges, undirected=False)
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     def test_empty_graph_transforms(self):
         self.assertEqual({}, adjacency_matrix_to_dict([]))
@@ -100,7 +100,7 @@ class TestGraph(unittest.TestCase):
 
     def test_basic_topological_sort(self):
         """Standard DAG test where order must be [0, 1, 2, 3] or [0, 2, 1, 3]."""
-        result = topological_sort(self.nodes, self.graph)
+        result = topological_sort(self.graph, self.nodes)
         # Verify length
         self.assertEqual(4, len(result))
 
@@ -115,7 +115,7 @@ class TestGraph(unittest.TestCase):
         graph = {0: [1], 1: [], 2: [3], 3: []}
         nodes = [0, 1, 2, 3]
 
-        result = topological_sort(nodes, graph)
+        result = topological_sort(graph, nodes)
 
         self.assertEqual(4, len(result))
         self.assertTrue(result.index(0) < result.index(1))
@@ -124,8 +124,8 @@ class TestGraph(unittest.TestCase):
     def test_top_sort_single_node(self):
         """Edge case: Single node graph."""
         graph = {0: []}
-        result = topological_sort([0], graph)
-        self.assertEqual(result, [0])
+        result = topological_sort(graph, [0])
+        self.assertEqual([0], result)
 
     def test_get_components(self):
         # Two separate clusters: (0, 1) and (2, 3)
@@ -180,7 +180,7 @@ class TestGraph(unittest.TestCase):
             2: []
         }
 
-        cut = min_cut(0, 2, graph)
+        cut = min_cut(graph, 0, 2)
         self.assertEqual([(0, 1)], cut)
 
     def test_min_cut_diamond_graph(self):
@@ -193,14 +193,14 @@ class TestGraph(unittest.TestCase):
             2: [(3, 10)],
             3: []
         }
-        cut = min_cut(0, 3, graph)
+        cut = min_cut(graph, 0, 3)
         capacity = sum(
             cap
             for u, neighbors in graph.items()
             for v, cap in neighbors
             if (u, v) in cut
         )
-        self.assertEqual(capacity, 10)
+        self.assertEqual(10, capacity)
 
     def test_min_cut_disconnected_graph(self):
         # No path exists
@@ -208,9 +208,9 @@ class TestGraph(unittest.TestCase):
             0: [(1, 10)],
             2: [(3, 10)]
         }
-        cut = min_cut(0, 3, graph)
+        cut = min_cut(graph, 0, 3)
         # No edges should be returned because no flow can pass
-        self.assertEqual(cut, [])
+        self.assertEqual([], cut)
 
 
 if __name__ == '__main__':

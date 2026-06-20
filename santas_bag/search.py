@@ -383,7 +383,7 @@ def floyd_warshall(nodes: List[Any],
     :param nodes: A list of all nodes in the graph.
     :param get_weight: A function returning the direct weight between two nodes.
 
-    :return: A dictionary mapping (start, end) to shortest path distance.
+    :return: A dictionary mapping (start, end) of shortest path distance.
     """
     dist = {(i, j): get_weight(i, j) for i in nodes for j in nodes}
     for k in nodes:

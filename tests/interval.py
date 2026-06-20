@@ -52,15 +52,15 @@ class TestIntervals(unittest.TestCase):
 
     def test_find_interval_not_found(self):
         intervals = [(1, 5), (10, 15), (20, 25)]
-        self.assertEqual(None, find_interval(intervals, 7))
+        self.assertIsNone(find_interval(intervals, 7))
 
     def test_find_interval_empty(self):
-        self.assertEqual(None, find_interval([], 10))
+        self.assertIsNone(find_interval([], 10))
 
     def test_find_interval_single(self):
         intervals = [(5, 10)]
         self.assertEqual((5, 10), find_interval(intervals, 7))
-        self.assertEqual(None, find_interval(intervals, 1))
+        self.assertIsNone(find_interval(intervals, 1))
 
 
 if __name__ == '__main__':
