@@ -131,23 +131,23 @@ class TestGrid(unittest.TestCase):
     def test_grid_bfs_from_point(self):
         # BFS should find the shortest path: (0,0) -> (0,1) -> (1,0) ... path is blocked
         # Actually, let's verify finding goal (2,2)
-        goal_pos, steps = grid_bfs_from_point(self.search_grid, self.impassable, 0, 0, 3)
+        goal_pos, steps = grid_bfs_from_point(self.search_grid, 0, 0, 3, self.impassable)
         self.assertEqual((2, 2), goal_pos)
         self.assertEqual(4, steps)  # Simple check for path existence
 
     def test_grid_bfs_from_value(self):
         # Starts at '2', which is (0,0)
-        goal_pos, steps = grid_bfs_from_value(self.search_grid, self.impassable, 2, 3)
+        goal_pos, steps = grid_bfs_from_value(self.search_grid, 2, 3, self.impassable)
         self.assertEqual((2, 2), goal_pos)
 
     def test_grid_dfs_from_point(self):
         # DFS might take a longer path, but should still reach the goal
-        goal_pos, steps = grid_dfs_from_point(self.search_grid, self.impassable, 0, 0, 3)
+        goal_pos, steps = grid_dfs_from_point(self.search_grid, 0, 0, 3, self.impassable)
         self.assertEqual(3, self.search_grid[goal_pos[0]][goal_pos[1]])
 
     def test_grid_dfs_from_value(self):
         # Starts at '2', which is (0,0)
-        goal_pos, steps = grid_dfs_from_value(self.search_grid, self.impassable, 2, 3)
+        goal_pos, steps = grid_dfs_from_value(self.search_grid, 2, 3, self.impassable)
         self.assertEqual((2, 2), goal_pos)
 
     def test_no_path_found(self):
@@ -157,7 +157,7 @@ class TestGrid(unittest.TestCase):
             [0, 0, 3]
         ]
         # Start at (0,0) is blocked by walls from (2,2)
-        goal_pos, steps = grid_bfs_from_point(grid_with_wall, {1}, 0, 0, 3)
+        goal_pos, steps = grid_bfs_from_point(grid_with_wall, 0, 0, 3, {1})
         self.assertIsNone(goal_pos)
         self.assertEqual(float('inf'), steps)
 
@@ -165,7 +165,7 @@ class TestGrid(unittest.TestCase):
         # Starting at (0,0), there are paths to both 3s:
         # Path 1: (0,0) -> (0,1) -> (1,1) -> (2, 1) ->  [Goal]
         # Path 2: (0,0) -> (1,0) -> (2,0) -> (2,1) -> (2,2) [Goal]
-        paths = grid_find_all_paths_from_point(self.all_paths_grid, self.impassable, 0, 0, 3)
+        paths = grid_find_all_paths_from_point(self.all_paths_grid, 0, 0, 3, self.impassable)
 
         self.assertEqual(2, len(paths))
 
@@ -176,7 +176,7 @@ class TestGrid(unittest.TestCase):
 
     def test_grid_find_all_paths_from_value(self):
         # Uses the '2' at (0,0) to start
-        paths = grid_find_all_paths_from_value(self.all_paths_grid, self.impassable, 2, 3)
+        paths = grid_find_all_paths_from_value(self.all_paths_grid, 2, 3, self.impassable)
         self.assertEqual(len(paths), 2)
 
     def test_no_paths(self):
@@ -185,7 +185,7 @@ class TestGrid(unittest.TestCase):
             [1, 1, 0],
             [0, 0, 0]
         ]
-        paths = grid_find_all_paths_from_point(blocked_grid, {1}, 0, 0, 3)
+        paths = grid_find_all_paths_from_point(blocked_grid, 0, 0, 3, {1})
         self.assertEqual(0, len(paths))
 
     def test_cycle_prevention(self):
@@ -194,7 +194,7 @@ class TestGrid(unittest.TestCase):
             [2, 0],
             [0, 3]
         ]
-        paths = grid_find_all_paths_from_point(grid, set(), 0, 0, 3)
+        paths = grid_find_all_paths_from_point(grid, 0, 0, 3)
         # Should finish execution successfully
         self.assertTrue(len(paths) > 0)
 
@@ -205,6 +205,7 @@ class TestGrid(unittest.TestCase):
         self.assertFalse(g.is_inbounds(5, 5))
         self.assertTrue(g.is_valid(1, 1))
         self.assertFalse(g.is_valid(1, 2))
+
 
 if __name__ == '__main__':
     unittest.main()
