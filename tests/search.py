@@ -30,14 +30,14 @@ class TestSearch(unittest.TestCase):
     def test_bfs_shortest_path(self):
         is_terminal = self.make_is_terminal(3)
         result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors)
-        self.assertEqual(result, 3)
-        self.assertEqual(steps, 2)
+        self.assertEqual(3, result)
+        self.assertEqual(2, steps)
 
     def test_bfs_start_is_terminal(self):
         is_terminal = self.make_is_terminal(0)
         result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors)
-        self.assertEqual(result, 0)
-        self.assertEqual(steps, 0)
+        self.assertEqual(0, result)
+        self.assertEqual(0, steps)
 
     def test_greedy_best_first_search(self):
         """
@@ -63,34 +63,34 @@ class TestSearch(unittest.TestCase):
             heuristic=heuristic
         )
 
-        self.assertEqual(result, 3)
-        self.assertEqual(steps, 2)
+        self.assertEqual(3, result)
+        self.assertEqual(2, steps)
 
     def test_dfs_start_is_terminal(self):
         is_terminal = self.make_is_terminal(0)
         result, steps = dfs(0, self.graph, is_terminal, self.get_neighbors)
-        self.assertEqual(result, 0)
-        self.assertEqual(steps, 0)
+        self.assertEqual(0, result)
+        self.assertEqual(0, steps)
 
     def test_dfs_finds_path(self):
         is_terminal = self.make_is_terminal(3)
         result, steps = dfs(0, self.graph, is_terminal, self.get_neighbors)
-        self.assertEqual(result, 3)
-        self.assertEqual(steps, 2)
+        self.assertEqual(3, result)
+        self.assertEqual(2, steps)
 
     def test_no_path(self):
         is_terminal = self.make_is_terminal(99)
         result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors)
         self.assertIsNone(result)
-        self.assertEqual(steps, float('inf'))
+        self.assertEqual(float('inf'), steps)
 
     def test_a_star_shortest_path(self):
         is_terminal = self.make_is_terminal(3)
         # Manhattan-style heuristic: simple absolute difference distance estimate
         heuristic = lambda node, space: abs(3 - node)
         result, steps = a_star(0, self.graph, is_terminal, self.get_neighbors, heuristic)
-        self.assertEqual(result, 3)
-        self.assertEqual(steps, 2)
+        self.assertEqual(3, result)
+        self.assertEqual(2, steps)
 
     def test_a_star_start_is_terminal(self):
         # Start at 0, terminal is 0.
@@ -98,8 +98,8 @@ class TestSearch(unittest.TestCase):
         is_terminal = self.make_is_terminal(0)
         heuristic = lambda node, space: 0
         result, steps = a_star(0, self.graph, is_terminal, self.get_neighbors, heuristic)
-        self.assertEqual(result, 0)
-        self.assertEqual(steps, 0)
+        self.assertEqual(0, result)
+        self.assertEqual(0, steps)
 
     def test_get_state_pruning(self):
         """Verify that get_state correctly prunes visited nodes."""
@@ -111,8 +111,8 @@ class TestSearch(unittest.TestCase):
         # get_state = lambda n: n
 
         result, steps = bfs(0, graph, is_terminal, self.get_neighbors)
-        self.assertEqual(result, 3)
-        self.assertEqual(steps, 2)
+        self.assertEqual(3, result)
+        self.assertEqual(2, steps)
 
     def test_args_and_kwargs_passing(self):
         """Verify that *args and **kwargs pass transparently through the engine."""
@@ -127,7 +127,7 @@ class TestSearch(unittest.TestCase):
 
         # Pass reverse=True as a kwarg through BFS to the neighbor generator
         result, steps = bfs(0, self.graph, is_terminal, get_neighbors_with_modifier, reverse=True)
-        self.assertEqual(result, 3)
+        self.assertEqual(3, result)
 
     def test_dijkstra_weighted_path(self):
         """
@@ -152,8 +152,8 @@ class TestSearch(unittest.TestCase):
 
         result, steps = dijkstra(0, graph, is_terminal, get_weighted_neighbors)
 
-        self.assertEqual(result, 2)
-        self.assertEqual(steps, 2)  # 0->1 (1) + 1->2 (1) = 2
+        self.assertEqual(2, result)
+        self.assertEqual(2, steps)  # 0->1 (1) + 1->2 (1) = 2
 
     def test_bidirectional_simple_path(self):
         """
@@ -178,7 +178,7 @@ class TestSearch(unittest.TestCase):
         )
 
         # In a 4-step path, bidirectional will meet at a middle node
-        self.assertEqual(steps, 4)
+        self.assertEqual(4, steps)
 
     def test_bidirectional_no_path(self):
         """Verify returns None if no path exists."""
@@ -192,7 +192,7 @@ class TestSearch(unittest.TestCase):
             q_b=q_b, pop_b=q_b.popleft, push_b=q_b.append
         )
         self.assertIsNone(result)
-        self.assertEqual(steps, float('inf'))
+        self.assertEqual(float('inf'), steps)
 
     def test_tsp_s_star_basic(self):
         # Define a simple 3-city graph
@@ -212,8 +212,8 @@ class TestSearch(unittest.TestCase):
         # Optimal: 30
         result_node, total_steps = solve_tsp_a_star(cities, dist_matrix)
 
-        self.assertEqual(total_steps, 30)
-        self.assertEqual(result_node[0], 'C')  # Ended at C
+        self.assertEqual(30, total_steps)
+        self.assertEqual('C', result_node[0])  # Ended at C
 
     def test_tsp_a_star_no_path(self):
         # Cities that cannot reach each other
@@ -223,15 +223,15 @@ class TestSearch(unittest.TestCase):
             return float('inf')
 
         result_node, total_steps = solve_tsp_a_star(cities, dist_matrix)
-        self.assertEqual(total_steps, float('inf'))
+        self.assertEqual(float('inf'), total_steps)
         self.assertIsNone(result_node)
 
     def test_solve_tsp_optimized(self):
         # A -> B (10) + B -> C (5) = 15
         result_node, total_steps = solve_tsp_optimized(self.cities, self.dist_matrix)
-        self.assertEqual(total_steps, 15)
+        self.assertEqual(15, total_steps)
         # Check that all cities were visited (visited set length is 3)
-        self.assertEqual(len(result_node[1]), 3)
+        self.assertEqual(3, len(result_node[1]))
 
     def test_solve_tsp(self):
         # Using the same setup, but passing a weight function for solve_tsp
@@ -239,14 +239,14 @@ class TestSearch(unittest.TestCase):
             return self.dist_matrix.get((c1, c2), float('inf'))
 
         result_node, total_steps = solve_tsp(self.cities, dist_func)
-        self.assertEqual(total_steps, 15)
+        self.assertEqual(15, total_steps)
 
     def test_tsp_no_path(self):
         # Cities with no connections
         cities = [(0, 0), (5, 5)]
         dist_matrix = {}
         result_node, total_steps = solve_tsp_optimized(cities, dist_matrix)
-        self.assertEqual(total_steps, float('inf'))
+        self.assertEqual(float('inf'), total_steps)
         self.assertIsNone(result_node)
 
     def test_floyd_warshall_basic(self):
@@ -265,9 +265,9 @@ class TestSearch(unittest.TestCase):
         results = floyd_warshall(nodes, get_weight)
 
         # A -> C should now be 5 (2 + 3)
-        self.assertEqual(results[('A', 'C')], 5)
-        self.assertEqual(results[('A', 'B')], 2)
-        self.assertEqual(results[('B', 'C')], 3)
+        self.assertEqual(5, results[('A', 'C')])
+        self.assertEqual(2, results[('A', 'B')])
+        self.assertEqual(3, results[('B', 'C')])
 
     def test_floyd_warshall_disconnected(self):
         nodes = ['A', 'B', 'C']
@@ -277,7 +277,7 @@ class TestSearch(unittest.TestCase):
             return 0 if n1 == n2 else float('inf')
 
         results = floyd_warshall(nodes, get_weight)
-        self.assertEqual(results[('A', 'C')], float('inf'))
+        self.assertEqual(float('inf'), results[('A', 'C')])
 
 if __name__ == '__main__':
     unittest.main()

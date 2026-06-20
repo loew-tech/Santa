@@ -39,7 +39,7 @@ class TestGrid(unittest.TestCase):
             (0, 0): 1, (0, 1): 2, (0, 2): 3,
             (1, 0): 4, (1, 1): 5, (1, 2): 6
         }
-        self.assertEqual(grid_to_dict(self.sample_grid), expected)
+        self.assertEqual(expected, grid_to_dict(self.sample_grid))
 
     def test_transpose_grid(self):
         expected = [
@@ -50,13 +50,13 @@ class TestGrid(unittest.TestCase):
         self.assertEqual(transpose_grid(self.sample_grid), expected)
 
     def test_neighbors4(self):
-        self.assertEqual(sorted(neighbors4(0, 1, self.sample_grid)), sorted([(0, 0), (0, 2), (1, 1)]))
-        self.assertEqual(sorted(neighbors4(0, 0, self.sample_grid)), sorted([(0, 1), (1, 0)]))
+        self.assertEqual(sorted([(0, 0), (0, 2), (1, 1)]), sorted(neighbors4(0, 1, self.sample_grid)))
+        self.assertEqual(sorted([(0, 1), (1, 0)]), sorted(neighbors4(0, 0, self.sample_grid)))
 
     def test_neighbors8(self):
         expected = [(0, 0), (0, 2), (1, 0), (1, 1), (1, 2)]
-        self.assertEqual(sorted(neighbors8(0, 1, self.sample_grid)), sorted(expected))
-        self.assertEqual(sorted(neighbors8(0, 0, self.sample_grid)), sorted([(0, 1), (1, 0), (1, 1)]))
+        self.assertEqual(sorted(expected), sorted(neighbors8(0, 1, self.sample_grid)))
+        self.assertEqual(sorted([(0, 1), (1, 0), (1, 1)]), sorted(neighbors8(0, 0, self.sample_grid)))
 
     def test_empty_grid(self):
         empty = []
@@ -65,16 +65,16 @@ class TestGrid(unittest.TestCase):
         self.assertEqual([], transpose_grid(empty))
 
     def test_taxi_distance(self):
-        self.assertEqual(taxi_distance(0, 0, 3, 4), 7)
-        self.assertEqual(taxi_distance(1, 1, 1, 1), 0)
+        self.assertEqual(7, taxi_distance(0, 0, 3, 4))
+        self.assertEqual(0, taxi_distance(1, 1, 1, 1))
 
     def test_rotate_clockwise(self):
         expected = [[4, 1], [5, 2], [6, 3]]
-        self.assertEqual(rotate_clockwise(self.sample_grid), expected)
+        self.assertEqual(expected, rotate_clockwise(self.sample_grid))
 
     def test_flip_horizontal(self):
         expected = [[3, 2, 1], [6, 5, 4]]
-        self.assertEqual(flip_horizontal(self.sample_grid), expected)
+        self.assertEqual(expected, flip_horizontal(self.sample_grid))
 
     def test_find_all_in_grid(self):
         grid = [['A', 'B'], ['A', 'C']]
@@ -177,7 +177,7 @@ class TestGrid(unittest.TestCase):
     def test_grid_find_all_paths_from_value(self):
         # Uses the '2' at (0,0) to start
         paths = grid_find_all_paths_from_value(self.all_paths_grid, 2, 3, self.impassable)
-        self.assertEqual(len(paths), 2)
+        self.assertEqual(2, len(paths))
 
     def test_no_paths(self):
         blocked_grid = [
@@ -200,7 +200,7 @@ class TestGrid(unittest.TestCase):
 
     def test_grid_class(self):
         g = Grid(self.sample_grid, impassable={6})
-        self.assertEqual(g[(1, 1)], 5)
+        self.assertEqual(5, g[(1, 1)])
         self.assertTrue(g.is_inbounds(1, 2))
         self.assertFalse(g.is_inbounds(5, 5))
         self.assertTrue(g.is_valid(1, 1))

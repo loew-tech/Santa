@@ -30,7 +30,7 @@ class TestGraph(unittest.TestCase):
             [0, 0, 0]
         ]
         expected = {0: [(1, 5), (2, 10)], 1: [], 2: []}
-        self.assertEqual(adjacency_matrix_to_dict(matrix, weighted=True), expected)
+        self.assertEqual(expected, adjacency_matrix_to_dict(matrix, weighted=True))
 
     def test_edge_list_dict_undirected(self):
         edges = [(0, 1), (1, 2)]
@@ -40,12 +40,12 @@ class TestGraph(unittest.TestCase):
         # Sort values to ensure comparison works regardless of list order
         for node in result:
             result[node].sort()
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     def test_edge_list_dict_directed(self):
         edges = [(0, 1), (1, 2)]
         expected = {0: [1], 1: [2]}
-        self.assertEqual(edge_list_dict(edges, undirected=False), expected)
+        self.assertEqual(expected, edge_list_dict(edges, undirected=False))
 
     def test_edge_list_dict_weighted_undirected(self):
         # Weighted edges: (u, v, weight)
@@ -56,7 +56,7 @@ class TestGraph(unittest.TestCase):
             2: [(1, 10)]
         }
         result = edge_list_dict(edges, undirected=True)
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     def test_edge_list_dict_weighted_directed(self):
         # Weighted edges: (u, v, weight)
@@ -66,7 +66,7 @@ class TestGraph(unittest.TestCase):
             1: [(2, 10)]
         }
         result = edge_list_dict(edges, undirected=False)
-        self.assertEqual(result, expected)
+        self.assertEqual(expected, result)
 
     def test_empty_graph_transforms(self):
         self.assertEqual({}, adjacency_matrix_to_dict([]))
