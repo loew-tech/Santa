@@ -11,6 +11,7 @@ def adjacency_matrix_to_dict(
 ) -> Dict[int, List[int]]:
     """
     Transform a list of adjacency matrix into a graph dictionary mapping node -> neighbors.
+
     :param weighted: Bool flag if graph is weighted or not. Default is False
     :param adjacency_lists: List of adjacency
 
@@ -81,8 +82,8 @@ def topological_sort(graph: Dict[Any, List[Any]],
     """
     Kahn's Algorithm implementation using the search engine.
 
-    :param nodes: The nodes in the graph.
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+    :param nodes: The nodes in the graph.
 
     :return: List of nodes in topological order
     """
@@ -112,6 +113,8 @@ def topological_sort(graph: Dict[Any, List[Any]],
 
 def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
     """
+    Returns a list of sets where each set is a connected component of the graph
+
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
 
     :return: List of Sets of nodes where each set is a component
@@ -217,9 +220,9 @@ def edmonds_karp(
     """
     Edmonds Karp network flow algorithm.
 
+    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
     :param source: Source node
     :param sink: Sink node
-    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
 
     :return: int representing maximum flow
     """
@@ -280,9 +283,9 @@ def min_cut(graph: Dict[Any, List[Any]], source, sink: Any) -> List[Tuple[Any, A
     """
     Return edges crossing a minimum s-t cut.
 
+    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
     :param source: Source node
     :param sink: Sink node
-    :param graph: Dict mapping node -> Dict mapping neighbor -> weight
 
     :return: List of edges (u, v) forming the min cut
     """
