@@ -353,9 +353,9 @@ def solve_tsp_optimized(destinations: List[Tuple[int, int]],
     Solves TSP using A* to find the shortest path in a weighted graph.
 
     :param destinations: List of destinations to visit.
-    :param distance_matrix: dictionary mapping (start, end) to distance.
+    :param distance_matrix: Dictionary mapping (start, end) to distance.
 
-    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path
+    :return A tuple of (terminal_node, total_steps). Returns (None, inf) if no path
     """
     def dist_func(c1, c2):
         return distance_matrix.get((c1, c2), float('inf'))
@@ -369,7 +369,8 @@ def solve_tsp(destinations: List[Any], distance_func: Callable[[Any, Any], int |
 
     :param destinations: list of destinations to visit.
     :param distance_func:
-    :return:
+
+    :return: A tuple of (terminal_node, total_steps). Returns (None, inf) if no path
     """
     distances = floyd_warshall(destinations, distance_func)
     return solve_tsp_optimized(destinations, distances)
