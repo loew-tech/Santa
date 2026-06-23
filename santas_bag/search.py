@@ -34,6 +34,7 @@ def search(
     visited = set()
     while q:
         node, steps = pop()
+        # @TODO: should this come after get_state?
         if on_visit is not None:
             on_visit(node, steps, search_space)
 
