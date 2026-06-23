@@ -79,9 +79,19 @@ def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
 
 def get_in_degrees(graph: Dict[Any, List[Any]],
               nodes: Iterable[Any]) -> Dict[Any, int]:
+    """
+    Returns a dictionary mapping node id to in degree
+
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+    :param nodes: Node ids in the graph
+
+    :return: Dict node -> in degree
+    """
     in_degrees = {n: 0 for n in nodes}
     for u in graph:
         for v in graph[u]:
+            if isinstance(v, tuple):
+                v = v[0]
             in_degrees[v] = in_degrees.get(v, 0) + 1
     return in_degrees
 
