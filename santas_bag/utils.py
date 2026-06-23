@@ -20,7 +20,7 @@ def read_input(
         inputs_path: Path | None = None,
         tests_path: Path | None = None,
         delim: str | None = '\n',
-        parse: Callable[[List[str] | str], Any] | None = None,
+        parse: Callable[[List[str] | str], Any | List | str | None] | None = None,
         testing: bool = False
 ) -> List[Any] | str:
     """
@@ -103,7 +103,8 @@ def _fetch_test_input(year: int | str, day: int | str) -> str:
     return code_block.get_text()
 
 
-def _process_input(text: str, delim: str | None, parse: Callable[[List[str] | str], Any] | None) -> Any:
+def _process_input(text: str, delim: str | None,
+                   parse: Callable[[List[str] | str], Any | List[Any] | str | None] | None) -> Any:
     """
     Processes the raw input text based on the provided delimiter and parser.
 
