@@ -27,6 +27,26 @@ class TestSearch(unittest.TestCase):
     def make_is_terminal(target_node):
         return lambda node, search_space, *args, **kwargs: node == target_node
 
+    def test_on_visit_callback(self):
+        """Verify that on_visit is called for each unique node visited."""
+        visited_nodes = []
+
+        def track_visits(node, steps, space):
+            visited_nodes.append(node)
+
+        is_terminal = self.make_is_terminal(3)
+        # Using BFS on the graph: 0 -> 1 -> 2 -> 3
+        # Should visit 0, 1, 2, 3
+        result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors, on_visit=track_visits)
+
+        self.assertEqual(3, result)
+        # Check that we recorded visits for the path
+        self.assertIn(0, visited_nodes)
+        self.assertIn(1, visited_nodes)
+        self.assertIn(2, visited_nodes)
+        self.assertIn(3, visited_nodes)
+        self.assertEqual(5, len(visited_nodes))
+
     def test_bfs_shortest_path(self):
         is_terminal = self.make_is_terminal(3)
         result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors)
@@ -193,6 +213,28 @@ class TestSearch(unittest.TestCase):
         )
         self.assertIsNone(result)
         self.assertEqual(float('inf'), steps)
+
+    def test_on_visit_bidirectional(self):
+        """Verify that on_visit works with bidirectional search."""
+        visit_count = 0
+
+        def count_visits(node, steps, space):
+            nonlocal visit_count
+            visit_count += 1
+
+        graph = {0: [1], 1: [2], 2: []}
+        q_f, q_b = deque(), deque()
+
+        bidirectional_search(
+            start=0, goal=2, search_space=graph,
+            get_neighbors=self.get_neighbors,
+            q_f=q_f, pop_f=q_f.popleft, push_f=q_f.append,
+            q_b=q_b, pop_b=q_b.popleft, push_b=q_b.append,
+            on_visit=count_visits
+        )
+
+        # Should have visited nodes from both directions
+        self.assertGreater(visit_count, 0)
 
     def test_tsp_s_star_basic(self):
         # Define a simple 3-city graph
