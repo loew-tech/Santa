@@ -77,6 +77,15 @@ def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
     return dict(transposed)
 
 
+def get_in_degrees(graph: Dict[Any, List[Any]],
+              nodes: Iterable[Any]) -> Dict[Any, int]:
+    in_degrees = {n: 0 for n in nodes}
+    for u in graph:
+        for v in graph[u]:
+            in_degrees[v] = in_degrees.get(v, 0) + 1
+    return in_degrees
+
+
 def topological_sort(graph: Dict[Any, List[Any]],
                      nodes: Iterable[Any]) -> List[Any]:
     """
@@ -87,10 +96,7 @@ def topological_sort(graph: Dict[Any, List[Any]],
 
     :return: List of nodes in topological order
     """
-    in_degrees = {n: 0 for n in nodes}
-    for u in graph:
-        for v in graph[u]:
-            in_degrees[v] = in_degrees.get(v, 0) + 1
+    in_degrees = get_in_degrees(graph, nodes)
 
     initial_nodes = [n for n in nodes if in_degrees.get(n, 0) == 0]
     q = deque([(n, 0) for n in initial_nodes])

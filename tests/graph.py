@@ -98,6 +98,88 @@ class TestGraph(unittest.TestCase):
     def test_transpose_empty(self):
         self.assertEqual({}, transpose_graph({}))
 
+    def test_in_degree_empty_graph(self):
+        self.assertEqual({}, get_in_degrees({}, []))
+
+    def test_in_degree_single_node_no_edges(self):
+        graph = {"A": []}
+
+        expected = {"A": 0}
+
+        self.assertEqual(expected, get_in_degrees(graph, graph))
+
+    def test_in_degreesimple_dag(self):
+        graph = {
+            "A": ["B", "C"],
+            "B": ["C"],
+            "C": [],
+        }
+
+        expected = {
+            "A": 0,
+            "B": 1,
+            "C": 2,
+        }
+
+        self.assertEqual(expected, get_in_degrees(graph, graph))
+
+    def test_in_degree_disconnected_components(self):
+        graph = {
+            "A": ["B"],
+            "B": [],
+            "C": ["D"],
+            "D": [],
+        }
+
+        expected = {
+            "A": 0,
+            "B": 1,
+            "C": 0,
+            "D": 1,
+        }
+
+        self.assertEqual(expected, get_in_degrees(graph, graph))
+
+    def test_in_degree_self_loop(self):
+        graph = {
+            "A": ["A"],
+        }
+
+        expected = {
+            "A": 1,
+        }
+
+        self.assertEqual(expected, get_in_degrees(graph, graph))
+
+    def test_in_degree_multiple_incoming_edges(self):
+        graph = {
+            "A": ["D"],
+            "B": ["D"],
+            "C": ["D"],
+            "D": [],
+        }
+
+        expected = {
+            "A": 0,
+            "B": 0,
+            "C": 0,
+            "D": 3,
+        }
+
+        self.assertEqual(expected, get_in_degrees(graph, graph))
+
+    def test_in_degree_neighbor_not_in_nodes(self):
+        graph = {
+            "A": ["B"],
+        }
+
+        expected = {
+            "A": 0,
+            "B": 1,
+        }
+
+        self.assertEqual(expected, get_in_degrees(graph, ["A"]))
+
     def test_basic_topological_sort(self):
         """Standard DAG test where order must be [0, 1, 2, 3] or [0, 2, 1, 3]."""
         result = topological_sort(self.graph, self.nodes)
