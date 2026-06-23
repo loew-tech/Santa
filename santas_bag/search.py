@@ -36,6 +36,7 @@ def search(
         node, steps = pop()
         if on_visit is not None:
             on_visit(node, steps, search_space)
+
         # @TODO: should search_space and args/kwargs be passed to get state?
         state = get_state(node)
         if state in visited:
