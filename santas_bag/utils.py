@@ -3,7 +3,7 @@ import time
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Callable, List
+from typing import Any, Callable, List, Tuple
 
 from bs4 import BeautifulSoup
 import requests
@@ -22,7 +22,7 @@ def read_input(
         delim: str | None = '\n',
         parse: Callable[[List[str] | str], Any | List | str | None] | None = None,
         testing: bool = False
-) -> List[Any] | str:
+) -> List | Tuple | str | int | Any:
     """
     Retrieves and parses Advent of Code input data.
 
