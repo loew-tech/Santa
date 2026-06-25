@@ -2,7 +2,7 @@ import heapq
 from collections import deque
 from typing import Any, Tuple, Callable, Iterable, Deque, Dict, Optional, List
 
-
+# @TODO: add revisit flag to not early out upon revisiting a node
 def search(
         q: Any,
         search_space: Any,
@@ -12,6 +12,7 @@ def search(
         get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
         on_visit: Optional[Callable[[Any, int, Any], None]] = None,
         get_state: Callable[[Any], Any] = lambda n: n,
+        revisit=False,
         *args,
         **kwargs
 ) -> Tuple[Optional[Any], int | float]:
@@ -26,6 +27,7 @@ def search(
     :param get_neighbors: Generator for adjacent nodes.
     :param on_visit: Function taking (node, steps, search_space) to call on visited state.
     :param get_state: Function to map a node to a hashable state for pruning.
+    :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
@@ -34,15 +36,14 @@ def search(
     visited = set()
     while q:
         node, steps = pop()
-        # @TODO: should this come after get_state?
-        if on_visit is not None:
-            on_visit(node, steps, search_space)
-
         # @TODO: should search_space and args/kwargs be passed to get state?
         state = get_state(node)
-        if state in visited:
+        if not revisit and state in visited:
             continue
         visited.add(state)
+
+        if on_visit is not None:
+            on_visit(node, steps, search_space)
 
         if is_terminal(node, search_space, *args, **kwargs):
             return node, steps
@@ -66,6 +67,7 @@ def bidirectional_search(
         get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
         on_visit: Optional[Callable[[Any, int, Any], None]] = None,
         get_state: Callable[[Any], Any] = lambda n: n,
+        revisit=False,
         *args,
         **kwargs
 ) -> Tuple[Optional[Any], int | float]:
@@ -84,6 +86,7 @@ def bidirectional_search(
     :param get_neighbors: Generator for adjacent nodes.
     :param on_visit: Function taking (node, steps, search_space) to call on visited state. Note steps is steps from start
     :param get_state: Function to map a node to a hashable state.
+    :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
@@ -105,14 +108,13 @@ def bidirectional_search(
         for q, pop, push, visited, other_visited in search_elements:
             node, steps = pop()
             state = get_state(node)
+            if state in other_visited:
+                return node, steps + other_visited[state]
 
             if on_visit is not None:
                 on_visit(node, steps, search_space)
 
-            if state in other_visited:
-                return node, steps + other_visited[state]
-
-            if state not in visited:
+            if revisit or state not in visited:
                 visited[state] = steps
                 for nghbr in get_neighbors(node, search_space, *args, **kwargs):
                     push((nghbr, steps + 1))
@@ -127,6 +129,7 @@ def bfs(
         get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
         on_visit: Optional[Callable[[Any, int, Any], None]] = None,
         get_state: Callable[[Any], Any] = lambda n: n,
+        revisit=False,
         *args,
         **kwargs
 ) -> Tuple[Optional[Any], int | float]:
@@ -139,6 +142,7 @@ def bfs(
     :param get_neighbors: Generator for adjacent nodes.
     :param on_visit: Function taking (node, steps, search_space) to call on visited state.
     :param get_state: Function to map a node to a hashable state.
+    :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
@@ -153,7 +157,7 @@ def bfs(
         q.append((neighbor, steps + 1))
 
     return search(q, search_space, q.popleft, push, is_terminal,
-                  get_neighbors, on_visit, get_state, *args, **kwargs)
+                  get_neighbors, on_visit, get_state, revisit, *args, **kwargs)
 
 
 def greedy_best_first_search(
@@ -164,6 +168,7 @@ def greedy_best_first_search(
     heuristic: Callable[[Any, Any], int],
     on_visit: Optional[Callable[[Any, int, Any], None]] = None,
     get_state: Callable[[Any], Any] = lambda n: n,
+    revisit=False,
     *args,
     **kwargs
 ) -> Tuple[Optional[Any], int | float]:
@@ -177,6 +182,7 @@ def greedy_best_first_search(
     :param heuristic: A function calculating the estimated cost to the goal.
     :param on_visit: Function taking (node, steps, search_space) to call on visited state.
     :param get_state: Function to map a node to a hashable state.
+    :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
@@ -196,7 +202,7 @@ def greedy_best_first_search(
 
     return search(
         q, search_space, priority_pop, priority_push,
-        is_terminal, get_neighbors, on_visit, get_state, *args, **kwargs
+        is_terminal, get_neighbors, on_visit, get_state, revisit, *args, **kwargs
     )
 
 
@@ -207,6 +213,7 @@ def dfs(
         get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
         on_visit: Optional[Callable[[Any, int, Any], None]] = None,
         get_state: Callable[[Any], Any] = lambda n: n,
+        revisit=False,
         *args,
         **kwargs
 ) -> Tuple[Optional[Any], int | float]:
@@ -224,16 +231,13 @@ def dfs(
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
-    if is_terminal(start, search_space, *args, **kwargs):
-        return start, 0
-
     q = deque([(start, 0)])
     def push(item):
         neighbor, steps = item
         q.append((neighbor, steps + 1))
 
     return search(q, search_space, q.pop, push, is_terminal,
-                  get_neighbors, on_visit, get_state, *args, **kwargs)
+                  get_neighbors, on_visit, get_state, revisit,*args, **kwargs)
 
 
 def a_star(
