@@ -284,11 +284,7 @@ def find_all_paths(
         return ret
 
     q = deque([((start, [start]), 0)])
-    def push(item):
-        neighbor, steps = item
-        q.append((neighbor, steps + 1))
-
-    search(q, search_space, q.pop, push, is_terminal,
+    search(q, search_space, q.pop, q.append, is_terminal,
                   neighbors, on_visit, get_state, revisit=True,*args, **kwargs)
     return all_paths
 
