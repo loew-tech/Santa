@@ -236,6 +236,34 @@ class TestSearch(unittest.TestCase):
         # Should have visited nodes from both directions
         self.assertGreater(visit_count, 0)
 
+    def test_find_all_paths_diamond(self):
+        """Verify finding all paths in a diamond graph: 0 -> 1 -> 3 and 0 -> 2 -> 3."""
+        # 0 connects to 1 and 2. 1 and 2 connect to 3.
+        graph = {0: [1, 2], 1: [3], 2: [3], 3: []}
+
+        paths = find_all_paths(0, graph, 3, self.get_neighbors)
+
+        expected = [[0, 1, 3], [0, 2, 3]]
+        self.assertEqual(len(paths), 2)
+        self.assertIn([0, 1, 3], paths)
+        self.assertIn([0, 2, 3], paths)
+
+    def test_find_all_paths_with_cycles(self):
+        """Verify it ignores cycles (0 -> 1 -> 0) and finds valid paths."""
+        # 0 -> 1 -> 2, but 1 also points back to 0
+        graph = {0: [1], 1: [0, 2], 2: []}
+
+        paths = find_all_paths(0, graph, 2, self.get_neighbors)
+
+        # Only one simple path: 0 -> 1 -> 2
+        self.assertEqual(paths, [[0, 1, 2]])
+
+    def test_find_all_paths_no_path(self):
+        """Verify returns empty list when goal is unreachable."""
+        graph = {0: [1], 1: [], 2: []}
+        paths = find_all_paths(0, graph, 2, self.get_neighbors)
+        self.assertEqual(paths, [])
+
     def test_tsp_s_star_basic(self):
         # Define a simple 3-city graph
         cities = ['A', 'B', 'C']

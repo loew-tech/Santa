@@ -2,7 +2,7 @@ import heapq
 from collections import deque
 from typing import Any, Tuple, Callable, Iterable, Deque, Dict, Optional, List
 
-# @TODO: add revisit flag to not early out upon revisiting a node
+
 def search(
         q: Any,
         search_space: Any,
@@ -226,6 +226,7 @@ def dfs(
     :param get_neighbors: Generator for adjacent nodes.
     :param on_visit: Function taking (node, steps, search_space) to call on visited state.
     :param get_state: Function to map a node to a hashable state.
+    :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
@@ -238,6 +239,58 @@ def dfs(
 
     return search(q, search_space, q.pop, push, is_terminal,
                   get_neighbors, on_visit, get_state, revisit,*args, **kwargs)
+
+
+def find_all_paths(
+        start: Any,
+        search_space: Any,
+        goal: Any,
+        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
+        get_state: Callable[[Any], Any] = lambda n: n[0],
+        *args,
+        **kwargs
+) -> List[List]:
+    """
+    Finds all paths from start to goal.
+
+    :param start: The starting node.
+    :param search_space: The environment or graph to navigate.
+    :param goal: Terminal node to reach.
+    :param get_neighbors: Generator for adjacent nodes.
+    :param get_state: Function to map a node to a hashable state.
+    :param args: Additional positional arguments for callbacks.
+    :param kwargs: Additional keyword arguments for callbacks.
+
+    :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
+    """
+    all_paths = []
+    def on_visit(node, steps, space):
+        nd, path = node
+        if nd == goal:
+            all_paths.append(path)
+
+    def is_terminal(node, space, *args_, **kwargs_):
+        return False
+
+    def neighbors(node, space, *args_, **kwargs_):
+        nd, path = node
+        if nd == goal:
+            return []
+
+        ret = []
+        for nghbr in get_neighbors(nd, space, *args_, **kwargs_):
+            if nghbr not in path:
+                ret.append((nghbr, path + [nghbr]))
+        return ret
+
+    q = deque([((start, [start]), 0)])
+    def push(item):
+        neighbor, steps = item
+        q.append((neighbor, steps + 1))
+
+    search(q, search_space, q.pop, push, is_terminal,
+                  neighbors, on_visit, get_state, revisit=True,*args, **kwargs)
+    return all_paths
 
 
 def a_star(
