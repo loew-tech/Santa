@@ -62,14 +62,12 @@ def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> s
 
     :param day: The puzzle day.
     :param year: The puzzle year.
-    :raises ValueError: If the session ID is missing from the .env file.
+    :param session_id: your session cookie for authentication.
+
     :raises Exception: If the HTTP request fails.
 
     :return: The raw string content of the puzzle input.
     """
-    if not session_id:
-        raise ValueError("Could not find 'session=' variable in your .env file.")
-
     response = requests.get(
         f'{ADVENT_URI}{year}/day/{day}/input',
         cookies={'session': session_id},
