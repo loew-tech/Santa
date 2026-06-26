@@ -34,5 +34,40 @@ class TestParse(unittest.TestCase):
         with self.assertRaises(ValueError):
             interval_tuple("Just one number 5")
 
+    def test_get_parse_instruction(self):
+        # Setup: Define simple extraction logic for a custom format
+        # Format: "OP:ARG1,ARG2"
+        def get_op(line):
+            return line.split(':')[0]
+
+        def get_args(line):
+            args_str = line.split(':')[1]
+            return tuple(args_str.split(','))
+
+        # Create the parser
+        parse_func = get_parse_instruction(get_op, get_args)
+
+        # Execute and Verify
+        instr = parse_func("ADD:a,b")
+        self.assertEqual(instr.instruction, "ADD")
+        self.assertEqual(instr.args, ('a', 'b'))
+        self.assertIsInstance(instr, Instruction)
+
+    def test_get_parse_instruction_with_complex_logic(self):
+        # Setup: Complex logic where arguments need casting
+        def get_op(line):
+            return line.split()[0]
+
+        def get_args(line):
+            # Parse "INC 5" -> (5,)
+            return (int(line.split()[1]),)
+
+        parse_func = get_parse_instruction(get_op, get_args)
+
+        instr = parse_func("INC 5")
+        self.assertEqual(instr.instruction, "INC")
+        self.assertEqual(instr.args, (5,))
+        self.assertIsInstance(instr.args[0], int)
+
 if __name__ == '__main__':
     unittest.main()

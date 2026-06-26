@@ -4,8 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "santas_bag"
-version = "0.5.0"
+version = "0.6.0"
 description = "Common utilities for Advent of Code"
+authors = [
+    { name = "Steve Marek-Loew", email = "loew.technology@gmail.com" }
+]
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
