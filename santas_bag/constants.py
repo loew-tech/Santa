@@ -1,4 +1,4 @@
-from operator import add, mul, sub, truediv, floordiv, mod
+from operator import add, mul, sub, truediv, floordiv, mod, eq, ne, lt, le, gt, ge
 from string import ascii_lowercase, ascii_uppercase
 
 CARDINAL_DIRECTIONS = (
@@ -30,6 +30,7 @@ ALPHAS_TO_NUMS = {
 }
 
 OPS_DICT = {'+': add, '*': mul, '-': sub, '/': truediv, '//': floordiv, '%': mod, '**': pow}
+CONDITIONAL_OPS = {'<=': le, '>=': ge, '==': eq, '!=': ne, '<': lt, '>': gt}
 
 REGEX_WORDS = r'\b[a-zA-Z]+\b'
 REGEX_DIGITS = r'\d+'
