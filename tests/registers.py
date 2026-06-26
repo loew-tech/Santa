@@ -5,11 +5,11 @@ class TestRegisters(unittest.TestCase):
 
     def setUp(self):
         # Create a clean state for every test
-        self.regs = RegisterDictionary()
+        self.regs = RegisterDict()
         self.ops = get_standard_ops(self.regs)
 
     def test_sample_execution(self):
-        # Testing your custom logic flow with the new RegisterDictionary
+        # Testing your custom logic flow with the new RegisterDict
         self.regs['a'] = 0
         self.regs['b'] = 0
         self.regs['c'] = 0
