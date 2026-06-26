@@ -1,7 +1,8 @@
 import re
-from typing import List, Tuple
+from typing import List, Tuple, Callable
 
 from santas_bag.constants import REGEX_INTS, REGEX_NUMBERS
+from santas_bag.registers import Instruction
 from santas_bag.types import Interval
 
 
@@ -60,3 +61,21 @@ def interval_tuple(s: str) -> Interval:
         raise ValueError("String must contain at least two integers to define a range.")
     start, stop = matches[0], matches[1]
     return start, stop
+
+def get_parse_instruction(
+        get_instruction: Callable[[str], str],
+        get_args: Callable[[str], Tuple]
+) -> Callable[[str], Instruction]:
+    """
+    Returns a parse function that parses a line and returns an Instruction.
+
+    :param get_instruction: function that parses a line and returns an Instruction.
+    :param get_args: function that parses a line and returns arguments to Instruction.
+
+    :return: Function that parses a line and returns an Instruction.
+    """
+    def parse(line: str) -> Instruction:
+        instruction = get_instruction(line)
+        args = get_args(line)
+        return Instruction(instruction, args)
+    return parse
