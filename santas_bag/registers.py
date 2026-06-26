@@ -124,7 +124,7 @@ def get_standard_ops(registers: RegisterProtocol) -> Dict[str, Callable]:
     }
 
 
-class RegisterDict(defaultdict, RegisterProtocol, RegisterMixin):
+class RegisterDict(defaultdict, RegisterMixin, RegisterProtocol):
     """
     A dictionary-based register storage for Virtual Machine implementations.
 
@@ -140,6 +140,7 @@ class RegisterDict(defaultdict, RegisterProtocol, RegisterMixin):
         """
         Initializes the register dictionary by merging initial data and keyword arguments.
         """
-        data = dict(registers or {})
-        data.update(kwargs)
-        super().__init__(int, data)
+        super().__init__(int)
+        if registers:
+            self.update(registers)
+        self.update(kwargs)
