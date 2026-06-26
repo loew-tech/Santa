@@ -1,8 +1,12 @@
-from typing import Any, Callable, Dict, List, NamedTuple, Tuple
+import operator
+from collections import defaultdict
+from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Protocol
+
 
 class Instruction(NamedTuple):
     instruction: str
     args: Tuple[Any, ...]
+
 
 # The "Resolved" or "Compiled" format
 class CompiledInstruction(NamedTuple):
@@ -10,7 +14,7 @@ class CompiledInstruction(NamedTuple):
     args: Tuple[Any, ...]
 
 
-def instruction_execution(instructions: List[Instruction], operations: Dict[str, Callable]) -> None:
+def execute_instructions(instructions: List[Instruction], operations: Dict[str, Callable]) -> None:
     """
     Returns None. Operations executed from operations dictionary will modify registers outside function scope.
     Given a list of Instruction objects (namedtuple of the form ['instruction', 'args']) and an operations dictionary,
@@ -23,8 +27,7 @@ def instruction_execution(instructions: List[Instruction], operations: Dict[str,
     :return: None. Side effects will cause registers that operations act on to be modified
     """
     compiled = compile_instructions(instructions, operations)
-    compiled_instruction_execution(compiled)
-
+    execute_compiled_instructions(compiled)
 
 
 def compile_instructions(
@@ -49,7 +52,7 @@ def compile_instructions(
     return compiled
 
 
-def compiled_instruction_execution(compiled_instructions: List[CompiledInstruction]) -> None:
+def execute_compiled_instructions(compiled_instructions: List[CompiledInstruction]) -> None:
     """
     Returns None. Operations executed from operations dictionary will modify registers outside function scope.
     Given a list of Instruction objects (namedtuple of the form ['instruction', 'args']) and an operations dictionary,
@@ -66,3 +69,77 @@ def compiled_instruction_execution(compiled_instructions: List[CompiledInstructi
         func, args = compiled_instructions[indx]
         ret = func(*args)
         indx += 1 if ret is None else ret
+
+
+class RegisterProtocol(Protocol):
+    def __getitem__(self, key: str) -> int: ...
+
+    def __setitem__(self, key: str, value: int) -> None: ...
+
+    def value(self, key: str | int) -> int: ...
+
+
+class RegisterMixin:
+    """
+    A mixin providing the value function used operations in get_standard_ops
+    """
+
+    def value(self, key: str | int) -> int:
+        """
+        Returns the value of a register or key if key is a value and not a register reference.
+        :param key: the register reference or value.
+
+        :return: the value of the referenced register or key if key is a value and not a register reference.
+        """
+        if isinstance(key, int):
+            return key
+        try:
+            return int(key)
+        except ValueError:
+            return self[key]
+
+
+def get_standard_ops(registers: RegisterProtocol) -> Dict[str, Callable]:
+    """
+    Returns a dictionary of 'standard' operations on registers. Includes:
+    inc, dec, set, add, mul, mod, and pow.
+
+    :param registers: A register storage object satisfying the RegisterProtocol
+                      (must support __getitem__, __setitem__, and value()).
+
+    :return: A dictionary mapping operation names (strings) to their
+             respective callable implementations.
+    """
+    val = registers.value
+    set_ = registers.__setitem__
+
+    return {
+        'inc': lambda x: set_(x, val(x) + 1),
+        'dec': lambda x: set_(x, val(x) - 1),
+        'set': lambda x, y: set_(x, val(y)),
+        'add': lambda x, y: set_(x, operator.add(val(x), val(y))),
+        'mul': lambda x, y: set_(x, operator.mul(val(x), val(y))),
+        'mod': lambda x, y: set_(x, operator.mod(val(x), val(y))),
+        'pow': lambda x, y: set_(x, operator.pow(val(x), val(y))),
+    }
+
+
+class RegisterDictionary(defaultdict, RegisterMixin):
+    """
+    A dictionary-based register storage for Virtual Machine implementations.
+
+    This class extends `defaultdict` to provide auto-initializing integer registers
+    (defaulting to 0) and incorporates `RegisterMixin` to provide the `value()`
+    method for resolving register names or literal values.
+
+    :param registers: An optional initial dictionary of register assignments.
+    :param kwargs: Additional key-value pairs to initialize registers.
+    """
+
+    def __init__(self, registers: Dict | None = None, **kwargs):
+        """
+        Initializes the register dictionary by merging initial data and keyword arguments.
+        """
+        data = dict(registers or {})
+        data.update(kwargs)
+        super().__init__(int, data)
