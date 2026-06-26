@@ -1,17 +1,14 @@
-from typing import Any, Callable, Dict, List, Tuple, TypeAlias
+from typing import Any, Callable, Dict, List, NamedTuple, Tuple
 
-Instruction: TypeAlias = Tuple[str, Tuple[Any, ...]]
-CompiledInstruction: TypeAlias = Tuple[Callable[..., Any], Tuple[Any, ...]]
+class Instruction(NamedTuple):
+    instruction: str
+    args: Tuple[Any, ...]
 
-# @TODO: consider this change:
+# The "Resolved" or "Compiled" format
+class CompiledInstruction(NamedTuple):
+    func: Callable[..., Any]
+    args: Tuple[Any, ...]
 
-# # This class gives you the readability and easy dot-access
-# class Instruction(NamedTuple):
-#     instruction: str
-#     args: Tuple[Any, ...]
-#
-# # This alias keeps your function signatures clean and explicit
-# CompiledInstruction: TypeAlias = Tuple[Callable[..., Any], Tuple[Any, ...]]
 
 def instruction_execution(instructions: List[Instruction], operations: Dict[str, Callable]) -> None:
     """
@@ -48,24 +45,24 @@ def compile_instructions(
     for i, (instruction, args) in enumerate(instructions):
         if instruction not in operations:
             raise ValueError(f"Unknown instruction: {instruction} at index {i}")
-        compiled.append((operations[instruction], args))
+        compiled.append(CompiledInstruction(operations[instruction], args))
     return compiled
 
 
-def compiled_instruction_execution(compiled: List[CompiledInstruction]) -> None:
+def compiled_instruction_execution(compiled_instructions: List[CompiledInstruction]) -> None:
     """
     Returns None. Operations executed from operations dictionary will modify registers outside function scope.
     Given a list of Instruction objects (namedtuple of the form ['instruction', 'args']) and an operations dictionary,
     execute them while instruction index is within limits of instruction list [0, len(instructions)-1].
     Instruction index increments by 1 unless the return of an operation is not None, then it increments by that value.
 
-    :param compiled: A list of CompiledConstructions to be executed while instructions index is
+    :param compiled_instructions: A list of CompiledConstructions to be executed while instructions index is
     in [0, len(instructions)-1]
 
     :return: None. Side effects will cause registers that operations act on to be modified
     """
     indx = 0
-    while indx < len(compiled):
-        func, args = compiled[indx]
+    while indx < len(compiled_instructions):
+        func, args = compiled_instructions[indx]
         ret = func(*args)
         indx += 1 if ret is None else ret

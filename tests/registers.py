@@ -1,15 +1,15 @@
 import unittest
-
-from santas_bag.registers import *
+from santas_bag.registers import Instruction, instruction_execution, compile_instructions
 
 class TestRegisters(unittest.TestCase):
 
     def test_sample_execution(self):
-        registers = {'a':0, 'b': 0, 'c': 0}
-        instructions = [('inc', ('a',)),
-                        ('dec', ('b',)),
-                        ('add', ('c', 'a', 'b'))
-                        ]
+        registers = {'a': 0, 'b': 0, 'c': 0}
+        instructions = [
+            Instruction('inc', ('a',)),
+            Instruction('dec', ('b',)),
+            Instruction('add', ('c', 'a', 'b'))
+        ]
 
         def inc(a):
             registers[a] += 1
@@ -34,15 +34,16 @@ class TestRegisters(unittest.TestCase):
     def test_compile_instructions_success(self):
         def dummy_op(): pass
 
-        instructions = [('inc', ('a',)), ('dec', ('b',))]
+        instructions = [Instruction('inc', ('a',)), Instruction('dec', ('b',))]
         ops = {'inc': dummy_op, 'dec': dummy_op}
 
         compiled = compile_instructions(instructions, ops)
         self.assertEqual(len(compiled), 2)
-        self.assertEqual(compiled[0][0], dummy_op)
+        # Testing against the CompiledInstruction fields: func and args
+        self.assertEqual(compiled[0].func, dummy_op)
 
     def test_compile_instructions_raises_error(self):
-        instructions = [('unknown', ())]
+        instructions = [Instruction('unknown', ())]
         ops = {'inc': lambda: None}
         with self.assertRaises(ValueError):
             compile_instructions(instructions, ops)
@@ -51,14 +52,17 @@ class TestRegisters(unittest.TestCase):
         """Verify the instruction pointer jumps correctly based on return value."""
         registers = {'val': 0}
 
-        # Op returns 2 to skip the next instruction
         def jump_op():
             return 2
 
         def no_op():
             registers['val'] = 1
 
-        instructions = [('jump', ()), ('skip_me', ()), ('target', ())]
+        instructions = [
+            Instruction('jump', ()),
+            Instruction('skip_me', ()),
+            Instruction('target', ())
+        ]
         ops = {'jump': jump_op, 'skip_me': no_op, 'target': lambda: None}
 
         instruction_execution(instructions, ops)
@@ -66,15 +70,13 @@ class TestRegisters(unittest.TestCase):
 
     def test_execution_bounds_safety(self):
         """Ensure execution stops cleanly even if jump goes out of bounds."""
-        instructions = [('out_of_bounds', ())]
-        # Returning 10 from index 0 should exit the loop
+        instructions = [Instruction('out_of_bounds', ())]
         ops = {'out_of_bounds': lambda: 10}
 
         try:
             instruction_execution(instructions, ops)
         except Exception as e:
             self.fail(f"Execution should handle out of bounds gracefully, but raised {e}")
-
 
 if __name__ == '__main__':
     unittest.main()
