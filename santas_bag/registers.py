@@ -140,7 +140,5 @@ class RegisterDict(defaultdict, RegisterMixin, RegisterProtocol):
         """
         Initializes the register dictionary by merging initial data and keyword arguments.
         """
-        super().__init__(int)
-        if registers:
-            self.update(registers)
-        self.update(kwargs)
+        data = {**dict(registers or {}), **kwargs}
+        super().__init__(int, data)
