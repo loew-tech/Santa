@@ -20,6 +20,7 @@ ALL_DIRECTIONS = (
     *DIAGONAL_DIRECTIONS,
 )
 
+# @TODO: make dicts frozen -> _ARROW_DIRECTIONS =... \n ARROW_DIRECTIONS = MappingProxyType(_ARROW_DIRECTIONS)
 ARROW_DIRECTIONS  = dict(zip('^>v<', CARDINAL_DIRECTIONS))
 
 NUMS_TO_ALPHAS_LOWERCASE = {i: v for i, v in enumerate(ascii_lowercase)}
