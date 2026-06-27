@@ -186,7 +186,6 @@ def get_component_for_node(graph: Dict[str, List[Any]],
         lambda n, s, *args_, **kwargs_: False,
         get_neighbors,
         lambda n, steps, s: visited.add(n))
-
     return visited
 
 
@@ -201,28 +200,17 @@ def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
     unvisited = set(graph.keys())
     for neighbors in graph.values():
         for n in neighbors:
-            v = n[0] if isinstance(n, tuple) else n
-            unvisited.add(v)
+            unvisited.add(n[0] if isinstance(n, tuple) else n)
 
     def get_neighbors(node, graph_, *args, **kwargs):
         for n_ in graph_.get(node, []):
-            v_ = n_[0] if isinstance(n_, tuple) else n_
-            if v_ in unvisited:
-                yield v_
+            yield n_[0] if isinstance(n_, tuple) else n_
 
     components = []
     while unvisited:
-        start_node = unvisited.pop()
-        component = {start_node}
-
-        def on_visit(node, _, *args, **kwargs):
-            if node in unvisited:
-                unvisited.remove(node)
-                component.add(node)
-            return False
-
-        bfs(start_node, graph, on_visit, get_neighbors)
+        component = get_component_for_node(graph, next(iter(unvisited)), get_neighbors)
         components.append(component)
+        unvisited -= component
 
     return components
 
