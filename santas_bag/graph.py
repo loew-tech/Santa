@@ -1,6 +1,6 @@
 import heapq
 from collections import deque, defaultdict
-from typing import Iterable, Dict, Any, List, Tuple, Set
+from typing import Iterable, Dict, Any, List, Tuple, Set, Callable
 
 from santas_bag.search import search, bfs
 
@@ -165,6 +165,30 @@ def topological_sort(graph: Dict[Any, List[Any]],
     search(q, graph, q.popleft, push, lambda *args: False, get_neighbors)
 
     return sorted_order
+
+
+def get_component_for_node(graph: Dict[str, List[Any]],
+                           start_node: str,
+                           get_neighbors: Callable[..., Iterable[Any]],) -> Set[str]:
+    """
+    Returns the set of all nodes reachable from the start_node.
+
+    :param graph: The graph dictionary.
+    :param start_node: The node to begin the search from.
+    :return: A set of nodes comprising the connected component.
+    """
+    if start_node not in graph:
+        return set()
+
+    visited = set()
+    bfs(start_node,
+        graph,
+        lambda n, s, *args_, **kwargs_: False,
+        get_neighbors,
+        lambda n, steps, s: visited.add(n))
+
+    return visited
+
 
 def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
     """
