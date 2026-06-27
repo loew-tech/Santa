@@ -83,8 +83,8 @@ class TestGraph(unittest.TestCase):
         # Now run an algorithm (e.g., in-degrees)
         in_degrees = get_in_degrees(graph, list(graph.keys()))
 
-        self.assertEqual(in_degrees["C"], 2)
-        self.assertEqual(in_degrees["A"], 0)
+        self.assertEqual(2, in_degrees["C"])
+        self.assertEqual(0, in_degrees["A"])
 
     def test_adjacency_list_to_dict_directed(self):
         # A -> B (weight 5), B -> C
@@ -94,7 +94,7 @@ class TestGraph(unittest.TestCase):
             "B": ["C"],
             "C": []  # Closure: C must exist as a key
         }
-        self.assertEqual(adjacency_lists_to_dict(data, undirected=False), expected)
+        self.assertEqual(expected, adjacency_lists_to_dict(data, undirected=False))
 
     def test_adjacency_list_to_dict_undirected(self):
         # A --(5)--> B
@@ -104,7 +104,7 @@ class TestGraph(unittest.TestCase):
             "A": [("B", 5)],
             "B": [("A", 5)]
         }
-        self.assertEqual(adjacency_lists_to_dict(data, undirected=True), expected)
+        self.assertEqual(expected, adjacency_lists_to_dict(data, undirected=True))
 
     def test_adjacency_list_to_dict_undirected_no_weights(self):
         # A -> B
@@ -113,7 +113,7 @@ class TestGraph(unittest.TestCase):
             "A": ["B"],
             "B": ["A"]
         }
-        self.assertEqual(adjacency_lists_to_dict(data, undirected=True), expected)
+        self.assertEqual(expected, adjacency_lists_to_dict(data, undirected=True))
 
     def test_adjacency_list_to_dict_undirected_avoids_duplicates(self):
         # Explicitly define both directions
@@ -123,7 +123,7 @@ class TestGraph(unittest.TestCase):
             "B": ["A"]
         }
         # The logic should not add a second 'B' to A's list
-        self.assertEqual(adjacency_lists_to_dict(data, undirected=True), expected)
+        self.assertEqual(expected, adjacency_lists_to_dict(data, undirected=True))
 
     def test_transpose_unweighted(self):
         # 0 -> 1 -> 2
