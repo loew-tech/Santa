@@ -27,28 +27,41 @@ def adjacency_matrix_to_dict(
     return graph
 
 
-def adjacency_list_to_dict(
-        adjacency_list: List[Tuple[str, List[Any]]]
+from typing import List, Tuple, Any, Dict
+
+
+def adjacency_lists_to_dict(
+        adjacency_list: List[Tuple[str, List[Any]]],
+        undirected: bool = False
 ) -> Dict[str, List[Any]]:
     """
-    Converts a parsed adjacency list into a complete graph dictionary.
+    Converts a parsed adjacency list into a graph dictionary.
 
-    Ensures that every neighbor mentioned in the edge list exists as a key
-    in the resulting dictionary, even if it has no outbound edges of its own.
-
-    :param adjacency_list: A list of tuples, where each tuple contains:
-                           - Index 0: The vertex name (str).
-                           - Index 1: A list of neighbors. Neighbors can be
-                                      simple values (str) or tuples (neighbor, weight).
-    :return: A dictionary mapping every encountered vertex to its list of neighbors.
+    :param adjacency_list: List of (vertex, [neighbors]).
+                           Neighbors can be simple values or (neighbor, weight) tuples.
+    :param undirected: If True, adds reverse edges for all connections.
     """
-    graph = {vertex: edges for vertex, edges in adjacency_list}
+    # Initialize the graph with primary edges
+    graph = {vertex: list(edges) for vertex, edges in adjacency_list}
 
-    for _, edges in adjacency_list:
+    # Ensure all mentioned neighbors exist as keys in the graph
+    for vertex, edges in adjacency_list:
         for edge in edges:
             neighbor = edge[0] if isinstance(edge, tuple) else edge
             if neighbor not in graph:
                 graph[neighbor] = []
+
+            # If undirected, add the reverse connection
+            if undirected:
+                # Determine weight if it exists
+                weight = edge[1] if isinstance(edge, tuple) else None
+
+                # Create the reverse entry
+                reverse_entry = (vertex, weight) if weight is not None else vertex
+
+                # Avoid adding duplicates if the edge is already defined
+                if reverse_entry not in graph[neighbor]:
+                    graph[neighbor].append(reverse_entry)
 
     return graph
 
