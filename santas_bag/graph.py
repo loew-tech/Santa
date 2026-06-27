@@ -27,7 +27,33 @@ def adjacency_matrix_to_dict(
     return graph
 
 
-def edge_list_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List[Any]]:
+def adjacency_list_to_dict(
+        adjacency_list: List[Tuple[str, List[Any]]]
+) -> Dict[str, List[Any]]:
+    """
+    Converts a parsed adjacency list into a complete graph dictionary.
+
+    Ensures that every neighbor mentioned in the edge list exists as a key
+    in the resulting dictionary, even if it has no outbound edges of its own.
+
+    :param adjacency_list: A list of tuples, where each tuple contains:
+                           - Index 0: The vertex name (str).
+                           - Index 1: A list of neighbors. Neighbors can be
+                                      simple values (str) or tuples (neighbor, weight).
+    :return: A dictionary mapping every encountered vertex to its list of neighbors.
+    """
+    graph = {vertex: edges for vertex, edges in adjacency_list}
+
+    for _, edges in adjacency_list:
+        for edge in edges:
+            neighbor = edge[0] if isinstance(edge, tuple) else edge
+            if neighbor not in graph:
+                graph[neighbor] = []
+
+    return graph
+
+
+def edge_list_to_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List[Any]]:
     """
     Transform a list of edges into a graph dictionary mapping node -> neighbors.
     Supports unweighted graphs and weighted graphs in form (vertex1, vertex2, weight).
