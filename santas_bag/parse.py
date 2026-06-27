@@ -1,5 +1,5 @@
 import re
-from typing import List, Tuple, Callable
+from typing import List, Tuple, Callable, Union
 
 from santas_bag.constants import REGEX_INTS, REGEX_NUMBERS
 from santas_bag.registers import Instruction
@@ -61,6 +61,34 @@ def interval_tuple(s: str) -> Interval:
         raise ValueError("String must contain at least two integers to define a range.")
     start, stop = matches[0], matches[1]
     return start, stop
+
+
+EdgeEntry = Union[str, Tuple[str, Union[int, float]]]
+def get_parse_adjacency_list(
+        get_vertex: Callable[[str], str],
+        get_edges: Callable[[str], List[str]],
+        get_weights: Callable[[str], List[Union[int, float]]] | None = None,
+) -> Callable[[str], Tuple[str, List[EdgeEntry]]]:
+    """
+    Returns a function that parses a line and returns an EdgeEntry tuple  (Vertex followed by list of edges).
+
+    :param get_vertex: Function that parses a line and identifies the vertex of the edge.
+    :param get_edges: Function that parses a line and returns the adjacent edges.
+    :param get_weights: Optional function that if provided parses a line and returns the edge weights.
+                        If not provided will return list of edges without weights.
+
+    :return: A function that parses a line and returns an EdgeEntry tuple (Vertex followed by list of edges).
+    """
+    def parse(line: str) -> Tuple[str, List[EdgeEntry]]:
+        vertex = get_vertex(line)
+        edges = get_edges(line)
+        if get_weights is not None:
+            weights = get_weights(line)
+            return vertex, list(zip(edges, weights))
+        return vertex, edges
+
+    return parse
+
 
 def get_parse_instruction(
         get_instruction: Callable[[str], str],

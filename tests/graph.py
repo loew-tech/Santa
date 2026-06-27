@@ -36,7 +36,7 @@ class TestGraph(unittest.TestCase):
         edges = [(0, 1), (1, 2)]
         # Expected: 0 connects to 1, 1 connects to 0 and 2, 2 connects to 1
         expected = {0: [1], 1: [0, 2], 2: [1]}
-        result = edge_list_dict(edges, undirected=True)
+        result = edge_list_to_dict(edges, undirected=True)
         # Sort values to ensure comparison works regardless of list order
         for node in result:
             result[node].sort()
@@ -45,7 +45,7 @@ class TestGraph(unittest.TestCase):
     def test_edge_list_dict_directed(self):
         edges = [(0, 1), (1, 2)]
         expected = {0: [1], 1: [2]}
-        self.assertEqual(expected, edge_list_dict(edges, undirected=False))
+        self.assertEqual(expected, edge_list_to_dict(edges, undirected=False))
 
     def test_edge_list_dict_weighted_undirected(self):
         # Weighted edges: (u, v, weight)
@@ -55,7 +55,7 @@ class TestGraph(unittest.TestCase):
             1: [(0, 5), (2, 10)],
             2: [(1, 10)]
         }
-        result = edge_list_dict(edges, undirected=True)
+        result = edge_list_to_dict(edges, undirected=True)
         self.assertEqual(expected, result)
 
     def test_edge_list_dict_weighted_directed(self):
@@ -65,12 +65,26 @@ class TestGraph(unittest.TestCase):
             0: [(1, 5)],
             1: [(2, 10)]
         }
-        result = edge_list_dict(edges, undirected=False)
+        result = edge_list_to_dict(edges, undirected=False)
         self.assertEqual(expected, result)
 
     def test_empty_graph_transforms(self):
         self.assertEqual({}, adjacency_matrix_to_dict([]))
-        self.assertEqual({}, edge_list_dict([]))
+        self.assertEqual({}, edge_list_to_dict([]))
+
+    def test_adjacency_lists_to_graph(self):
+        """Verify the parse graph works seamlessly with graph structures."""
+        # Setup: Parse then convert
+        raw_data = [("A", ["B", "C"]), ("B", ["C"])]
+
+        # This uses your existing utility
+        graph = adjacency_list_to_dict(raw_data)
+
+        # Now run an algorithm (e.g., in-degrees)
+        in_degrees = get_in_degrees(graph, list(graph.keys()))
+
+        self.assertEqual(in_degrees["C"], 2)
+        self.assertEqual(in_degrees["A"], 0)
 
     def test_transpose_unweighted(self):
         # 0 -> 1 -> 2

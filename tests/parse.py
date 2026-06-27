@@ -34,6 +34,35 @@ class TestParse(unittest.TestCase):
         with self.assertRaises(ValueError):
             interval_tuple("Just one number 5")
 
+    def test_get_parse_adjacency_list_unweighted(self):
+        """Test parsing of a simple vertex:edge1,edge2 list."""
+        get_v = lambda line: line.split(':')[0]
+        get_e = lambda line: line.split(':')[1].split(',')
+
+        parse = get_parse_adjacency_list(get_v, get_e)
+        vertex, edges = parse("A:B,C")
+
+        self.assertEqual(vertex, "A")
+        self.assertEqual(edges, ["B", "C"])
+
+    def test_get_parse_adjacency_list_weighted(self):
+        """Test parsing where edge weights are provided."""
+        get_v = lambda line: line.split(':')[0]
+        get_e = lambda line: line.split(':')[1].split(',')
+        get_w = lambda line: [int(w) for w in line.split(':')[2].split(',')]
+
+        parse = get_parse_adjacency_list(get_v, get_e, get_w)
+        vertex, edges = parse("A:B,C:10,20")
+
+        self.assertEqual(vertex, "A")
+        self.assertEqual(edges, [("B", 10), ("C", 20)])
+
+    def test_get_parse_adjacency_list_empty(self):
+        """Ensure no edges result in an empty list."""
+        parse = get_parse_adjacency_list(lambda l: l, lambda l: [])
+        vertex, edges = parse("StandaloneVertex")
+        self.assertEqual(edges, [])
+
     def test_get_parse_instruction(self):
         # Setup: Define simple extraction logic for a custom format
         # Format: "OP:ARG1,ARG2"
