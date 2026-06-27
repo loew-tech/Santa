@@ -72,8 +72,8 @@ class TestGraph(unittest.TestCase):
         self.assertEqual({}, adjacency_matrix_to_dict([]))
         self.assertEqual({}, edge_list_to_dict([]))
 
-    def test_integration_parser_to_graph(self):
-        """Verify the parser works seamlessly with graph structures."""
+    def test_adjacency_lists_to_graph(self):
+        """Verify the parse graph works seamlessly with graph structures."""
         # Setup: Parse then convert
         raw_data = [("A", ["B", "C"]), ("B", ["C"])]
 
