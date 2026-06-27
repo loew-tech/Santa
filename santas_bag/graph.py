@@ -169,7 +169,7 @@ def topological_sort(graph: Dict[Any, List[Any]],
 
 def get_component_for_node(graph: Dict[Any, List],
                            start_node: str,
-                           get_neighbors: Callable[..., Iterable],) -> Set[str]:
+                           get_neighbors: Callable[..., Iterable],) -> Set[Any]:
     """
     Returns the set of all nodes reachable from the start_node.
 
