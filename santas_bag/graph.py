@@ -167,14 +167,16 @@ def topological_sort(graph: Dict[Any, List[Any]],
     return sorted_order
 
 
-def get_component_for_node(graph: Dict[str, List[Any]],
+def get_component_for_node(graph: Dict[Any, List],
                            start_node: str,
-                           get_neighbors: Callable[..., Iterable[Any]],) -> Set[str]:
+                           get_neighbors: Callable[..., Iterable],) -> Set[str]:
     """
     Returns the set of all nodes reachable from the start_node.
 
     :param graph: The graph dictionary.
     :param start_node: The node to begin the search from.
+    :param get_neighbors: A callback for getting the neighbors of the current node
+
     :return: A set of nodes comprising the connected component.
     """
     if start_node not in graph:
