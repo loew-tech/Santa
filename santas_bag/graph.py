@@ -1,6 +1,6 @@
 import heapq
 from collections import deque, defaultdict
-from typing import Iterable, Dict, Any, List, Tuple, Set
+from typing import Iterable, Dict, Any, List, Tuple, Set, Callable
 
 from santas_bag.search import search, bfs
 
@@ -166,6 +166,31 @@ def topological_sort(graph: Dict[Any, List[Any]],
 
     return sorted_order
 
+
+def get_component_for_node(graph: Dict[Any, List],
+                           start_node: str,
+                           get_neighbors: Callable[..., Iterable],) -> Set[Any]:
+    """
+    Returns the set of all nodes reachable from the start_node.
+
+    :param graph: The graph dictionary.
+    :param start_node: The node to begin the search from.
+    :param get_neighbors: A callback for getting the neighbors of the current node
+
+    :return: A set of nodes comprising the connected component.
+    """
+    if start_node not in graph:
+        return set()
+
+    visited = set()
+    bfs(start_node,
+        graph,
+        lambda n, s, *args_, **kwargs_: False,
+        get_neighbors,
+        lambda n, steps, s: visited.add(n))
+    return visited
+
+
 def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
     """
     Returns a list of sets where each set is a connected component of the graph
@@ -177,28 +202,17 @@ def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
     unvisited = set(graph.keys())
     for neighbors in graph.values():
         for n in neighbors:
-            v = n[0] if isinstance(n, tuple) else n
-            unvisited.add(v)
+            unvisited.add(n[0] if isinstance(n, tuple) else n)
 
     def get_neighbors(node, graph_, *args, **kwargs):
         for n_ in graph_.get(node, []):
-            v_ = n_[0] if isinstance(n_, tuple) else n_
-            if v_ in unvisited:
-                yield v_
+            yield n_[0] if isinstance(n_, tuple) else n_
 
     components = []
     while unvisited:
-        start_node = unvisited.pop()
-        component = {start_node}
-
-        def on_visit(node, _, *args, **kwargs):
-            if node in unvisited:
-                unvisited.remove(node)
-                component.add(node)
-            return False
-
-        bfs(start_node, graph, on_visit, get_neighbors)
+        component = get_component_for_node(graph, next(iter(unvisited)), get_neighbors)
         components.append(component)
+        unvisited -= component
 
     return components
 

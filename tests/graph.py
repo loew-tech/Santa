@@ -274,6 +274,18 @@ class TestGraph(unittest.TestCase):
 
         self.assertEqual(expected_sorted, actual_sorted)
 
+    def test_get_component_for_node_not_in_graph(self):
+        """Verify that a node not present in the graph returns an empty set."""
+        graph = {"A": ["B"], "B": []}
+        get_neighbors = lambda node, g: g.get(node, [])
+
+        # Act
+        actual = get_component_for_node(graph, "Z", get_neighbors)
+
+        # Assert
+        expected = set()
+        self.assertEqual(expected, actual)
+
     def test_prims_algorithm(self):
         # A triangle: 0-1 (1), 1-2 (2), 0-2 (3)
         graph = {
