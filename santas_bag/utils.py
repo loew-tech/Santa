@@ -77,7 +77,7 @@ def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> s
     if response.status_code != HTTPStatus.OK:
         raise Exception(f'Failed to acquire input from {ADVENT_URI} (Status: {response.status_code})')
 
-    return response.text.strip()
+    return response.text
 
 def _fetch_test_input(year: int | str, day: int | str) -> str:
     """
@@ -112,6 +112,7 @@ def _process_input(text: str, delim: str | None,
 
     :return: A list of processed data, or a single parsed value if delim is None.
     """
+    text = text.strip()
     if delim == '\n':
         raw_data = text.splitlines()
     elif delim:
