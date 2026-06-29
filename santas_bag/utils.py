@@ -20,9 +20,9 @@ def read_input(
         inputs_path: Path | None = None,
         tests_path: Path | None = None,
         delim: str | None = '\n',
-        parse: Callable[[List[str] | str], Any | List | str | None] | None = None,
+        parse: Callable[[List[str] | str], Any] | None = None,
         testing: bool = False
-) -> List | Tuple | str | int | Any:
+) ->  Any:
     """
     Retrieves and parses Advent of Code input data.
 
@@ -77,7 +77,7 @@ def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> s
     if response.status_code != HTTPStatus.OK:
         raise Exception(f'Failed to acquire input from {ADVENT_URI} (Status: {response.status_code})')
 
-    return response.text
+    return response.text.strip()
 
 def _fetch_test_input(year: int | str, day: int | str) -> str:
     """
@@ -102,7 +102,7 @@ def _fetch_test_input(year: int | str, day: int | str) -> str:
 
 
 def _process_input(text: str, delim: str | None,
-                   parse: Callable[[List[str] | str], Any | List[Any] | str | None] | None) -> Any:
+                   parse: Callable[[List[str] | str], Any] | None) -> Any:
     """
     Processes the raw input text based on the provided delimiter and parser.
 
