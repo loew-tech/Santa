@@ -3,7 +3,7 @@ import time
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Callable, List, Tuple
+from typing import Any, Callable, List, Tuple, Optional
 
 from bs4 import BeautifulSoup
 import requests
@@ -11,6 +11,31 @@ import requests
 ADVENT_URI = 'https://adventofcode.com/'
 INPUTS_PATH = Path('inputs/')
 TESTS_PATH = Path('tests/')
+
+
+def get_read_input(
+        year: int | str,
+        session_id: str,
+        inputs_path: Path | None = None,
+        tests_path: Path | None = None,
+) -> Callable[..., Any]:
+    """
+    Returns a closure of read_input pre-configured with
+    the year, authentication credentials, and inputs/tests paths.
+
+    :param year: The puzzle year (e.g., 2024).
+    :param session_id: The session cookie for authentication.
+    :param inputs_path: Directory to store official input files. If None, defaults to ./inputs/
+    :param tests_path: Directory to store test/scraped input files. If None, defaults to ./tests/
+
+    :return: A callable that accepts day, delim, parse, and testing arguments.
+    """
+    def read(day: int | str,
+             delim: str | None = '\n',
+             parse: Callable[[List[str] | str], Any] | None = None,
+             testing=False) -> Any:
+        return read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing)
+    return read
 
 
 def read_input(
@@ -56,6 +81,7 @@ def read_input(
     target_file.write_text(text)
     return _process_input(text, delim, parse)
 
+
 def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> str:
     """
     Fetches the official puzzle input from the Advent of Code website.
@@ -78,6 +104,7 @@ def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> s
         raise Exception(f'Failed to acquire input from {ADVENT_URI} (Status: {response.status_code})')
 
     return response.text
+
 
 def _fetch_test_input(year: int | str, day: int | str) -> str:
     """
