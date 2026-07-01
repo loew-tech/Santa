@@ -94,6 +94,64 @@ class TestUtils(unittest.TestCase):
         result = _process_input(text, '\n', int)
         self.assertEqual([1, 2, 3], result)
 
+    @patch('requests.get')
+    def test_fetch_test_input_http_error(self, mock_get):
+        """Verify _fetch_test_input raises Exception on non-200 status."""
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_get.return_value = mock_response
+
+        from santas_bag.utils import _fetch_test_input
+        with self.assertRaisesRegex(Exception, 'Failed to fetch puzzle page'):
+            _fetch_test_input(2026, 1)
+
+    @patch('requests.get')
+    def test_fetch_test_input_no_pre_block(self, mock_get):
+        """Verify _fetch_test_input raises Exception when <pre> is missing."""
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        # Valid HTML but no <pre> tag
+        mock_response.content = b"<html><body><p>No code here</p></body></html>"
+        mock_get.return_value = mock_response
+
+        from santas_bag.utils import _fetch_test_input
+        with self.assertRaisesRegex(Exception, 'Could not automatically find a test case'):
+            _fetch_test_input(2026, 1)
+
+    def test_process_input_custom_delimiter(self):
+        """Verify processing with a custom delimiter (e.g., comma-separated)."""
+        from santas_bag.utils import _process_input
+
+        # Test with custom delimiter and no parser
+        text = "1,2,3"
+        result = _process_input(text, delim=',', parse=None)
+        self.assertEqual(result, ["1", "2", "3"])
+
+        # Test with custom delimiter and a parser
+        result = _process_input(text, delim=',', parse=int)
+        self.assertEqual(result, [1, 2, 3])
+
+    def test_process_input_no_delimiter(self):
+        """Verify processing when delim is None (raw processing)."""
+        from santas_bag.utils import _process_input
+
+        # Test with no delimiter and no parser (returns raw text)
+        text = "some raw text"
+        result = _process_input(text, delim=None, parse=None)
+        self.assertEqual(result, "some raw text")
+
+        # Test with no delimiter but with a parser
+        # Example: parsing a raw string into a list of characters
+        result = _process_input("abc", delim=None, parse=list)
+        self.assertEqual(result, ['a', 'b', 'c'])
+
+    def test_process_input_trailing_newline_stripping(self):
+        """Verify that the function correctly strips the trailing newline."""
+        from santas_bag.utils import _process_input
+
+        # '1,2,3\n' should become ['1', '2', '3']
+        result = _process_input("1,2,3\n", delim=',', parse=None)
+        self.assertEqual(result, ["1", "2", "3"])
 
     @patch('time.perf_counter')
     def test_time_execution(self, mock_perf):
