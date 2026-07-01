@@ -169,7 +169,7 @@ def topological_sort(graph: Dict[Any, List[Any]],
 
 def get_component_for_node(graph: Dict[Any, List],
                            start_node: Any,
-                           get_neighbors: Callable[..., Iterable]) -> Set[Any]:
+                           get_neighbors: Callable[..., Iterable] | None =None) -> Set[Any]:
     """
     Returns the set of all nodes reachable from the start_node.
 
@@ -182,6 +182,9 @@ def get_component_for_node(graph: Dict[Any, List],
     if start_node not in graph:
         return set()
 
+    if get_neighbors is None:
+        get_neighbors = _get_neighbors_default
+
     visited = set()
     bfs(start_node,
         graph,
@@ -192,7 +195,7 @@ def get_component_for_node(graph: Dict[Any, List],
 
 
 def get_components(graph: Dict[Any, List[Any]],
-                   get_neighbors: Callable[..., Iterable],) -> List[Set[Any]]:
+                   get_neighbors: Callable[..., Iterable] | None = None) -> List[Set[Any]]:
     """
     Returns a list of sets where each set is a connected component of the graph
 
@@ -202,10 +205,12 @@ def get_components(graph: Dict[Any, List[Any]],
 
     :return: List of Sets of nodes where each set is a component
     """
+    if get_neighbors is None:
+        get_neighbors = _get_neighbors_default
+
     unvisited = set(graph.keys())
-    for neighbors in graph.values():
-        for n in neighbors:
-            unvisited.add(n[0] if isinstance(n, tuple) else n)
+    for node in graph:
+        unvisited.update(get_neighbors(node, graph))
 
     components = []
     while unvisited:
@@ -214,6 +219,11 @@ def get_components(graph: Dict[Any, List[Any]],
         unvisited -= component
 
     return components
+
+
+def _get_neighbors_default(node: Any, graph: Dict[Any, List[Any]], *args, **kwargs) -> Iterable[Any]:
+    for neighbor in graph.get(node, []):
+        yield neighbor[0] if isinstance(neighbor, tuple) else neighbor
 
 
 def spanning_tree(graph: Dict[Any, List[Tuple[Any, int]]]) -> List[Tuple[Any, Any, int]]:

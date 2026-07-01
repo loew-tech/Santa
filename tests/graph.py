@@ -291,6 +291,34 @@ class TestGraph(unittest.TestCase):
         expected = set()
         self.assertEqual(expected, actual)
 
+    def test_get_components_custom_grid_neighbors(self):
+        """
+        Verify get_components works with a custom callback
+        on a grid where neighbors are calculated on-the-fly.
+        """
+        # Define a 2x2 grid: (0,0) (0,1)
+        #                   (1,0) (1,1)
+        # Components: { (0,0), (0,1), (1,0), (1,1) } (all connected)
+        nodes = [(0, 0), (0, 1), (1, 0), (1, 1)]
+
+        # Custom logic: neighbors are nodes with Manhattan distance of 1
+        def get_grid_neighbors(node, graph):
+            r, c = node
+            possible = [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
+            # Only return neighbors that actually exist in our defined node set
+            return [n for n in possible if n in graph]
+
+        # In this setup, 'graph' is just the collection of valid nodes
+        grid_graph = {node: [] for node in nodes}
+
+        # Act
+        actual = get_components(grid_graph, get_neighbors=get_grid_neighbors)
+
+        # Assert: Everything is one component
+        expected = [{(0, 0), (0, 1), (1, 0), (1, 1)}]
+
+        self.assertEqual(expected, actual)
+
     def test_prims_algorithm(self):
         # A triangle: 0-1 (1), 1-2 (2), 0-2 (3)
         graph = {
