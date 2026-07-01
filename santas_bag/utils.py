@@ -1,9 +1,8 @@
-import os
 import time
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Callable, List, Tuple, Optional
+from typing import Any, Callable
 
 from bs4 import BeautifulSoup
 import requests
@@ -32,7 +31,7 @@ def get_read_input(
     """
     def read(day: int | str,
              delim: str | None = '\n',
-             parse: Callable[[List[str] | str], Any] | None = None,
+             parse: Callable[[Any], Any] | None = None,
              testing=False) -> Any:
         return read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing)
     return read
@@ -45,7 +44,7 @@ def read_input(
         inputs_path: Path | None = None,
         tests_path: Path | None = None,
         delim: str | None = '\n',
-        parse: Callable[[List[str] | str], Any] | None = None,
+        parse: Callable[[Any], Any] | None = None,
         testing: bool = False
 ) ->  Any:
     """
@@ -129,7 +128,7 @@ def _fetch_test_input(year: int | str, day: int | str) -> str:
 
 
 def _process_input(text: str, delim: str | None,
-                   parse: Callable[[List[str] | str], Any] | None) -> Any:
+                   parse: Callable[[Any], Any] | None) -> Any:
     """
     Processes the raw input text based on the provided delimiter and parser.
 
@@ -139,7 +138,7 @@ def _process_input(text: str, delim: str | None,
 
     :return: A list of processed data, or a single parsed value if delim is None.
     """
-    text = text.strip()
+    text = text[:-1] if text[-1] == '\n' else text
     if delim == '\n':
         raw_data = text.splitlines()
     elif delim:
