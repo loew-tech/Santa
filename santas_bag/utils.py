@@ -1,9 +1,8 @@
-import os
 import time
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Callable, List, Tuple, Optional
+from typing import Any, Callable
 
 from bs4 import BeautifulSoup
 import requests
