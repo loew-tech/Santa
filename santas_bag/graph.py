@@ -197,7 +197,7 @@ def get_components(graph: Dict[Any, List[Any]],
     Returns a list of sets where each set is a connected component of the graph
 
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
-        :param get_neighbors: A callback for getting the neighbors of the current node
+    :param get_neighbors: A callback for getting the neighbors of the current node
 
 
     :return: List of Sets of nodes where each set is a component
