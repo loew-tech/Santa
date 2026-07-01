@@ -265,7 +265,12 @@ class TestGraph(unittest.TestCase):
     def test_get_components(self):
         # Two separate clusters: (0, 1) and (2, 3)
         graph = {0: [1], 1: [0], 2: [3], 3: [2]}
-        actual = get_components(graph)
+
+        # Define how to get neighbors from the graph dictionary
+        get_neighbors = lambda u, s, *args, **kwargs: graph.get(u, [])
+
+        # Pass the callback into the function
+        actual = get_components(graph, get_neighbors)
         expected = [{0, 1}, {2, 3}]
 
         # Sort for comparison since set order is arbitrary

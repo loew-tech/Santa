@@ -169,7 +169,7 @@ def topological_sort(graph: Dict[Any, List[Any]],
 
 def get_component_for_node(graph: Dict[Any, List],
                            start_node: Any,
-                           get_neighbors: Callable[..., Iterable],) -> Set[Any]:
+                           get_neighbors: Callable[..., Iterable]) -> Set[Any]:
     """
     Returns the set of all nodes reachable from the start_node.
 
@@ -191,11 +191,14 @@ def get_component_for_node(graph: Dict[Any, List],
     return visited
 
 
-def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
+def get_components(graph: Dict[Any, List[Any]],
+                   get_neighbors: Callable[..., Iterable],) -> List[Set[Any]]:
     """
     Returns a list of sets where each set is a connected component of the graph
 
     :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+    :param get_neighbors: A callback for getting the neighbors of the current node
+
 
     :return: List of Sets of nodes where each set is a component
     """
@@ -203,10 +206,6 @@ def get_components(graph: Dict[Any, List[Any]]) -> List[Set[Any]]:
     for neighbors in graph.values():
         for n in neighbors:
             unvisited.add(n[0] if isinstance(n, tuple) else n)
-
-    def get_neighbors(node, graph_, *args, **kwargs):
-        for n_ in graph_.get(node, []):
-            yield n_[0] if isinstance(n_, tuple) else n_
 
     components = []
     while unvisited:
