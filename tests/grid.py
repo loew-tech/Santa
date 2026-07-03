@@ -41,13 +41,62 @@ class TestGrid(unittest.TestCase):
         }
         self.assertEqual(expected, grid_to_dict(self.sample_grid))
 
-    def test_transpose_grid(self):
+    def test_transform_transpose_grid(self):
         expected = [
             [1, 4],
             [2, 5],
             [3, 6]
         ]
-        self.assertEqual(transpose_grid(self.sample_grid), expected)
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'transpose'))
+
+    def test_transform_h_flip(self):
+        # h_flip is horizontal (left-to-right)
+        expected = [
+            [3, 2, 1],
+            [6, 5, 4]
+        ]
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'h_flip'))
+        self.assertEqual(flip_horizontal(self.sample_grid), transform_grid(self.sample_grid, 'h_flip'))
+
+    def test_transform_v_flip(self):
+        expected = [
+            [4, 5, 6],
+            [1, 2, 3]
+        ]
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'v_flip'))
+
+    def test_transform_rot90(self):
+        # Using sample_grid [[1, 2, 3], [4, 5, 6]]
+        # Row 1 becomes col 1 (reversed), Row 2 becomes col 2 (reversed)
+        expected = [
+            [4, 1],
+            [5, 2],
+            [6, 3]
+        ]
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'rot90'))
+        # Ensure it matches your legacy rotate_clockwise function
+        self.assertEqual(rotate_clockwise(self.sample_grid), transform_grid(self.sample_grid, 'rot90'))
+
+    def test_transform_rot180(self):
+        # 180 degrees is equivalent to reversing rows and columns
+        expected = [
+            [6, 5, 4],
+            [3, 2, 1]
+        ]
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'rot180'))
+
+    def test_transform_rot270(self):
+        # 270 degrees clockwise (or 90 counter-clockwise)
+        expected = [
+            [3, 6],
+            [2, 5],
+            [1, 4]
+        ]
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'rot270'))
+
+    def test_transform_invalid_mode(self):
+        with self.assertRaises(ValueError):
+            transform_grid(self.sample_grid, 'invalid_mode')
 
     def test_neighbors4(self):
         self.assertEqual(sorted([(0, 0), (0, 2), (1, 1)]), sorted(neighbors4(0, 1, self.sample_grid)))
@@ -62,7 +111,7 @@ class TestGrid(unittest.TestCase):
         empty = []
         self.assertFalse(inbounds(empty, 0, 0))
         self.assertEqual({}, grid_to_dict(empty))
-        self.assertEqual([], transpose_grid(empty))
+        self.assertEqual([], transform_grid(empty, 'transpose'))
 
     def test_taxi_distance(self):
         self.assertEqual(7, taxi_distance(0, 0, 3, 4))

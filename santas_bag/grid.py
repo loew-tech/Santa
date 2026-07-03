@@ -1,5 +1,5 @@
 from collections.abc import Container
-from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Generator
+from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Generator, Literal
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
@@ -54,16 +54,41 @@ def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Tuple[int, int], Any]:
     return {(y, x): v for y, row in enumerate(grid) for x, v in enumerate(row)}
 
 
-def transpose_grid(grid: Iterable[Iterable]) -> Iterable:
+def transform_grid(grid: Iterable[Iterable],
+                   mode: Literal['v_flip', 'h_flip', 'transpose', 'rot90', 'rot180', 'rot270']) -> List[List]:
     """
-    Transposes a 2D grid (rows become columns and vice versa).
+    Performs various geometric transformations on a 2D grid.
 
-    :param grid: The 2D structure to transpose.
+    :param grid: The 2D structure.
+    :param mode: The transformation mode.
 
-    :return: The transposed grid as a list of lists.
+    Modes:
+    - 'v_flip': Vertical flip (top-to-bottom)
+    - 'h_flip': Horizontal flip (left-to-right)
+    - 'transpose': Rows become columns
+    - 'rot90': 90 degrees clockwise
+    - 'rot180': 180 degrees clockwise
+    - 'rot270': 270 degrees clockwise
+
+    :return: The transformed 2D grid.
     """
-    return [list(row) for row in zip(*grid)]
+    g = [list(row) for row in grid]
 
+    match mode:
+        case 'v_flip':
+            return g[::-1]
+        case 'h_flip':
+            return [row[::-1] for row in g]
+        case 'transpose':
+            return [list(row) for row in zip(*g)]
+        case 'rot90':
+            return [list(row) for row in zip(*g[::-1])]
+        case 'rot180':
+            return [row[::-1] for row in g[::-1]]
+        case 'rot270':
+            return [list(row) for row in zip(*g)][::-1]
+        case _:
+            raise ValueError(f"Unknown transformation mode: {mode}")
 
 def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
     """
