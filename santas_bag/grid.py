@@ -62,6 +62,9 @@ def transform_grid(grid: Iterable[Iterable],
     """
     Performs various geometric transformations on a 2D grid.
 
+    :param grid: The 2D structure.
+    :param mode: The transformation mode.
+
     Modes:
     - 'v_flip': Vertical flip (top-to-bottom)
     - 'h_flip': Horizontal flip (left-to-right)
@@ -69,6 +72,8 @@ def transform_grid(grid: Iterable[Iterable],
     - 'rot90': 90 degrees clockwise
     - 'rot180': 180 degrees clockwise
     - 'rot270': 270 degrees clockwise
+
+    :return: The transformed 2D grid.
     """
     g = [list(row) for row in grid]
 
