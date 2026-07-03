@@ -1,5 +1,5 @@
 from collections.abc import Container
-from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Generator
+from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Generator, Literal
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
@@ -52,9 +52,6 @@ def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Tuple[int, int], Any]:
     :return: A dictionary where keys are (y, x) tuples and values are grid cells.
     """
     return {(y, x): v for y, row in enumerate(grid) for x, v in enumerate(row)}
-
-
-from typing import Iterable, Literal
 
 
 def transform_grid(grid: Iterable[Iterable],
