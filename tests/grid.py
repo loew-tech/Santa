@@ -111,7 +111,7 @@ class TestGrid(unittest.TestCase):
         empty = []
         self.assertFalse(inbounds(empty, 0, 0))
         self.assertEqual({}, grid_to_dict(empty))
-        self.assertEqual([], transpose_grid(empty))
+        self.assertEqual([], transform_grid(empty, 'transpose'))
 
     def test_taxi_distance(self):
         self.assertEqual(7, taxi_distance(0, 0, 3, 4))
