@@ -118,9 +118,11 @@ def get_standard_ops(registers: RegisterProtocol) -> Dict[str, Callable]:
         'dec': lambda x: set_(x, val(x) - 1),
         'set': lambda x, y: set_(x, val(y)),
         'add': lambda x, y: set_(x, operator.add(val(x), val(y))),
+        'sub': lambda x, y: set_(x, operator.sub(val(x), val(y))),
         'mul': lambda x, y: set_(x, operator.mul(val(x), val(y))),
         'mod': lambda x, y: set_(x, operator.mod(val(x), val(y))),
         'pow': lambda x, y: set_(x, operator.pow(val(x), val(y))),
+        'jmp': lambda x, y: val(y) if val(x) else None
     }
 
 
