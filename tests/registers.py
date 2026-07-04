@@ -18,28 +18,28 @@ class TestRegisters(unittest.TestCase):
         self.ops['dec']('b')
         self.ops['add']('c', 1)  # c = 0 + 1 = 1
 
-        self.assertEqual(self.regs['a'], 1)
-        self.assertEqual(self.regs['b'], -1)
-        self.assertEqual(self.regs['c'], 1)
+        self.assertEqual(1, self.regs['a'])
+        self.assertEqual(-1, self.regs['b'])
+        self.assertEqual(1, self.regs['c'])
 
     def test_arithmetic_with_literals(self):
         """Verify that operations handle both registers and literal integers correctly."""
         self.regs['a'] = 10
         self.ops['add']('a', 5)  # 10 + 5
-        self.assertEqual(self.regs['a'], 15)
+        self.assertEqual(15, self.regs['a'])
 
         self.ops['mul']('a', 'a')  # 15 * 15
-        self.assertEqual(self.regs['a'], 225)
+        self.assertEqual(225, self.regs['a'])
 
     def test_mod_and_pow(self):
         """Verify standard operations include mod and pow."""
         self.regs['x'] = 10
         self.ops['mod']('x', 3)  # 10 % 3
-        self.assertEqual(self.regs['x'], 1)
+        self.assertEqual(1, self.regs['x'])
 
         self.ops['set']('x', 5)
         self.ops['pow']('x', 2)  # 5^2
-        self.assertEqual(self.regs['x'], 25)
+        self.assertEqual(25, self.regs['x'])
 
     def test_sub(self):
         """Verify the sub operation performs subtraction."""
@@ -64,7 +64,7 @@ class TestRegisters(unittest.TestCase):
     def test_default_factory_behavior(self):
         """Ensure new registers auto-initialize to 0."""
         _ = self.regs['new_reg']
-        self.assertEqual(self.regs.value('new_reg'), 0)
+        self.assertEqual(0, self.regs.value('new_reg'))
 
     def test_compile_instructions_success(self):
         def dummy_op(): pass
@@ -73,9 +73,9 @@ class TestRegisters(unittest.TestCase):
         ops = {'inc': dummy_op, 'dec': dummy_op}
 
         compiled = compile_instructions(instructions, ops)
-        self.assertEqual(len(compiled), 2)
+        self.assertEqual(2, len(compiled))
         # Testing against the CompiledInstruction fields: func and args
-        self.assertEqual(compiled[0].func, dummy_op)
+        self.assertEqual(dummy_op, compiled[0].func)
 
     def test_compile_instructions_raises_error(self):
         instructions = [Instruction('unknown', ())]
@@ -101,7 +101,7 @@ class TestRegisters(unittest.TestCase):
         ops = {'jump': jump_op, 'skip_me': no_op, 'target': lambda: None}
 
         execute_instructions(instructions, ops)
-        self.assertEqual(registers['val'], 0, "Instruction should have been skipped")
+        self.assertEqual(0, registers['val'] )
 
     def test_execution_bounds_safety(self):
         """Ensure execution stops cleanly even if jump goes out of bounds."""
