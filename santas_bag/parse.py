@@ -90,18 +90,33 @@ def get_parse_adjacency_list(
     return parse
 
 
+def _get_instruction_default(ln: str) -> str:
+    return ln.split()[0]
+
+
+def _get_args_default(line: str) -> Tuple:
+    _, *args = line.split()
+    return tuple(args)
+
 def get_parse_instruction(
-        get_instruction: Callable[[str], str],
-        get_args: Callable[[str], Tuple]
+        get_instruction: Callable[[str], str] | None = None,
+        get_args: Callable[[str], Tuple] | None = None,
 ) -> Callable[[str], Instruction]:
     """
     Returns a parse function that parses a line and returns an Instruction.
 
-    :param get_instruction: function that parses a line and returns an Instruction.
-    :param get_args: function that parses a line and returns arguments to Instruction.
+    :param get_instruction: Optional function that parses a line and returns an Instruction. Defaults to retrieving first
+    entry from line.split()
+    :param get_args: Optional function that parses a line and returns arguments to Instruction. Defaults to retrieving
+    line.split()[1:]
 
     :return: Function that parses a line and returns an Instruction.
     """
+    if get_instruction is None:
+        get_instruction = _get_instruction_default
+    if get_args is None:
+        get_args = _get_args_default
+
     def parse(line: str) -> Instruction:
         instruction = get_instruction(line)
         args = get_args(line)

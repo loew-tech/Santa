@@ -63,6 +63,16 @@ class TestParse(unittest.TestCase):
         vertex, edges = parse("StandaloneVertex")
         self.assertEqual(edges, [])
 
+    def test_get_parse_instruction_default(self):
+        # Use default getters
+        parse_func = get_parse_instruction()
+
+        # Execute and Verify
+        instr = parse_func("ADD a b")
+        self.assertEqual(instr.instruction, "ADD")
+        self.assertEqual(instr.args, ('a', 'b'))
+        self.assertIsInstance(instr, Instruction)
+
     def test_get_parse_instruction(self):
         # Setup: Define simple extraction logic for a custom format
         # Format: "OP:ARG1,ARG2"
