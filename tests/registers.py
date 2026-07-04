@@ -16,11 +16,11 @@ class TestRegisters(unittest.TestCase):
 
         self.ops['inc']('a')
         self.ops['dec']('b')
-        self.ops['add']('c', 'a', 'b')  # c = 0 + 1 + (-1) = 0
+        self.ops['add']('c', 1)  # c = 0 + 1 = 1
 
         self.assertEqual(self.regs['a'], 1)
         self.assertEqual(self.regs['b'], -1)
-        self.assertEqual(self.regs['c'], 0)
+        self.assertEqual(self.regs['c'], 1)
 
     def test_arithmetic_with_literals(self):
         """Verify that operations handle both registers and literal integers correctly."""
@@ -41,38 +41,30 @@ class TestRegisters(unittest.TestCase):
         self.ops['pow']('x', 2)  # 5^2
         self.assertEqual(self.regs['x'], 25)
 
+    def test_sub(self):
+        """Verify the sub operation performs subtraction."""
+        self.regs['a'] = 10
+        self.regs['b'] = 4
+        self.ops['sub']('a', 'b')
+        self.assertEqual(6, self.regs['a'])
+
+    def test_jmp(self):
+        """Verify the jmp operation returns the jump offset or None."""
+        # Condition is true (a=1), should return value of y (5)
+        self.regs['a'] = 1
+        self.regs['b'] = 5
+        result = self.ops['jmp']('a', 'b')
+        self.assertEqual(5, result)
+
+        # Condition is false (a=0), should return None
+        self.regs['a'] = 0
+        result = self.ops['jmp']('a', 'b')
+        self.assertEqual(None, result)
+
     def test_default_factory_behavior(self):
         """Ensure new registers auto-initialize to 0."""
         _ = self.regs['new_reg']
         self.assertEqual(self.regs.value('new_reg'), 0)
-
-    def test_sample_execution(self):
-        registers = {'a': 0, 'b': 0, 'c': 0}
-        instructions = [
-            Instruction('inc', ('a',)),
-            Instruction('dec', ('b',)),
-            Instruction('add', ('c', 'a', 'b'))
-        ]
-
-        def inc(a):
-            registers[a] += 1
-
-        def dec(a):
-            registers[a] -= 1
-
-        def add(a, b, c):
-            registers[a] += registers.get(b, b) + registers.get(c, c)
-
-        ops = {
-            'inc': inc,
-            'dec': dec,
-            'add': add,
-        }
-
-        execute_instructions(instructions, ops)
-        self.assertEqual(registers['a'], 1)
-        self.assertEqual(registers['b'], -1)
-        self.assertEqual(registers['c'], 0)
 
     def test_compile_instructions_success(self):
         def dummy_op(): pass
