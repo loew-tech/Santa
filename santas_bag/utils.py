@@ -180,9 +180,8 @@ def _fetch_expected(year, day: int | str, session_id: str, part: int) -> str:
         with open(file_path, 'w') as out:
             out.write(expected)
         return expected
-    else:
-        return (f'Could not find any test cases year {year} for Day {day}. '
-                f'Verify by examining {ADVENT_URI}{year}/day/{day}')
+
+    return f'Could not find any test cases year {year} for Day {day}. Verify by examining {ADVENT_URI}{year}/day/{day}'
 
 
 def _process_input(text, delim: str | None,
