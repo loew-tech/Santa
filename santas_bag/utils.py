@@ -1,3 +1,4 @@
+import re
 import time
 from functools import wraps
 from http import HTTPStatus
@@ -32,8 +33,9 @@ def get_read_input(
     def read(day: int | str,
              delim: str | None = '\n',
              parse: Callable[[Any], Any] | None = None,
-             testing=False) -> Any:
-        return read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing)
+             testing=False,
+             part=1) -> Any:
+        return read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing, part)
     return read
 
 
@@ -45,7 +47,8 @@ def read_input(
         tests_path: Path | None = None,
         delim: str | None = '\n',
         parse: Callable[[Any], Any] | None = None,
-        testing: bool = False
+        testing: bool = False,
+        part = 1
 ) ->  Any:
     """
     Retrieves and parses Advent of Code input data.
@@ -58,6 +61,7 @@ def read_input(
     :param delim: String to split input text; defaults to newline.
     :param parse: A callable to transform input lines or the entire text.
     :param testing: Whether to fetch from the test path and scrape test cases.
+    :param part: The part of the problem being tested / solved.
 
     :return: A list of parsed items or the raw input string.
     """
@@ -68,11 +72,16 @@ def read_input(
     target_file = target_dir / f'{day}.txt'
 
     if target_file.exists():
+        if testing:
+            expected_file = TESTS_PATH / f'{day}_part_{part}_expected.txt'
+            if not expected_file.exists():
+                _fetch_expected(year, day, session_id, part)
         return _process_input(target_file.read_text(), delim, parse)
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
     if testing:
         text = _fetch_test_input(year, day)
+        _fetch_expected(year, day, session_id, part)
         print(f'⚠️ Scraped test input for Day {day}. Verify it in {target_file}')
     else:
         text = _fetch_official_input(year, day, session_id)
@@ -81,12 +90,12 @@ def read_input(
     return _process_input(text, delim, parse)
 
 
-def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> str:
+def _fetch_official_input(year, day: int | str, session_id: str) -> str:
     """
     Fetches the official puzzle input from the Advent of Code website.
 
-    :param day: The puzzle day.
     :param year: The puzzle year.
+    :param day: The puzzle day.
     :param session_id: your session cookie for authentication.
 
     :raises Exception: If the HTTP request fails.
@@ -105,7 +114,7 @@ def _fetch_official_input(year: int | str, day: int | str, session_id: str) -> s
     return response.text
 
 
-def _fetch_test_input(year: int | str, day: int | str) -> str:
+def _fetch_test_input(year,  day: int | str) -> str:
     """
     Scrapes the example input from the puzzle page <pre> blocks.
 
@@ -127,7 +136,55 @@ def _fetch_test_input(year: int | str, day: int | str) -> str:
     return code_block.get_text()
 
 
-def _process_input(text: str, delim: str | None,
+def _fetch_expected(year, day: int | str, session_id: str, part: int) -> str:
+    """
+    Scrapes the example output from the puzzle page <code> blocks. Result is cached in TESTS_PATH (default: /test) and
+    written to <day>_part_<part>_expected.txt
+
+    :param year: The puzzle year.
+    :param day: The puzzle day.
+    :param session_id: your session cookie for authentication. Necessary for scraping answer for part 2.
+    :param part: The part of the problem being tested / solved.
+
+    :return: The expected answer for the puzzle's sample input
+    """
+    TESTS_PATH.mkdir(exist_ok=True)
+    file_path = TESTS_PATH / f'{day}_part_{part}_expected.txt'
+
+    if file_path.exists():
+        return file_path.read_text().strip()
+
+    response = requests.get(f'{ADVENT_URI}{year}/day/{day}',
+    cookies = {'session': session_id if not int(part) == 1 else ''},
+    headers = {'User-Agent': 'github.com/loew-tech/santas_bag by loew.technology@gmail.com'}
+    )
+    soup = BeautifulSoup(response.content, 'html.parser')
+    if not part == 1:
+        if 'Part Two' not in soup.prettify():
+            print(f'\treturning early')
+            return 'UNLOCK PART 2 TO TEST'
+
+    expected = ''
+    for p in soup.find_all('p'):
+        for c in p.find_all('code'):
+            if em := c.find('em'):
+                expected = em.get_text().strip()
+
+    if not expected:
+        for p in soup.find_all('p'):
+            for em in p.find_all('em'):
+                if code := em.find('code'):
+                    expected = code.get_text().strip()
+
+    if expected:
+        with open(file_path, 'w') as out:
+            out.write(expected)
+        return expected
+
+    return f'Could not find any test cases year {year} for Day {day}. Verify by examining {ADVENT_URI}{year}/day/{day}'
+
+
+def _process_input(text, delim: str | None,
                    parse: Callable[[Any], Any] | None) -> Any:
     """
     Processes the raw input text based on the provided delimiter and parser.
