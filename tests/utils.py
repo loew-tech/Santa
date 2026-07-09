@@ -4,6 +4,7 @@ from pathlib import Path
 import time
 
 from santas_bag.utils import *
+from santas_bag.utils import _fetch_expected
 
 
 class TestUtils(unittest.TestCase):
@@ -23,7 +24,7 @@ class TestUtils(unittest.TestCase):
         # 4. Assert that read_input was called with the combined arguments
         # (factory args + function call args)
         mock_read_input.assert_called_once_with(
-            2026, 1, 'my_session', None, None, '\n', None, True
+            2026, 1, 'my_session', None, None, '\n', None, True, 1
         )
         self.assertEqual(result, ["mocked_data"])
 
@@ -105,6 +106,31 @@ class TestUtils(unittest.TestCase):
         with self.assertRaisesRegex(Exception, 'Failed to fetch puzzle page'):
             _fetch_test_input(2026, 1)
 
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.write_text')
+    @patch('santas_bag.utils._fetch_test_input', return_value="mock_test_content")
+    @patch('santas_bag.utils._fetch_expected')
+    @patch('builtins.print')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_read_input_testing_mode_triggers_scraping(
+            self, mock_exists, mock_print, mock_expected, mock_fetch_input, mock_write, mock_mkdir
+    ):
+        """Verify that testing=True triggers fetching and directory creation safely in-memory."""
+        read_input(2026, 1, 'session', part=1, testing=True)
+
+        mock_mkdir.assert_called_once()
+        mock_fetch_input.assert_called_once()
+        mock_expected.assert_called_once()
+        mock_print.assert_called()
+
+    @patch('pathlib.Path.read_text', return_value="dummy_data")
+    @patch('pathlib.Path.exists', return_value=True)
+    @patch('santas_bag.utils._fetch_expected')
+    def test_read_input_skips_fetch_if_exists(self, mock_fetch, mock_exists, mock_read):
+        """Verify _fetch_expected is NOT called when the file already exists."""
+        read_input(2026, 1, 'session', testing=True, part=1)
+        mock_fetch.assert_not_called()
+
     @patch('requests.get')
     def test_fetch_test_input_no_pre_block(self, mock_get):
         """Verify _fetch_test_input raises Exception when <pre> is missing."""
@@ -175,6 +201,71 @@ class TestUtils(unittest.TestCase):
             # Duration should be 2.5 - 1.0 = 1.5
             mock_print.assert_called_with("⏱️ Execution time for sample_func: 1.5000 seconds")
 
+    @patch('pathlib.Path.write_text')
+    @patch('pathlib.Path.read_text', return_value="dummy_data")
+    @patch('pathlib.Path.exists', return_value=False)
+    @patch('santas_bag.utils._fetch_expected')
+    def test_read_input_fetches_expected_if_missing(
+            self, mock_fetch, mock_exists, mock_read, mock_write
+    ):
+        """Verify _fetch_expected IS called when the file is missing."""
+        # We also mock _fetch_test_input to prevent network calls
+        with patch('santas_bag.utils._fetch_test_input', return_value="data"):
+            read_input(2026, 1, 'session', testing=True, part=1)
+            mock_fetch.assert_called_once()
+            mock_write.assert_called_once()
+
+    from unittest.mock import patch, mock_open, MagicMock
+
+    # ... inside your TestUtils class ...
+
+    @patch('builtins.open', new_callable=mock_open)  # Intercepts the open() call
+    @patch('pathlib.Path.exists', return_value=False)
+    @patch('requests.get')
+    def test_fetch_expected_nested_em_code(self, mock_get, mock_exists, mock_file_open):
+        """Verify <em><code>answer</code></em> and ensure no disk artifact is created."""
+        mock_response = MagicMock()
+        mock_response.content = b"<html><p><em><code>999</code></em></p></html>"
+        mock_get.return_value = mock_response
+
+        with patch('pathlib.Path.mkdir'):
+            result = _fetch_expected(2026, 1, "session", 1)
+
+            self.assertEqual("999", result)
+
+            # Assert that the file was opened for writing
+            mock_file_open.assert_called_once()
+
+            # Optionally, assert that the correct data was written
+            # .return_value is the handle; .write is the method called on that handle
+            mock_file_open().write.assert_called_once_with("999")
+
+    @patch('pathlib.Path.exists', return_value=False)
+    @patch('requests.get')
+    def test_fetch_expected_not_found(self, mock_get, mock_exists):
+        """Verify the 'Could not find any test cases' fallback logic."""
+        mock_response = MagicMock()
+        # HTML with no <code> or <em> tags at all
+        mock_response.content = b"<html><body><p>No answers here</p></body></html>"
+        mock_get.return_value = mock_response
+
+        with patch('pathlib.Path.mkdir'):
+            result = _fetch_expected(2026, 1, "session", 1)
+            self.assertIn("Could not find any test cases", result)
+
+    @patch('requests.get')
+    def test_fetch_expected_part2_locked(self, mock_get):
+        """Verify Part 2 locked logic without disk interaction."""
+        mock_response = MagicMock()
+        mock_response.content = b"<html><body>Part One only</body></html>"
+        mock_response.prettify.return_value = "<html><body>Part One only</body></html>"
+        mock_get.return_value = mock_response
+
+        # Mock Path to return False for exists()
+        with patch('pathlib.Path.exists', return_value=False):
+            with patch('pathlib.Path.mkdir'):
+                result = _fetch_expected(2026, 1, "session", 2)
+                self.assertEqual("UNLOCK PART 2 TO TEST", result)
 
     def test_time_execution_args_forwarding(self):
         """Verify that args and kwargs are passed transparently."""
