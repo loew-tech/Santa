@@ -165,17 +165,16 @@ def _fetch_expected(year, day: int | str, session_id: str, part: int) -> str:
             return 'UNLOCK PART 2 TO TEST'
 
     expected = ''
-    if not expected.strip():
-        for p in soup.find_all('p'):
-            for c in p.find_all('code'):
-                if em := c.find('em'):
-                    expected = em.get_text()
+    for p in soup.find_all('p'):
+        for c in p.find_all('code'):
+            if em := c.find('em'):
+                expected = em.get_text().strip()
 
-    if not expected.strip():
+    if not expected:
         for p in soup.find_all('p'):
             for em in p.find_all('em'):
                 if code := em.find('code'):
-                    expected = code.get_text()
+                    expected = code.get_text().strip()
 
     if expected:
         with open(file_path, 'w') as out:

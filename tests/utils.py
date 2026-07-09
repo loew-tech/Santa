@@ -233,11 +233,8 @@ class TestUtils(unittest.TestCase):
 
             self.assertEqual("999", result)
 
-            # Assert that the file was opened for writing
             mock_file_open.assert_called_once()
 
-            # Optionally, assert that the correct data was written
-            # .return_value is the handle; .write is the method called on that handle
             mock_file_open().write.assert_called_once_with("999")
 
     @patch('pathlib.Path.exists', return_value=False)
