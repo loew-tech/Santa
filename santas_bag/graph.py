@@ -1,6 +1,6 @@
 import heapq
 from collections import deque, defaultdict
-from typing import Iterable, Dict, Any, List, Tuple, Set, Callable
+from typing import Iterable, Dict, List, Set, Callable
 
 from santas_bag.search import search, bfs
 
@@ -221,7 +221,7 @@ def get_components(graph: Dict[Any, List[Any]],
     return components
 
 
-def _get_neighbors_default(node: Any, graph: Dict[Any, List[Any]], *args, **kwargs) -> Iterable[Any]:
+def _get_neighbors_default(node: Any, graph: Dict[Any, List[Any]], *args ,**kwargs) -> Iterable[Any]:
     for neighbor in graph.get(node, []):
         yield neighbor[0] if isinstance(neighbor, tuple) else neighbor
 

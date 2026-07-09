@@ -99,6 +99,26 @@ class RegisterMixin:
             return self[key]
 
 
+class RegisterDict(defaultdict, RegisterMixin, RegisterProtocol):
+    """
+    A dictionary-based register storage for Virtual Machine implementations.
+
+    This class extends `defaultdict` to provide auto-initializing integer registers
+    (defaulting to 0) and incorporates `RegisterMixin` to provide the `value()`
+    method for resolving register names or literal values.
+
+    :param registers: An optional initial dictionary of register assignments.
+    :param kwargs: Additional key-value pairs to initialize registers.
+    """
+
+    def __init__(self, registers: Dict | None = None, **kwargs):
+        """
+        Initializes the register dictionary by merging initial data and keyword arguments.
+        """
+        data = {**dict(registers or {}), **kwargs}
+        super().__init__(int, data)
+
+
 def get_standard_ops(registers: RegisterProtocol) -> Dict[str, Callable]:
     """
     Returns a dictionary of 'standard' operations on registers. Includes:
@@ -124,23 +144,3 @@ def get_standard_ops(registers: RegisterProtocol) -> Dict[str, Callable]:
         'pow': lambda x, y: set_(x, operator.pow(val(x), val(y))),
         'jmp': lambda x, y: val(y) if val(x) else None
     }
-
-
-class RegisterDict(defaultdict, RegisterMixin, RegisterProtocol):
-    """
-    A dictionary-based register storage for Virtual Machine implementations.
-
-    This class extends `defaultdict` to provide auto-initializing integer registers
-    (defaulting to 0) and incorporates `RegisterMixin` to provide the `value()`
-    method for resolving register names or literal values.
-
-    :param registers: An optional initial dictionary of register assignments.
-    :param kwargs: Additional key-value pairs to initialize registers.
-    """
-
-    def __init__(self, registers: Dict | None = None, **kwargs):
-        """
-        Initializes the register dictionary by merging initial data and keyword arguments.
-        """
-        data = {**dict(registers or {}), **kwargs}
-        super().__init__(int, data)
