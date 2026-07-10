@@ -1,4 +1,3 @@
-import re
 import time
 from functools import wraps
 from http import HTTPStatus
@@ -136,6 +135,28 @@ def _fetch_test_input(year,  day: int | str) -> str:
     return code_block.get_text()
 
 
+def _process_input(text, delim: str | None,
+                   parse: Callable[[Any], Any] | None) -> Any:
+    """
+    Processes the raw input text based on the provided delimiter and parser.
+
+    :param text: The raw input string.
+    :param delim: The delimiter to split the text, or None for raw processing.
+    :param parse: An optional transformation function applied to data.
+
+    :return: A list of processed data, or a single parsed value if delim is None.
+    """
+    text = text[:-1] if text[-1] == '\n' else text
+    if delim == '\n':
+        raw_data = text.splitlines()
+    elif delim:
+        raw_data = text.split(delim)
+    else:
+        return parse(text) if parse else text
+
+    return [parse(item) for item in raw_data] if parse else raw_data
+
+
 def _fetch_expected(year, day: int | str, session_id: str, part: int) -> str:
     """
     Scrapes the example output from the puzzle page <code> blocks. Result is cached in TESTS_PATH (default: /test) and
@@ -161,7 +182,6 @@ def _fetch_expected(year, day: int | str, session_id: str, part: int) -> str:
     soup = BeautifulSoup(response.content, 'html.parser')
     if not part == 1:
         if 'Part Two' not in soup.prettify():
-            print(f'\treturning early')
             return 'UNLOCK PART 2 TO TEST'
 
     expected = ''
@@ -184,33 +204,12 @@ def _fetch_expected(year, day: int | str, session_id: str, part: int) -> str:
     return f'Could not find any test cases year {year} for Day {day}. Verify by examining {ADVENT_URI}{year}/day/{day}'
 
 
-def _process_input(text, delim: str | None,
-                   parse: Callable[[Any], Any] | None) -> Any:
-    """
-    Processes the raw input text based on the provided delimiter and parser.
-
-    :param text: The raw input string.
-    :param delim: The delimiter to split the text, or None for raw processing.
-    :param parse: An optional transformation function applied to data.
-
-    :return: A list of processed data, or a single parsed value if delim is None.
-    """
-    text = text[:-1] if text[-1] == '\n' else text
-    if delim == '\n':
-        raw_data = text.splitlines()
-    elif delim:
-        raw_data = text.split(delim)
-    else:
-        return parse(text) if parse else text
-
-    return [parse(item) for item in raw_data] if parse else raw_data
-
-
 def time_execution(func):
     """
     Decorator to log the execution time of a function.
 
     :param func: The function to be wrapped and timed.
+
     :return: A wrapper function that prints the execution duration.
     """
     @wraps(func)
@@ -219,5 +218,32 @@ def time_execution(func):
         result = func(*args, **kwargs)
         end = time.perf_counter()
         print(f"⏱️ Execution time for {func.__name__}: {end - start:.4f} seconds")
+        return result
+    return wrapper
+
+
+def naughty_or_nice(func):
+    """
+    Decorator for Advent of Code solution functions.
+
+    Times the execution of the solution and, when called with
+    ``testing=True``, compares the result against the expected answer
+    and reports whether it matches.
+
+    :param func: The solution function to wrap.
+
+    :return: A wrapped function with timing and optional validation.
+    """
+    timed_func = time_execution(func)
+
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        result = timed_func(*args, **kwargs)
+        if kwargs.get("testing"):
+            expected = _fetch_expected(*args, **kwargs)
+            if expected == str(result):
+                print(f"{func.__name__}     NICE: {expected} == {result}.")
+            else:
+                print(f"{func.__name__}  NAUGHTY: {expected=}. {result=}.")
         return result
     return wrapper
