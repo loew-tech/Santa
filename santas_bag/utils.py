@@ -212,7 +212,8 @@ def time_execution(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        print(f'\t\t\ttimed_execution {args=} {kwargs=}')
+        # @TODO: remove debug print
+        # print(f'\t\t\ttimed_execution {args=} {kwargs=}')
         start = time.perf_counter()
         result = func(*args, **kwargs)
         end = time.perf_counter()
@@ -311,12 +312,12 @@ def solve(year: str | int,
     """
     naughty_or_nice = get_naughty_or_nice(year, session_id)
     part1_wrapped = naughty_or_nice(day, part=1)(part1_func)
-    res1 = part1_wrapped(testing=testing)
+    res1 = part1_wrapped(testing=testing) if _accepts_testing_arg(part1_wrapped) else part1_wrapped()
 
     res2 = None
     if part2_func is not None:
         part2_wrapped = naughty_or_nice(day, part=2)(part2_func)
-        res2 = part2_wrapped(testing=testing)
+        res2 = part2_wrapped(testing=testing) if _accepts_testing_arg(part2_wrapped) else part2_wrapped()
     return res1, res2
 
 
