@@ -268,54 +268,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual({'key': 'value'}, kwargs)
 
 
-    @patch('santas_bag.utils._fetch_expected')
-    @patch('builtins.print')
-    def test_naughty_or_nice_decorator_nice(self, mock_print, mock_fetch):
-        """Verify decorator prints 'NICE' when result matches expected."""
-        mock_fetch.return_value = "100"
-
-        @naughty_or_nice
-        def solution_func(testing=False, day=1, session_id='123', year=2023, part=1):
-            return 100
-
-        result = solution_func(testing=True, day=1, session_id='123', year=2023, part=1)
-
-        self.assertEqual(result, 100)
-        # Check if the "NICE" message was printed
-        self.assertTrue(any("NICE" in call[0][0] for call in mock_print.call_args_list))
-
-
-    @patch('santas_bag.utils._fetch_expected')
-    @patch('builtins.print')
-    def test_naughty_or_nice_decorator_naughty(self, mock_print, mock_fetch):
-        """Verify decorator prints 'NAUGHTY' when result does not match expected."""
-        mock_fetch.return_value = "100"
-
-        @naughty_or_nice
-        def solution_func(testing=False, day=1, session_id='123', year=2023, part=1):
-            return 999
-
-        result = solution_func(testing=True, day=1, session_id='123', year=2023, part=1)
-
-        self.assertEqual(result, 999)
-        # Check if the "NAUGHTY" message was printed
-        self.assertTrue(any("NAUGHTY" in call[0][0] for call in mock_print.call_args_list))
-
-
-    @patch('santas_bag.utils._fetch_expected')
-    @patch('builtins.print')
-    def test_naughty_or_nice_decorator_disabled(self, mock_print, mock_fetch):
-        """Verify decorator does nothing when testing=False."""
-
-        @naughty_or_nice
-        def solution_func(testing=False):
-            return 100
-
-        result = solution_func(testing=False)
-
-        self.assertEqual(result, 100)
-        mock_fetch.assert_not_called()
-
+# @TODO: write get_naughty_or_nice tests
 
 if __name__ == '__main__':
     unittest.main()

@@ -211,39 +211,74 @@ def time_execution(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
+        print(f'\t\t\ttimed_execution {args=} {kwargs=}')
+        # @TODO: is this the right way to handle this?
+        kws = {**kwargs}
         start = time.perf_counter()
-        result = func(*args, **kwargs)
+        result = func(*args, **kws)
         end = time.perf_counter()
         print(f"⏱️ Execution time for {func.__name__}: {end - start:.4f} seconds")
         return result
     return wrapper
 
 
-def naughty_or_nice(func):
+def get_naughty_or_nice(year: int, session_id: str):
     """
-    Decorator for Advent of Code solution functions.
-
-    Times the execution of the solution and, when called with
-    ``testing=True``, compares the result against the expected answer
-    and reports whether it matches.
-
-    :param func: The solution function to wrap.
-
-    :return: A wrapped function with timing and optional validation.
+    Outer factory: Configures the decorator with persistent
+    values like year and session_id.
     """
-    timed_func = time_execution(func)
 
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        actual = timed_func(*args, **kwargs)
-        if kwargs.get("testing"):
-            year, day, part, session_id = kwargs.get('year'), kwargs.get('day'), kwargs.get('part'), kwargs.get('session_id')
-            if None in {year, day, part, session_id}:
-                raise Exception(f'Invalid arguments. Must provide kwarg year, day, part, and session_id.')
-            expected = _fetch_expected(year, day, session_id, part)
-            if expected == str(actual):
-                print(f"{func.__name__}     NICE: {expected}.")
-            else:
-                print(f"{func.__name__}  NAUGHTY: {expected=}. {actual=}.")
-        return actual
-    return wrapper
+    def naughty_or_nice(day: int, part: int = 1):
+        """
+        Middle layer: Captures the arguments provided at the @ line
+        (e.g., @decorator(day=1, part=1)).
+        """
+
+        def decorator(func):
+            """
+            Inner layer: Receives the function (e.g., day_1) being decorated.
+            """
+            timed_func = time_execution(func)
+
+            @wraps(func)
+            def wrapper(*args, **kwargs):
+                print(f'\t\twrapper {args=} {kwargs=}')
+                actual = timed_func(*args, **kwargs)
+
+                # We inject the captured arguments into kwargs so the function
+                # or the validation logic can use them.
+                kwargs.setdefault('year', year)
+                kwargs.setdefault('session_id', session_id)
+                kwargs.setdefault('day', day)
+                kwargs.setdefault('part', part)
+
+                # Validation logic
+                if kwargs.get("testing"):
+                    # Use the values we injected above
+                    y = kwargs['year']
+                    d = kwargs['day']
+                    p = kwargs['part']
+                    s = kwargs['session_id']
+                    expected = _fetch_expected(y, d, s, p)
+                    if expected == str(actual):
+                        print(f"{func.__name__}     NICE: {expected}.")
+                    else:
+                        print(f"{func.__name__}  NAUGHTY: {expected=}. {actual=}.")
+                return actual
+
+            return wrapper
+
+        return decorator
+
+    return naughty_or_nice
+
+
+# def solve(year: str| int,
+#           day: int | str,
+#           session_id: str,
+#           part1_func: Callable,
+#           part2_func: Callable | None=None,
+#           testing=False) -> Any:
+#     naughty_or_nice(part1_func, year=year, day=day, session_id=session_id, part=1, testing=testing)()
+#     if part2_func is not None:
+#         naughty_or_nice(part2_func, year=year, day=day, session_id=session_id, part=2, testing=testing)()
