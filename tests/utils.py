@@ -2,7 +2,7 @@ import unittest
 from unittest.mock import patch, mock_open, MagicMock
 
 from santas_bag.utils import *
-from santas_bag.utils import _fetch_expected
+from santas_bag.utils import _fetch_expected, _accepts_testing_arg
 
 
 class TestUtils(unittest.TestCase):
@@ -267,8 +267,128 @@ class TestUtils(unittest.TestCase):
         self.assertEqual((1, 2), args)
         self.assertEqual({'key': 'value'}, kwargs)
 
+    def test_naughty_or_nice_decorator_success(self):
+        """Verify NICE print output when result matches."""
+        # Mock _fetch_expected
+        with patch('santas_bag.utils._fetch_expected', return_value="15"):
+            @get_naughty_or_nice(2026, 'session')('day1', part=1)
+            def dummy_solution(data, testing=False):
+                return 15
 
-# @TODO: write get_naughty_or_nice tests
+            with patch('builtins.print') as mock_print:
+                dummy_solution(None, testing=True)
+                mock_print.assert_any_call("dummy_solution     NICE: 15.")
+
+    def test_naughty_or_nice_decorator_naughty(self):
+        """Verify NAUGHTY print output when result mismatches."""
+        with patch('santas_bag.utils._fetch_expected', return_value="100"):
+            @get_naughty_or_nice(2026, 'session')('day1', part=1)
+            def dummy_solution(data, testing=False):
+                return 15
+
+            with patch('builtins.print') as mock_print:
+                dummy_solution(None, testing=True)
+                # Verify that it reports the mismatch
+                self.assertTrue(any("NAUGHTY" in call.args[0] for call in mock_print.call_args_list))
+
+    @patch('santas_bag.utils.solve')
+    def test_get_solve_factory(self, mock_solve):
+        """Verify get_solve returns a function that calls solve with pre-bound args."""
+        solver = get_solve(2026, 'session_id')
+        p1 = lambda x: 1
+
+        solver(1, p1, None, testing=True)
+
+        mock_solve.assert_called_once_with(2026, 1, 'session_id', p1, None, testing=True)
+
+    @patch('santas_bag.utils.read_input', return_value="data")
+    @patch('santas_bag.utils.solve', return_value=(10, 20))
+    def test_read_and_solve_orchestration(self, mock_solve, mock_read):
+        """Verify read_and_solve chains read_input -> solve."""
+
+        def p1(data, **kwargs): return 10
+
+        def p2(data, **kwargs): return 20
+
+        result = read_and_solve(2026, 1, 'session', p1, p2, testing=True)
+
+        # Verify read_input was called
+        mock_read.assert_called()
+        # Verify solve was called (and received lambdas)
+        self.assertEqual(result, (10, 20))
+        args, kwargs = mock_solve.call_args
+        # args[3] is the wrapped part1_func
+        self.assertEqual(args[3](testing=True), 10)
+
+
+    @patch('santas_bag.utils.read_input', return_value="")
+    @patch('santas_bag.utils.solve', return_value=(10, 20))
+    def test_read_and_solve_raises_error_on_no_read_data(self, mock_solve, mock_read):
+        """Verify read_and_solve chains read_input -> solve."""
+
+        def p1(data, **kwargs): return 10
+
+        def p2(data, **kwargs): return 20
+
+        with self.assertRaises(ValueError):
+            read_and_solve(2026, 1, 'session', p1, p2, testing=True)
+            # Verify read_input was called
+            mock_read.assert_called()
+
+    @patch('santas_bag.utils.read_input', return_value="data")
+    @patch('santas_bag.utils.solve', return_value=(10, 20))
+    def test_read_and_solve_factory(self, mock_solve, mock_read):
+        """Verify read_and_solve chains read_input -> solve."""
+
+        def p1(data, **kwargs): return 10
+
+        def p2(data, **kwargs): return 20
+
+        _read_and_solve = get_read_and_solve(2026, 'session')
+        result = _read_and_solve(1, p1, p2, testing=True)
+
+        # Verify read_input was called
+        mock_read.assert_called()
+        # Verify solve was called (and received lambdas)
+        self.assertEqual(result, (10, 20))
+        args, kwargs = mock_solve.call_args
+        # args[3] is the wrapped part1_func
+        self.assertEqual(args[3](testing=True), 10)
+
+    def test_accepts_testing_arg(self):
+        """Verify signature inspection."""
+
+        def func_with_testing(data, testing=False): pass
+
+        def func_simple(data): pass
+
+        def func_kwargs(data, **kwargs): pass
+
+        self.assertTrue(_accepts_testing_arg(func_with_testing))
+        self.assertTrue(_accepts_testing_arg(func_kwargs))
+        self.assertFalse(_accepts_testing_arg(func_simple))
+
+    @patch('santas_bag.utils.read_input', return_value="dummy_data")
+    @patch('santas_bag.utils.solve')
+    def test_read_and_solve_wrap_simple_function(self, mock_solve, mock_read):
+        """Verify wrap correctly handles a function that DOES NOT take a testing argument."""
+
+        # Define a function that only accepts 'data'
+        def simple_part1(data):
+            return "success"
+
+        # Call read_and_solve
+        read_and_solve(2026, 1, 'session', simple_part1, testing=True)
+
+        # Retrieve the lambda passed to solve as func1
+        _, args, _ = mock_solve.mock_calls[0]
+        func1 = args[3]  # The wrapped part1_func
+
+        # Execute the lambda. It should return "success"
+        # Since it's the "else" branch, it ignores the argument passed to it
+        result = func1("irrelevant_arg")
+
+        self.assertEqual(result, "success")
 
 if __name__ == '__main__':
     unittest.main()

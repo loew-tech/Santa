@@ -1,8 +1,9 @@
+import inspect
 import time
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Tuple
 
 from bs4 import BeautifulSoup
 import requests
@@ -212,26 +213,32 @@ def time_execution(func):
     @wraps(func)
     def wrapper(*args, **kwargs):
         print(f'\t\t\ttimed_execution {args=} {kwargs=}')
-        # @TODO: is this the right way to handle this?
-        kws = {**kwargs}
         start = time.perf_counter()
-        result = func(*args, **kws)
+        result = func(*args, **kwargs)
         end = time.perf_counter()
         print(f"⏱️ Execution time for {func.__name__}: {end - start:.4f} seconds")
         return result
     return wrapper
 
 
-def get_naughty_or_nice(year: int, session_id: str):
+def get_naughty_or_nice(year: str | int, session_id: str):
     """
     Outer factory: Configures the decorator with persistent
     values like year and session_id.
+
+    :param year: The puzzle year.
+    :param session_id: The session cookie for authentication.
+
+    :return: A wrapper for ease of testing and timing
     """
 
-    def naughty_or_nice(day: int, part: int = 1):
+    def naughty_or_nice(day: str | int, part: int = 1):
         """
         Middle layer: Captures the arguments provided at the @ line
         (e.g., @decorator(day=1, part=1)).
+
+        :param day: The day of the problem being tested / solved.
+        :param part: The part of the problem being tested / solved
         """
 
         def decorator(func):
@@ -239,27 +246,14 @@ def get_naughty_or_nice(year: int, session_id: str):
             Inner layer: Receives the function (e.g., day_1) being decorated.
             """
             timed_func = time_execution(func)
-
             @wraps(func)
             def wrapper(*args, **kwargs):
-                print(f'\t\twrapper {args=} {kwargs=}')
                 actual = timed_func(*args, **kwargs)
 
-                # We inject the captured arguments into kwargs so the function
-                # or the validation logic can use them.
-                kwargs.setdefault('year', year)
-                kwargs.setdefault('session_id', session_id)
-                kwargs.setdefault('day', day)
-                kwargs.setdefault('part', part)
-
                 # Validation logic
-                if kwargs.get("testing"):
-                    # Use the values we injected above
-                    y = kwargs['year']
-                    d = kwargs['day']
-                    p = kwargs['part']
-                    s = kwargs['session_id']
-                    expected = _fetch_expected(y, d, s, p)
+                testing = kwargs.get('testing', False)
+                if testing:
+                    expected = _fetch_expected(year, day, session_id, part)
                     if expected == str(actual):
                         print(f"{func.__name__}     NICE: {expected}.")
                     else:
@@ -273,12 +267,148 @@ def get_naughty_or_nice(year: int, session_id: str):
     return naughty_or_nice
 
 
-# def solve(year: str| int,
-#           day: int | str,
-#           session_id: str,
-#           part1_func: Callable,
-#           part2_func: Callable | None=None,
-#           testing=False) -> Any:
-#     naughty_or_nice(part1_func, year=year, day=day, session_id=session_id, part=1, testing=testing)()
-#     if part2_func is not None:
-#         naughty_or_nice(part2_func, year=year, day=day, session_id=session_id, part=2, testing=testing)()
+def get_solve(year: str | int, session_id: str) -> Callable[..., Any]:
+    """
+    Return a function that takes day, part1_func, [optional] part2_func, and [optional] testing bool and solves/tests
+    the functions
+
+    :param year: The puzzle year.
+    :param session_id: The session cookie for authentication.
+
+    :return: Callable that allows for running solution functions
+    """
+    def _solve(
+            day: str | int, part1_func: Callable[..., Any], part2_func: Callable[..., Any] | None = None, testing=True
+               ) -> Tuple[Any, Any]:
+        return solve(year,
+                     day,
+                     session_id,
+                     part1_func,
+                     part2_func,
+                     testing=testing)
+    return _solve
+
+
+def solve(year: str | int,
+          day: str|int,
+          session_id: str,
+          part1_func: Callable[..., Any],
+          part2_func: Callable[..., Any] | None = None,
+          testing=False
+) -> Tuple[Any, Any]:
+    """
+    Takes part1_func and [optional] part2_func and executes them. If keyword testing=True, then tests functions.
+    Returns tuple of the results of part1_func and part2_func
+
+    :param year: The puzzle year.
+    :param day: The day of the problem being tested / solved.
+    :param session_id: The session cookie for authentication.
+    :param part1_func: Solution function for part 1.
+    :param part2_func: Solution function for part 2.
+    :param testing: bool indicating if this is a test run.
+
+    :return: Tuple (result of part1_func, result of part2_func)
+    """
+    naughty_or_nice = get_naughty_or_nice(year, session_id)
+    part1_wrapped = naughty_or_nice(day, part=1)(part1_func)
+    res1 = part1_wrapped(testing=testing)
+
+    res2 = None
+    if part2_func is not None:
+        part2_wrapped = naughty_or_nice(day, part=2)(part2_func)
+        res2 = part2_wrapped(testing=testing)
+    return res1, res2
+
+
+def get_read_and_solve(year: str| int,
+                       session_id: str,
+                       inputs_path: Path | None = None,
+                       tests_path: Path | None = None,
+) -> Callable[..., Any]:
+    """
+    Return a function that takes day, part1_func, [optional] part2_func, delimiter (default to \n), an [optional] parser,
+    and [optional] testing bool and solves/tests the functions
+
+    :param year: The puzzle year.
+    :param session_id: The session cookie for authentication.
+    :param inputs_path: Directory to store official input files. If None, defaults to ./inputs/
+    :param tests_path: Directory to store test/scraped input files. If None, defaults to ./tests/
+
+    :return: Callable that allows for running solution functions
+    """
+    def _read_and_solve(
+            day, part1_func, part2_func, delim='\n', parse=None, testing=False
+    ) -> Tuple[Any, Any]:
+        return read_and_solve(year,
+                              day,
+                              session_id,
+                              part1_func,
+                              part2_func,
+                              inputs_path=inputs_path,
+                              tests_path=tests_path,
+                              delim=delim,
+                              parse=parse,
+                              testing=testing)
+    return _read_and_solve
+
+
+def _accepts_testing_arg(func) -> bool:
+    """
+    Returns whether testing or kwargs is present in the function argument
+
+    :param func: The solution function
+    :return: True is function accepts testing keyword argument or kwargs
+    """
+
+    sig = inspect.signature(func)
+    # Check if 'testing' is a parameter (by name or as part of **kwargs)
+    return 'testing' in sig.parameters or any(
+        p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values()
+    )
+
+
+def read_and_solve(year: str | int,
+          day: str|int,
+          session_id: str,
+          part1_func: Callable[..., Any],
+          part2_func: Callable[..., Any] | None = None,
+          inputs_path: Path | None = None,
+          tests_path: Path | None = None,
+          delim='\n',
+          parse: Callable[..., Any] | None = None,
+          testing=False
+) -> Tuple[Any, Any]:
+    """
+    Takes part1_func and [optional] part2_func and executes them. If keyword testing=True, then tests functions.
+    Returns tuple of the results of part1_func and part2_func
+
+    :param year: The puzzle year.
+    :param day: The day of the problem being tested / solved.
+    :param session_id: The session cookie for authentication.
+    :param part1_func: Solution function for part 1.
+    :param part2_func: Solution function for part 2.
+    :param inputs_path: Directory to store official input files. If None, defaults to ./inputs/
+    :param tests_path: Directory to store test/scraped input files. If None, defaults to ./tests/
+    :param delim: String to split input text; defaults to newline.
+    :param parse: A callable to transform input lines or the entire text.
+    :param testing: bool indicating if this is a test run.
+
+    :return: Tuple (result of part1_func, result of part2_func)
+    """
+    data = read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing=testing)
+    if not data:
+        raise ValueError(f"Failed to load or parse input for Day {day}, Year {year}. Data is empty.")
+
+    def wrap(func):
+        if _accepts_testing_arg(func):
+            return lambda testing=testing: func(data, testing=testing)
+        return lambda _: func(data)
+
+    func1 = wrap(part1_func)
+    func2 = None if part2_func is None else wrap(part2_func)
+    return solve(year,
+                 day,
+                 session_id,
+                 func1,
+                 func2,
+                 testing=testing)
