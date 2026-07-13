@@ -1,7 +1,5 @@
 import unittest
 from unittest.mock import patch, mock_open, MagicMock
-from pathlib import Path
-import time
 
 from santas_bag.utils import *
 from santas_bag.utils import _fetch_expected
@@ -81,11 +79,11 @@ class TestUtils(unittest.TestCase):
         """Verify scraper correctly extracts data from <pre> blocks."""
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.content = b"<html><body><pre>test_data</pre></body></html>"
+        mock_response.content = b"<article><html><body><pre>test_data</pre></body></html></article>"
         mock_get.return_value = mock_response
 
         from santas_bag.utils  import _fetch_test_input
-        result = _fetch_test_input(1, 2026)
+        result = _fetch_test_input(1, 2026, '123', 1)
         self.assertEqual("test_data", result)
 
     def test_process_input_parsing(self):
@@ -104,23 +102,21 @@ class TestUtils(unittest.TestCase):
 
         from santas_bag.utils import _fetch_test_input
         with self.assertRaisesRegex(Exception, 'Failed to fetch puzzle page'):
-            _fetch_test_input(2026, 1)
+            _fetch_test_input(2026, 1, '123', 1)
 
     @patch('pathlib.Path.mkdir')
     @patch('pathlib.Path.write_text')
     @patch('santas_bag.utils._fetch_test_input', return_value="mock_test_content")
-    @patch('santas_bag.utils._fetch_expected')
     @patch('builtins.print')
     @patch('pathlib.Path.exists', return_value=False)
     def test_read_input_testing_mode_triggers_scraping(
-            self, mock_exists, mock_print, mock_expected, mock_fetch_input, mock_write, mock_mkdir
+            self, mock_exists, mock_print, mock_fetch_input, mock_write, mock_mkdir
     ):
         """Verify that testing=True triggers fetching and directory creation safely in-memory."""
         read_input(2026, 1, 'session', part=1, testing=True)
 
         mock_mkdir.assert_called_once()
         mock_fetch_input.assert_called_once()
-        mock_expected.assert_called_once()
         mock_print.assert_called()
 
     @patch('pathlib.Path.read_text', return_value="dummy_data")
@@ -137,12 +133,12 @@ class TestUtils(unittest.TestCase):
         mock_response = MagicMock()
         mock_response.status_code = 200
         # Valid HTML but no <pre> tag
-        mock_response.content = b"<html><body><p>No code here</p></body></html>"
+        mock_response.content = b"<article><html><body><p>No code here</p></body></html></article>"
         mock_get.return_value = mock_response
 
         from santas_bag.utils import _fetch_test_input
         with self.assertRaisesRegex(Exception, 'Could not automatically find a test case'):
-            _fetch_test_input(2026, 1)
+            _fetch_test_input(2026, 1, '123', 1)
 
     def test_process_input_custom_delimiter(self):
         """Verify processing with a custom delimiter (e.g., comma-separated)."""
@@ -201,23 +197,19 @@ class TestUtils(unittest.TestCase):
             # Duration should be 2.5 - 1.0 = 1.5
             mock_print.assert_called_with("⏱️ Execution time for sample_func: 1.5000 seconds")
 
+    # We patch write_text because that is what is actually called after fetching
     @patch('pathlib.Path.write_text')
-    @patch('pathlib.Path.read_text', return_value="dummy_data")
     @patch('pathlib.Path.exists', return_value=False)
-    @patch('santas_bag.utils._fetch_expected')
-    def test_read_input_fetches_expected_if_missing(
-            self, mock_fetch, mock_exists, mock_read, mock_write
-    ):
-        """Verify _fetch_expected IS called when the file is missing."""
-        # We also mock _fetch_test_input to prevent network calls
-        with patch('santas_bag.utils._fetch_test_input', return_value="data"):
+    def test_read_input_writes_file_when_missing(self, mock_exists, mock_write):
+        """Verify that when the file is missing, we fetch and then write the file."""
+
+        # We patch the fetcher to return our dummy data
+        with patch('santas_bag.utils._fetch_test_input', return_value="dummy_data"):
             read_input(2026, 1, 'session', testing=True, part=1)
-            mock_fetch.assert_called_once()
-            mock_write.assert_called_once()
 
-    from unittest.mock import patch, mock_open, MagicMock
+            # Verify the file was written with the data returned by the fetcher
+            mock_write.assert_called_once_with("dummy_data")
 
-    # ... inside your TestUtils class ...
 
     @patch('builtins.open', new_callable=mock_open)  # Intercepts the open() call
     @patch('pathlib.Path.exists', return_value=False)
@@ -283,10 +275,10 @@ class TestUtils(unittest.TestCase):
         mock_fetch.return_value = "100"
 
         @naughty_or_nice
-        def solution_func(testing=False):
+        def solution_func(testing=False, day=1, session_id='123', year=2023, part=1):
             return 100
 
-        result = solution_func(testing=True)
+        result = solution_func(testing=True, day=1, session_id='123', year=2023, part=1)
 
         self.assertEqual(result, 100)
         # Check if the "NICE" message was printed
@@ -300,10 +292,10 @@ class TestUtils(unittest.TestCase):
         mock_fetch.return_value = "100"
 
         @naughty_or_nice
-        def solution_func(testing=False):
+        def solution_func(testing=False, day=1, session_id='123', year=2023, part=1):
             return 999
 
-        result = solution_func(testing=True)
+        result = solution_func(testing=True, day=1, session_id='123', year=2023, part=1)
 
         self.assertEqual(result, 999)
         # Check if the "NAUGHTY" message was printed

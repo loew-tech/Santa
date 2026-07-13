@@ -68,19 +68,13 @@ def read_input(
     tests_path = tests_path or TESTS_PATH
 
     target_dir = tests_path if testing else inputs_path
-    target_file = target_dir / f'{day}.txt'
-
+    target_file = target_dir / f'{day}_part_{part}.txt' if testing else target_dir / f'{day}.txt'
     if target_file.exists():
-        if testing:
-            expected_file = TESTS_PATH / f'{day}_part_{part}_expected.txt'
-            if not expected_file.exists():
-                _fetch_expected(year, day, session_id, part)
         return _process_input(target_file.read_text(), delim, parse)
 
     target_file.parent.mkdir(parents=True, exist_ok=True)
     if testing:
-        text = _fetch_test_input(year, day)
-        _fetch_expected(year, day, session_id, part)
+        text = _fetch_test_input(year, day, session_id, part)
         print(f'⚠️ Scraped test input for Day {day}. Verify it in {target_file}')
     else:
         text = _fetch_official_input(year, day, session_id)
@@ -113,7 +107,7 @@ def _fetch_official_input(year, day: int | str, session_id: str) -> str:
     return response.text
 
 
-def _fetch_test_input(year,  day: int | str) -> str:
+def _fetch_test_input(year,  day: int | str, session_id: str, part: int | str) -> str:
     """
     Scrapes the example input from the puzzle page <pre> blocks.
 
@@ -123,15 +117,18 @@ def _fetch_test_input(year,  day: int | str) -> str:
 
     :return: The extracted text content from the first code block.
     """
-    response = requests.get(f'{ADVENT_URI}{year}/day/{day}')
+    response = requests.get(f'{ADVENT_URI}{year}/day/{day}',
+    cookies = {'session': session_id if not int(part) == 1 else ''},
+    headers = {'User-Agent': 'github.com/loew-tech/santas_bag by loew.technology@gmail.com'}
+    )
     if response.status_code != HTTPStatus.OK:
         raise Exception(f'Failed to fetch puzzle page for scraping.')
 
     soup = BeautifulSoup(response.content, 'html.parser')
-    code_block = soup.find('pre')
-    if not code_block:
+    article = soup.find_all('article')[int(part) - 1]
+    code_block = article.find('pre')
+    if not code_block and not (code_block:=soup.find('pre')):
         raise Exception(f'Could not automatically find a test case (<pre> block) on Day {day} page.')
-
     return code_block.get_text()
 
 
@@ -157,7 +154,7 @@ def _process_input(text, delim: str | None,
     return [parse(item) for item in raw_data] if parse else raw_data
 
 
-def _fetch_expected(year, day: int | str, session_id: str, part: int) -> str:
+def _fetch_expected(year, day: int | str, session_id: str, part: int | str) -> str:
     """
     Scrapes the example output from the puzzle page <code> blocks. Result is cached in TESTS_PATH (default: /test) and
     written to <day>_part_<part>_expected.txt
@@ -238,12 +235,15 @@ def naughty_or_nice(func):
 
     @wraps(func)
     def wrapper(*args, **kwargs):
-        result = timed_func(*args, **kwargs)
+        actual = timed_func(*args, **kwargs)
         if kwargs.get("testing"):
-            expected = _fetch_expected(*args, **kwargs)
-            if expected == str(result):
-                print(f"{func.__name__}     NICE: {expected} == {result}.")
+            year, day, part, session_id = kwargs.get('year'), kwargs.get('day'), kwargs.get('part'), kwargs.get('session_id')
+            if None in {year, day, part, session_id}:
+                raise Exception(f'Invalid arguments. Must provide kwarg year, day, part, and session_id.')
+            expected = _fetch_expected(year, day, session_id, part)
+            if expected == str(actual):
+                print(f"{func.__name__}     NICE: {expected}.")
             else:
-                print(f"{func.__name__}  NAUGHTY: {expected=}. {result=}.")
-        return result
+                print(f"{func.__name__}  NAUGHTY: {expected=}. {actual=}.")
+        return actual
     return wrapper
