@@ -239,7 +239,7 @@ def naughty_or_nice(func):
         if kwargs.get("testing"):
             year, day, part, session_id = kwargs.get('year'), kwargs.get('day'), kwargs.get('part'), kwargs.get('session_id')
             if None in {year, day, part, session_id}:
-                raise Exception(f'Invalid arguments')
+                raise Exception(f'Invalid arguments. Must provide kwarg year, day, part, and session_id.')
             expected = _fetch_expected(year, day, session_id, part)
             if expected == str(actual):
                 print(f"{func.__name__}     NICE: {expected}.")
