@@ -8,6 +8,7 @@ from typing import Any, Callable, Tuple
 from bs4 import BeautifulSoup
 import requests
 
+
 ADVENT_URI = 'https://adventofcode.com/'
 INPUTS_PATH = Path('inputs/')
 TESTS_PATH = Path('tests/')
@@ -212,8 +213,6 @@ def time_execution(func):
     """
     @wraps(func)
     def wrapper(*args, **kwargs):
-        # @TODO: remove debug print
-        # print(f'\t\t\ttimed_execution {args=} {kwargs=}')
         start = time.perf_counter()
         result = func(*args, **kwargs)
         end = time.perf_counter()
@@ -396,20 +395,27 @@ def read_and_solve(year: str | int,
 
     :return: Tuple (result of part1_func, result of part2_func)
     """
-    data = read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing=testing)
+    data = read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing=testing, part=1)
     if not data:
         raise ValueError(f"Failed to load or parse input for Day {day}, Year {year}. Data is empty.")
 
-    def wrap(func):
-        if _accepts_testing_arg(func):
-            return lambda testing=testing: func(data, testing=testing)
-        return lambda _: func(data)
+    def part_1(testing=testing):
+        if _accepts_testing_arg(part1_func):
+            return part1_func(data, testing=testing)
+        return part1_func(data)
 
-    func1 = wrap(part1_func)
-    func2 = None if part2_func is None else wrap(part2_func)
+    data2 = read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing=testing, part=2)
+    if not data2:
+        raise ValueError(f'Failed to load or parse input for Day {day} part 2. Data is empty.')
+
+    def part_2(testing=testing):
+        if _accepts_testing_arg(part2_func):
+            return part2_func(data, testing=testing)
+        return part2_func(data)
+
     return solve(year,
                  day,
                  session_id,
-                 func1,
-                 func2,
+                 part_1,
+                 part_2 if part2_func is not None else None,
                  testing=testing)
