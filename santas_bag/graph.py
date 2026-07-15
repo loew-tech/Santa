@@ -88,7 +88,7 @@ def edge_list_to_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List
     return graph
 
 
-# @TODO: change this to graph: Dict[Node, Iterable[Node]]
+# @TODO: change this to Graph where Graph is: Dict[Node, Iterable[Node]] and Node = TypeVar('Node')
 def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
     """
     Take a graph and reverse the edges
