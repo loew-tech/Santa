@@ -1,8 +1,8 @@
 import heapq
 from collections import deque, defaultdict
-from typing import Iterable, Dict, List, Set, Callable
+from typing import Iterable, Dict, List, Set, Callable, Tuple, Any
 
-from santas_bag.search import search, bfs
+from santas_bag.search import search, bfs, dfs
 
 
 def adjacency_matrix_to_dict(
@@ -25,9 +25,6 @@ def adjacency_matrix_to_dict(
                 neighbors.append(x if not weighted else (x, val))
         graph[y] = neighbors
     return graph
-
-
-from typing import List, Tuple, Any, Dict
 
 
 def adjacency_lists_to_dict(
@@ -91,6 +88,7 @@ def edge_list_to_dict(edge_list: List[Tuple], undirected=True) -> Dict[Any, List
     return graph
 
 
+# @TODO: change this to Graph where Graph is: Dict[Node, Iterable[Node]] and Node = TypeVar('Node')
 def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
     """
     Take a graph and reverse the edges
@@ -114,6 +112,52 @@ def transpose_graph(graph: Dict[Any, List[Any]]) -> Dict[Any, List[Any]]:
             else:
                 transposed[neighbor].append(u)
     return dict(transposed)
+
+
+def graph_bfs(graph: Dict[Any, List[Any]],
+              start: Any,
+              goal: Any,
+              get_neighbors: Callable[..., Iterable] | None = None) -> tuple[Any | None, int | float]:
+    """
+    Performs a BFS on the graph from start searching for goal.
+    Returns the node for goal and the distance to get there
+
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+    :param start: Node to start from
+    :param goal: node ID to find
+    :param get_neighbors: Optional function for getting neighbors, default to graph[node]
+
+    :return: A tuple of node for goal and distance to get there
+    """
+    if get_neighbors is None:
+        get_neighbors = _get_neighbors_default
+
+    return bfs(start, graph, _get_is_terminal_default(goal), get_neighbors)
+
+
+def graph_dfs(graph: Dict[Any, List[Any]],
+              start: Any,
+              goal: Any,
+              get_neighbors: Callable[..., Iterable] | None = None) -> tuple[Any | None, int | float]:
+    """
+    Performs a DFS on the graph from start searching for goal.
+    Returns the node for goal and the distance to get there
+
+    :param graph: Adjacency list where graph[u] = [v, ...] (u -> v)
+    :param start: Node to start from
+    :param goal: node ID to find
+    :param get_neighbors: Optional function for getting neighbors, default to graph[node]
+
+    :return: A tuple of node for goal and distance to get there
+    """
+
+    if get_neighbors is None:
+        get_neighbors = _get_neighbors_default
+
+    return dfs(start,
+               graph,
+               _get_is_terminal_default(goal),
+               get_neighbors)
 
 
 def get_in_degrees(graph: Dict[Any, List[Any]],
@@ -169,7 +213,7 @@ def topological_sort(graph: Dict[Any, List[Any]],
 
 def get_component_for_node(graph: Dict[Any, List],
                            start_node: Any,
-                           get_neighbors: Callable[..., Iterable] | None =None) -> Set[Any]:
+                           get_neighbors: Callable[..., Iterable] | None = None) -> Set[Any]:
     """
     Returns the set of all nodes reachable from the start_node.
 
@@ -221,9 +265,16 @@ def get_components(graph: Dict[Any, List[Any]],
     return components
 
 
-def _get_neighbors_default(node: Any, graph: Dict[Any, List[Any]], *args ,**kwargs) -> Iterable[Any]:
+def _get_neighbors_default(node: Any, graph: Dict[Any, List[Any]], *_) -> Iterable[Any]:
     for neighbor in graph.get(node, []):
         yield neighbor[0] if isinstance(neighbor, tuple) else neighbor
+
+
+def _get_is_terminal_default(goal: Any) -> Callable[..., bool]:
+    def is_terminal_default(node: Any, *_) -> bool:
+        n = node if not isinstance(node, tuple) else node[0]
+        return n == goal
+    return is_terminal_default
 
 
 def spanning_tree(graph: Dict[Any, List[Tuple[Any, int]]]) -> List[Tuple[Any, Any, int]]:
