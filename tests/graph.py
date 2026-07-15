@@ -148,6 +148,55 @@ class TestGraph(unittest.TestCase):
         expected = {0: [], 1: [0], 2: [], 3: [2]}
         self.assertEqual(expected, transpose_graph(graph))
 
+    def test_graph_bfs(self):
+        """Verify BFS finds the shortest path to the goal."""
+        graph = {
+            'A': ['B', 'C'],
+            'B': ['D'],
+            'C': ['D', 'E'],
+            'D': ['F'],
+            'E': ['F'],
+            'F': []
+        }
+        # Start at A, search for E
+        # Path: A -> C -> E (Distance 2)
+        node, distance = graph_bfs(graph, 'A', 'E')
+        self.assertEqual(node, 'E')
+        self.assertEqual(distance, 2)
+
+    def test_graph_bfs_not_found(self):
+        """Verify BFS returns None when the goal is unreachable."""
+        graph = {'A': ['B'], 'B': []}
+        node, distance = graph_bfs(graph, 'A', 'Z')
+        self.assertIsNone(node)
+
+    def test_graph_dfs(self):
+        """Verify DFS finds the goal node."""
+        graph = {
+            'A': ['B', 'C'],
+            'B': ['D'],
+            'C': ['E'],
+            'D': [],
+            'E': []
+        }
+        # Searching for E
+        node, distance = graph_dfs(graph, 'A', 'E')
+        self.assertEqual(node, 'E')
+        # Depending on implementation details, DFS might find distance 2
+        self.assertEqual(distance, 2)
+
+    def test_graph_dfs_unweighted_tuple_handling(self):
+        """Verify DFS handles graph inputs with tuples correctly."""
+        # Using the logic from _get_neighbors_default which handles (neighbor, weight)
+        graph = {
+            'A': [('B', 1)],
+            'B': [('C', 1)],
+            'C': []
+        }
+        node, distance = graph_dfs(graph, 'A', 'C')
+        self.assertEqual(node, 'C')
+        self.assertEqual(distance, 2)
+
     def test_transpose_empty(self):
         self.assertEqual({}, transpose_graph({}))
 
@@ -161,7 +210,7 @@ class TestGraph(unittest.TestCase):
 
         self.assertEqual(expected, get_in_degrees(graph, graph))
 
-    def test_in_degreesimple_dag(self):
+    def test_in_degree_simple_dag(self):
         graph = {
             "A": ["B", "C"],
             "B": ["C"],
