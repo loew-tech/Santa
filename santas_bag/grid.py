@@ -165,7 +165,6 @@ def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
             for x, val in enumerate(row) if val == target]
 
 
-# @TODO: test against advent of code 2023 day 10
 def get_is_enclosed(
         grid: List[List],
         perimeter: Set[Tuple[int, int]],
