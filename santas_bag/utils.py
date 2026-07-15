@@ -326,8 +326,8 @@ def get_read_and_solve(year: str| int,
                        tests_path: Path | None = None,
 ) -> Callable[..., Any]:
     """
-    Return a function that takes day, part1_func, [optional] part2_func, delimiter (default to \n), an [optional] parser,
-    and [optional] testing bool and solves/tests the functions
+    Return a function that takes day, part1_func, [optional] part2_func, delimiter (default to '\n'), an [optional]
+    parser and [optional] testing bool and solves/tests the functions
 
     :param year: The puzzle year.
     :param session_id: The session cookie for authentication.
@@ -404,7 +404,8 @@ def read_and_solve(year: str | int,
             return part1_func(data, testing=testing)
         return part1_func(data)
 
-    data2 = read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing=testing, part=2)
+    data2 = data if not testing else \
+        read_input(year, day, session_id, inputs_path, tests_path, delim, parse, testing=testing, part=2)
     if not data2:
         raise ValueError(f'Failed to load or parse input for Day {day} part 2. Data is empty.')
 
