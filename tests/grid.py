@@ -56,7 +56,6 @@ class TestGrid(unittest.TestCase):
             [6, 5, 4]
         ]
         self.assertEqual(expected, transform_grid(self.sample_grid, 'h_flip'))
-        self.assertEqual(flip_horizontal(self.sample_grid), transform_grid(self.sample_grid, 'h_flip'))
 
     def test_transform_v_flip(self):
         expected = [
@@ -74,8 +73,6 @@ class TestGrid(unittest.TestCase):
             [6, 3]
         ]
         self.assertEqual(expected, transform_grid(self.sample_grid, 'rot90'))
-        # Ensure it matches your legacy rotate_clockwise function
-        self.assertEqual(rotate_clockwise(self.sample_grid), transform_grid(self.sample_grid, 'rot90'))
 
     def test_transform_rot180(self):
         # 180 degrees is equivalent to reversing rows and columns
@@ -119,11 +116,11 @@ class TestGrid(unittest.TestCase):
 
     def test_rotate_clockwise(self):
         expected = [[4, 1], [5, 2], [6, 3]]
-        self.assertEqual(expected, rotate_clockwise(self.sample_grid))
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'rot90'))
 
     def test_flip_horizontal(self):
         expected = [[3, 2, 1], [6, 5, 4]]
-        self.assertEqual(expected, flip_horizontal(self.sample_grid))
+        self.assertEqual(expected, transform_grid(self.sample_grid, 'h_flip'))
 
     def test_find_all_in_grid(self):
         grid = [['A', 'B'], ['A', 'C']]

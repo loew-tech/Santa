@@ -130,28 +130,6 @@ def taxi_distance(y, x, y1, x1: int) -> int:
     return abs(y1 - y) + abs(x1 - x)
 
 
-def rotate_clockwise(grid: List[List]) -> List[List]:
-    """
-    Rotates a grid 90 degrees clockwise.
-
-    :param grid: The 2D grid context.
-
-    :return: A rotated 2D grid.
-    """
-    return [list(row) for row in zip(*grid[::-1])]
-
-
-def flip_horizontal(grid: List[List]) -> List[List]:
-    """
-    Flips the grid horizontally.
-
-    :param grid: The 2D grid context.
-
-    :return: A rotated 2D grid.
-    """
-    return [row[::-1] for row in grid]
-
-
 def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
     """
     Returns a list of all coordinates matching the target.
