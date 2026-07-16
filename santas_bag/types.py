@@ -1,6 +1,7 @@
 from typing import Iterable, Mapping, Tuple, TypeAlias, TypeVar, NamedTuple
 
 type Interval = tuple[int, int]
+
 type Point = tuple[int, int]
 type Point3D = tuple[int, int, int]
 
