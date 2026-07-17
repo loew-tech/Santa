@@ -26,3 +26,13 @@ class WeightedEdge[Node](NamedTuple):
 
 type ResidualMap[Node] = Mapping[Node, Mapping[Node, Weight]]
 type CapacityGraph[Node] = Mapping[Node, Mapping[Node, Weight]]
+
+class Instruction(NamedTuple):
+    instruction: str
+    args: Tuple[Any, ...]
+
+
+# The "Resolved" or "Compiled" format
+class CompiledInstruction(NamedTuple):
+    func: Callable[..., Any]
+    args: Tuple[Any, ...]
