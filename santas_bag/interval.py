@@ -1,3 +1,6 @@
+"""Interval helpers for overlap checks, containment checks, interval merging, and interval lookup."""
+
+
 from santas_bag.types import Interval
 
 

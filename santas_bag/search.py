@@ -1,4 +1,8 @@
+"""Generic traversal and pathfinding utilities for graphs and state spaces, including BFS, DFS, greedy best-first search, A*, Dijkstra, and TSP helpers."""
+
+
 import heapq
+
 from collections import deque
 from typing import Any, Callable, Iterable, Optional, Dict
 

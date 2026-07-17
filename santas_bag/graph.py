@@ -1,3 +1,5 @@
+"""Graph helpers for converting between graph representations and running common graph algorithms such as BFS, DFS, topological sorting, connected-component discovery, spanning trees, and network flow."""
+
 import heapq
 from collections import deque, defaultdict
 from typing import Iterable, Callable, Any, Mapping

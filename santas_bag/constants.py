@@ -1,3 +1,5 @@
+"""Shared constants and lookup tables used throughout the Advent of Code helpers."""
+
 from operator import add, mul, sub, truediv, floordiv, mod, eq, ne, lt, le, gt, ge
 from string import ascii_lowercase, ascii_uppercase
 from types import MappingProxyType

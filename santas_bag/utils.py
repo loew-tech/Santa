@@ -1,3 +1,6 @@
+"""High-level Advent of Code helpers for reading, caching, and solving puzzle input with optional testing and expected-answer validation."""
+
+
 import inspect
 import time
 from functools import wraps
