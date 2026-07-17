@@ -1,9 +1,9 @@
 from collections.abc import Container
-from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Literal
+from typing import Iterable, List, Callable, Dict, Any, Set, Optional, Literal
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
-from santas_bag.types import Point, NeighborFunction, Node
+from santas_bag.types import Point, NeighborFunction
 
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
