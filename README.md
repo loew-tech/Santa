@@ -10,6 +10,24 @@ Santa's Bag is a small Python utility library for Advent of Code solutions. It b
 - Parsing helpers for extracting integers and numbers from strings and building simple parsers
 - Generic search primitives for breadth-first, depth-first, and best-first traversal
 
+## Quick start
+
+```python
+from santas_bag.utils import get_read_and_solve
+
+# Configure once for the current year
+run_day = get_read_and_solve(2024, session_id="your-aoc-session-cookie")
+
+
+def part1(data):
+    # 'data' is the automatically parsed input
+    return sum(data)
+
+
+# Run with testing=True to validate against scraped sample input
+run_day(day=1, part1_func=part1, testing=True)
+```
+
 ## Solve helpers
 
 The library provides a small set of entry points whose names include `solve` and are intended for running Advent of Code solutions end to end:
@@ -203,27 +221,6 @@ If you want to install the runtime dependencies explicitly:
 
 ```bash
 python -m pip install -r requirements.txt
-```
-
-## Quick start
-
-```python
-from santas_bag.grid import neighbors4, grid_to_dict
-from santas_bag.parse import ints
-
-grid = [
-    "123",
-    "456",
-    "789",
-]
-
-points = grid_to_dict(grid)
-neighbors = neighbors4(1, 1, grid)
-values = ints("The answer is 42 and 7")
-
-print(points)
-print(neighbors)
-print(values)
 ```
 
 ## Module overview
