@@ -1,5 +1,5 @@
 from collections.abc import Container
-from typing import Iterable, List, Callable, Dict, Any, Set, Optional, Literal
+from typing import Iterable, Callable, Any, Optional, Literal
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
@@ -19,7 +19,7 @@ def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
     print(end=end)
 
 
-def get_inbounds(grid: List[List]) -> Callable[[int, int], bool]:
+def get_inbounds(grid: list[list]) -> Callable[[int, int], bool]:
     """
     Returns a closure function to check if coordinates are within the grid bounds.
 
@@ -30,7 +30,7 @@ def get_inbounds(grid: List[List]) -> Callable[[int, int], bool]:
     return lambda y, x: inbounds(grid, y, x)
 
 
-def inbounds(grid: List[List], y, x: int) -> bool:
+def inbounds(grid: list[list], y, x: int) -> bool:
     """
     Checks if given coordinates are within the bounds of the provided grid.
 
@@ -43,7 +43,7 @@ def inbounds(grid: List[List], y, x: int) -> bool:
     return 0 <= y < len(grid) and 0 <= x < len(grid[y])
 
 
-def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Point, Any]:
+def grid_to_dict(grid: Iterable[Iterable]) -> Mapping[Point, Any]:
     """
     Converts a 2D grid into a coordinate-to-value dictionary.
 
@@ -55,7 +55,7 @@ def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Point, Any]:
 
 
 def transform_grid(grid: Iterable[Iterable],
-                   mode: Literal['v_flip', 'h_flip', 'transpose', 'rot90', 'rot180', 'rot270']) -> List[List]:
+                   mode: Literal['v_flip', 'h_flip', 'transpose', 'rot90', 'rot180', 'rot270']) -> list[list]:
     """
     Performs various geometric transformations on a 2D grid.
 
@@ -90,7 +90,7 @@ def transform_grid(grid: Iterable[Iterable],
         case _:
             raise ValueError(f"Unknown transformation mode: {mode}")
 
-def neighbors4(y, x: int, grid: List[List]) -> List[Point]:
+def neighbors4(y, x: int, grid: list[list]) -> list[Point]:
     """
     Returns a list of valid (y, x) coordinates adjacent (cardinal) to the given point.
 
@@ -103,7 +103,7 @@ def neighbors4(y, x: int, grid: List[List]) -> List[Point]:
     return [(y + dy, x + dx) for dx, dy in CARDINAL_DIRECTIONS if inbounds(grid, y + dy, x + dx)]
 
 
-def neighbors8(y, x: int, grid: List[List])-> List[Point]:
+def neighbors8(y, x: int, grid: list[list])-> list[Point]:
     """
     Returns a list of valid (y, x) coordinates adjacent (including diagonals) to the point.
 
@@ -130,7 +130,7 @@ def taxi_distance(y, x, y1, x1: int) -> int:
     return abs(y1 - y) + abs(x1 - x)
 
 
-def find_all_in_grid(grid: List[List], target: Any) -> List[Point]:
+def find_all_in_grid(grid: list[list], target: Any) -> list[Point]:
     """
     Returns a list of all coordinates matching the target.
 
@@ -144,8 +144,8 @@ def find_all_in_grid(grid: List[List], target: Any) -> List[Point]:
 
 
 def get_is_enclosed(
-        grid: List[List],
-        perimeter: Set[Point],
+        grid: list[list],
+        perimeter: set[Point],
         vertical_barriers: Container[str] = ('|', 'L', 'J')
     ) -> Callable[[int, int], bool]:
     """
@@ -161,8 +161,8 @@ def get_is_enclosed(
 
 
 def is_enclosed(
-        grid: List[List],
-        perimeter: Set[Point],
+        grid: list[list],
+        perimeter: set[Point],
         y: int,
         x: int,
         vertical_barriers: Container[str] = ('|', 'L', 'J')
@@ -191,7 +191,7 @@ def is_enclosed(
     return cross_count % 2 == 1
 
 
-def area(loop: List[Point]) -> int:
+def area(loop: list[Point]) -> int:
     """
     Calculates the number of interior tiles using the Shoelace Formula
     and Pick's Theorem.
@@ -234,7 +234,7 @@ def _get_get_neighbors_default(
 
 
 def grid_bfs_from_point(
-        grid: List[List],
+        grid: list[list],
         start_y, start_x: int,
         goal: Any,
         impassable: Container=(),
@@ -260,7 +260,7 @@ def grid_bfs_from_point(
 
 
 def grid_bfs_from_value(
-        grid: List[List],
+        grid: list[list],
         start: Any,
         goal: Any,
         impassable: Container=(),
@@ -281,7 +281,7 @@ def grid_bfs_from_value(
     return grid_bfs_from_point(grid, y, x, goal, impassable, cardinal_directions)
 
 
-def grid_dfs_from_point(grid: List[List],
+def grid_dfs_from_point(grid: list[list],
                         start_y, start_x: int,
                         goal: Any,
                         impassable: Container=(),
@@ -312,7 +312,7 @@ def grid_dfs_from_point(grid: List[List],
 
 
 def grid_dfs_from_value(
-        grid: List[List],
+        grid: list[list],
         start: Any,
         goal: Any,
         impassable: Container=(),
@@ -335,12 +335,12 @@ def grid_dfs_from_value(
 
 
 def grid_find_all_paths_from_point(
-        grid: List[List],
+        grid: list[list],
         start_y: int, start_x: int,
         goal: Any,
         impassable: Container=(),
         cardinal_directions=True
-) -> List[List[Point]]:
+) -> list[list[Point]]:
     """
     Finds all paths from a starting point to a goal value in the grid.
 
@@ -374,12 +374,12 @@ def grid_find_all_paths_from_point(
 
 
 def grid_find_all_paths_from_value(
-        grid: List[List],
+        grid: list[list],
         start: Any,
         goal: Any,
         impassable: Container=(),
         cardinal_directions=True
-) -> List[List[Point]]:
+) -> list[list[Point]]:
     """
     Finds all paths from a starting point to a goal value in the grid.
 
@@ -396,7 +396,7 @@ def grid_find_all_paths_from_value(
 
 
 class Grid:
-    def __init__(self, grid: List[List], impassable: Optional[Container] = None):
+    def __init__(self, grid: list[list], impassable: Optional[Container] = None):
         self.data = grid
         self.height = len(grid)
         self.width = len(grid[0])

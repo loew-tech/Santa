@@ -1,6 +1,6 @@
 import heapq
 from collections import deque, defaultdict
-from typing import Iterable, Dict, List, Set, Callable, Tuple, Any
+from typing import Iterable, Callable, Any, Mapping
 
 from santas_bag.search import search, bfs, dfs
 from santas_bag.types import Graph, Node, Edge, WeightedEdge, Weight, ResidualMap, CapacityGraph, GraphNeighbor, \
@@ -8,7 +8,7 @@ from santas_bag.types import Graph, Node, Edge, WeightedEdge, Weight, ResidualMa
 
 
 def adjacency_matrix_to_dict(
-        adjacency_lists: List[List[Node]],
+        adjacency_lists: list[list[Node]],
         weighted=False
 ) -> Graph[Node]:
     """
@@ -30,7 +30,7 @@ def adjacency_matrix_to_dict(
 
 
 def adjacency_lists_to_dict(
-        adjacency_list: List[Tuple[Node, List[GraphNeighbor]]],
+        adjacency_list: list[tuple[Node, list[GraphNeighbor]]],
         undirected: bool = False
 ) -> Graph[Node]:
     """
@@ -65,7 +65,7 @@ def adjacency_lists_to_dict(
     return graph
 
 
-def edge_list_to_dict(edge_list: List[Edge  | WeightedEdge], undirected=True) -> Graph[Node]:
+def edge_list_to_dict(edge_list: list[Edge  | WeightedEdge], undirected=True) -> Graph[Node]:
     """
     Transform a list of edges into a graph dictionary mapping node -> neighbors.
     Supports unweighted graphs and weighted graphs in form (vertex1, vertex2, weight).
@@ -162,7 +162,7 @@ def graph_dfs(graph: Graph[Node],
 
 
 def get_in_degrees(graph: Graph[Node],
-              nodes: Iterable[Node]) -> Dict[Node, int]:
+                   nodes: Iterable[Node]) -> Mapping[Node, int]:
     """
     Returns a dictionary mapping node id to in degree
 
@@ -180,7 +180,7 @@ def get_in_degrees(graph: Graph[Node],
     return in_degrees
 
 
-def topological_sort(graph: Graph[Node], nodes: Iterable[Node]) -> List[Node]:
+def topological_sort(graph: Graph[Node], nodes: Iterable[Node]) -> list[Node]:
     """
     Kahn's Algorithm implementation using the search engine.
 
@@ -213,7 +213,7 @@ def topological_sort(graph: Graph[Node], nodes: Iterable[Node]) -> List[Node]:
 
 def get_component_for_node(graph: Graph[Node],
                            start_node: Node,
-                           get_neighbors: NeighborFunction[Node] | None = None) -> Set[Node]:
+                           get_neighbors: NeighborFunction[Node] | None = None) -> set[Node]:
     """
     Returns the set of all nodes reachable from the start_node.
 
@@ -239,7 +239,7 @@ def get_component_for_node(graph: Graph[Node],
 
 
 def get_components(graph: Graph[Node],
-                   get_neighbors: NeighborFunction[Node] | None = None) -> List[Set[Node]]:
+                   get_neighbors: NeighborFunction[Node] | None = None) -> list[set[Node]]:
     """
     Returns a list of sets where each set is a connected component of the graph
 
@@ -276,7 +276,7 @@ def _get_is_terminal_default(goal: Node) -> Callable[..., bool]:
     return is_terminal_default
 
 
-def spanning_tree(graph: Dict[Any, List[Tuple[Node, Weight]]]) -> List[WeightedEdge]:
+def spanning_tree(graph: Mapping[Any, list[tuple[Node, Weight]]]) -> list[WeightedEdge]:
     """
     Computes the Minimum Spanning Tree using Prim's algorithm.
 
@@ -344,7 +344,7 @@ def edmonds_karp(
     graph: CapacityGraph,
     source: Node,
     sink: Node
-) -> Tuple[int, ResidualMap[Node]]:
+) -> tuple[int, ResidualMap[Node]]:
     """
     Edmonds Karp network flow algorithm.
 
@@ -405,7 +405,7 @@ def edmonds_karp(
 
 
 
-def min_cut(graph: Graph[Node], source, sink: Node) -> List[Edge]:
+def min_cut(graph: Graph[Node], source, sink: Node) -> list[Edge]:
     """
     Return edges crossing a minimum s-t cut.
 

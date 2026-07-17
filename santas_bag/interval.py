@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from santas_bag.types import Interval
 
 
@@ -27,7 +25,7 @@ def contains(a, b: Interval) -> bool:
     return a[0] <= b[0] and b[1] <= a[1]
 
 
-def merge(a, b: Interval) -> Optional[Interval]:
+def merge(a, b: Interval) -> Interval | None:
     """
     Returns a merged interval or None if intervals do not overlap
 
@@ -41,7 +39,7 @@ def merge(a, b: Interval) -> Optional[Interval]:
 
     return min(a[0], b[0]), max(a[1], b[1])
 
-def merge_intervals(intervals: List[Interval]) -> List[Interval]:
+def merge_intervals(intervals: list[Interval]) -> list[Interval]:
     """
     Iteratively merge overlapping intervals in list
 
@@ -67,7 +65,7 @@ def merge_intervals(intervals: List[Interval]) -> List[Interval]:
     return [(i[0], i[1]) for i in merged]
 
 
-def find_interval(intervals: List[Interval], value: int) -> Optional[Interval]:
+def find_interval(intervals: list[Interval], value: int) -> Interval | None:
     """
     Given a list of sorted, merged intervals, returns the interval that contains value
 

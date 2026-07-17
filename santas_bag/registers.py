@@ -1,11 +1,11 @@
 import operator
 from collections import defaultdict
-from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Protocol
+from typing import Callable, Protocol, Mapping
 
 from santas_bag.types import Instruction, CompiledInstruction
 
 
-def execute_instructions(instructions: List[Instruction], operations: Dict[str, Callable]) -> None:
+def execute_instructions(instructions: list[Instruction], operations: Mapping[str, Callable]) -> None:
     """
     Returns None. Operations executed from operations dictionary will modify registers outside function scope.
     Given a list of Instruction objects (namedtuple of the form ['instruction', 'args']) and an operations dictionary,
@@ -22,9 +22,9 @@ def execute_instructions(instructions: List[Instruction], operations: Dict[str, 
 
 
 def compile_instructions(
-        instructions: List[Instruction],
-        operations: Dict[str, Callable]
-) -> List[CompiledInstruction]:
+        instructions: list[Instruction],
+        operations: Mapping[str, Callable]
+) -> list[CompiledInstruction]:
     """
     Returns list of CompiledInstructions objects executed from operations dictionary
 
@@ -43,7 +43,7 @@ def compile_instructions(
     return compiled
 
 
-def execute_compiled_instructions(compiled_instructions: List[CompiledInstruction]) -> None:
+def execute_compiled_instructions(compiled_instructions: list[CompiledInstruction]) -> None:
     """
     Returns None. Operations executed from operations dictionary will modify registers outside function scope.
     Given a list of Instruction objects (namedtuple of the form ['instruction', 'args']) and an operations dictionary,
@@ -102,7 +102,7 @@ class RegisterDict(defaultdict, RegisterMixin, RegisterProtocol):
     :param kwargs: Additional key-value pairs to initialize registers.
     """
 
-    def __init__(self, registers: Dict | None = None, **kwargs):
+    def __init__(self, registers: Mapping | None = None, **kwargs):
         """
         Initializes the register dictionary by merging initial data and keyword arguments.
         """
@@ -110,7 +110,7 @@ class RegisterDict(defaultdict, RegisterMixin, RegisterProtocol):
         super().__init__(int, data)
 
 
-def get_standard_ops(registers: RegisterProtocol) -> Dict[str, Callable]:
+def get_standard_ops(registers: RegisterProtocol) -> Mapping[str, Callable]:
     """
     Returns a dictionary of 'standard' operations on registers. Includes:
     inc, dec, set, add, mul, mod, and pow.

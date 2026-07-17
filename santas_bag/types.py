@@ -14,6 +14,8 @@ type NeighborFunction[Node] = Callable[
     Iterable[Node]
 ]
 
+type EdgeEntry = str | tuple[str, Weight]
+
 class Edge[Node](NamedTuple):
     u: Node
     v: Node

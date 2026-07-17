@@ -3,7 +3,7 @@ import time
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Callable, Tuple
+from typing import Any, Callable
 
 from bs4 import BeautifulSoup
 import requests
@@ -279,7 +279,7 @@ def get_solve(year: str | int, session_id: str) -> Callable[..., Any]:
     """
     def _solve(
             day: str | int, part1_func: Callable[..., Any], part2_func: Callable[..., Any] | None = None, testing=True
-               ) -> Tuple[Any, Any]:
+               ) -> tuple[Any, Any]:
         return solve(year,
                      day,
                      session_id,
@@ -295,7 +295,7 @@ def solve(year: str | int,
           part1_func: Callable[..., Any],
           part2_func: Callable[..., Any] | None = None,
           testing=False
-) -> Tuple[Any, Any]:
+) -> tuple[Any, Any]:
     """
     Takes part1_func and [optional] part2_func and executes them. If keyword testing=True, then tests functions.
     Returns tuple of the results of part1_func and part2_func
@@ -326,7 +326,7 @@ def get_read_and_solve(year: str| int,
                        tests_path: Path | None = None,
 ) -> Callable[..., Any]:
     """
-    Return a function that takes day, part1_func, [optional] part2_func, delimiter (default to '\n'), an [optional]
+    Return a function that takes day, part1_func, [optional] part2_func, delimiter (defaults to '\n'), an [optional]
     parser and [optional] testing bool and solves/tests the functions
 
     :param year: The puzzle year.
@@ -338,7 +338,7 @@ def get_read_and_solve(year: str| int,
     """
     def _read_and_solve(
             day, part1_func, part2_func, delim='\n', parse=None, testing=False
-    ) -> Tuple[Any, Any]:
+    ) -> tuple[Any, Any]:
         return read_and_solve(year,
                               day,
                               session_id,
@@ -377,7 +377,7 @@ def read_and_solve(year: str | int,
           delim='\n',
           parse: Callable[..., Any] | None = None,
           testing=False
-) -> Tuple[Any, Any]:
+) -> tuple[Any, Any]:
     """
     Takes part1_func and [optional] part2_func and executes them. If keyword testing=True, then tests functions.
     Returns tuple of the results of part1_func and part2_func
