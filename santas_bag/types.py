@@ -1,5 +1,37 @@
-from typing import TypeAlias
+from typing import Iterable, Mapping, Tuple, TypeVar, NamedTuple, Callable, Any
 
-Interval: TypeAlias = tuple[int, int]
-Point: TypeAlias = tuple[int, int]
-Point3D: TypeAlias = tuple[int, int, int]
+type Interval = tuple[int, int]
+
+type Point = tuple[int, int]
+type Point3D = tuple[int, int, int]
+
+Node = TypeVar("Node")
+type Weight = int | float
+type GraphNeighbor[Node] = Node | tuple[Node, Weight]
+type Graph[Node] = Mapping[Node, Iterable[GraphNeighbor[Node]]]
+type NeighborFunction[Node] = Callable[
+    [Node, Any, tuple[Any, ...], dict[str, Any]],
+    Iterable[Node]
+]
+
+class Edge[Node](NamedTuple):
+    u: Node
+    v: Node
+
+class WeightedEdge[Node](NamedTuple):
+    u: Node
+    v: Node
+    weight: Weight
+
+type ResidualMap[Node] = Mapping[Node, Mapping[Node, Weight]]
+type CapacityGraph[Node] = Mapping[Node, Mapping[Node, Weight]]
+
+class Instruction(NamedTuple):
+    instruction: str
+    args: Tuple[Any, ...]
+
+
+# The "Resolved" or "Compiled" format
+class CompiledInstruction(NamedTuple):
+    func: Callable[..., Any]
+    args: Tuple[Any, ...]

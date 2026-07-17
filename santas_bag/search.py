@@ -2,20 +2,22 @@ import heapq
 from collections import deque
 from typing import Any, Tuple, Callable, Iterable, Deque, Dict, Optional, List
 
+from santas_bag.types import Node, NeighborFunction
+
 
 def search(
-        q: Any,
+        q: Iterable[Node],
         search_space: Any,
-        pop: Callable[[], Tuple[Any, int]],
-        push: Callable[[Any], None],
-        is_terminal: Callable[[Any, Any, Any], bool],
-        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-        on_visit: Optional[Callable[[Any, int, Any], None]] = None,
-        get_state: Callable[[Any], Any] = lambda n: n,
+        pop: Callable[[], Tuple[Node, int]],
+        push: Callable[[Tuple[Node, int]], None],
+        is_terminal: Callable[[Node, Any, Any], bool],
+        get_neighbors: NeighborFunction,
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Any], int | float]:
+) -> Tuple[Optional[Node], int | float]:
     """
     A polymorphic engine for state-space traversal.
 
@@ -54,22 +56,22 @@ def search(
 
 
 def bidirectional_search(
-        start: Any,
-        goal: Any,
+        start: Node,
+        goal: Node,
         search_space: Any,
-        q_f: Deque[Tuple[Any, int]],
-        pop_f: Callable[[], Tuple[Any, int]],
-        push_f: Callable[[Any], None],
-        q_b: Deque[Tuple[Any, int]],
-        pop_b: Callable[[], Tuple[Any, int]],
-        push_b: Callable[[Any], None],
-        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-        on_visit: Optional[Callable[[Any, int, Any], None]] = None,
-        get_state: Callable[[Any], Any] = lambda n: n,
+        q_f: Deque[Tuple[Node, int]],
+        pop_f: Callable[[], Tuple[Node, int]],
+        push_f: Callable[[Node], None],
+        q_b: Deque[Tuple[Node, int]],
+        pop_b: Callable[[], Tuple[Node, int]],
+        push_b: Callable[[Node], None],
+        get_neighbors: NeighborFunction[Node],
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Any], int | float]:
+) -> Tuple[Optional[Node], int | float]:
     """
     Performs a polymorphic bidirectional search to find the shortest path between start and goal.
 
@@ -122,16 +124,16 @@ def bidirectional_search(
 
 
 def bfs(
-        start: Any,
+        start: Node,
         search_space: Any,
-        is_terminal: Callable[[Any, Any, Any], bool],
-        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-        on_visit: Optional[Callable[[Any, int, Any], None]] = None,
-        get_state: Callable[[Any], Any] = lambda n: n,
+        is_terminal: Callable[[Node, Any, Any], bool],
+        get_neighbors: NeighborFunction[Node],
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Any], int | float]:
+) -> Tuple[Optional[Node], int | float]:
     """
     Performs a Breadth-First Search to find the shortest path in an unweighted graph.
 
@@ -160,17 +162,17 @@ def bfs(
 
 
 def greedy_best_first_search(
-    start: Any,
+    start: Node,
     search_space: Any,
     is_terminal: Callable[..., bool],
-    get_neighbors: Callable[..., Iterable[Any]],
-    heuristic: Callable[[Any, Any], int],
-    on_visit: Optional[Callable[[Any, int, Any], None]] = None,
-    get_state: Callable[[Any], Any] = lambda n: n,
+    get_neighbors: NeighborFunction[Node],
+    heuristic: Callable[[Node, Any], int],
+    on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+    get_state: Callable[[Node], Any] = lambda n: n,
     revisit=False,
     *args,
     **kwargs
-) -> Tuple[Optional[Any], int | float]:
+) -> Tuple[Optional[Node], int | float]:
     """
     Performs a Greedy Best-First Search to find a path quickly.
 
@@ -206,16 +208,16 @@ def greedy_best_first_search(
 
 
 def dfs(
-        start: Any,
+        start: Node,
         search_space: Any,
-        is_terminal: Callable[[Any, Any, Any], bool],
-        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-        on_visit: Optional[Callable[[Any, int, Any], None]] = None,
-        get_state: Callable[[Any], Any] = lambda n: n,
+        is_terminal: Callable[[Node, Any, Any], bool],
+        get_neighbors: NeighborFunction[Node],
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Any], int | float]:
+) -> Tuple[Optional[Node], int | float]:
     """
     Performs an iterative Depth-First Search for pathfinding.
 
@@ -241,11 +243,11 @@ def dfs(
 
 
 def find_all_paths(
-        start: Any,
+        start: Node,
         search_space: Any,
-        goal: Any,
-        get_neighbors: Callable[[Any, Any, Any, Any], Iterable[Any]],
-        get_state: Callable[[Any], Any] = lambda n: n[0],
+        goal: Node,
+        get_neighbors: NeighborFunction[Node],
+        get_state: Callable[[Node], Any] = lambda n: n[0] if isinstance(n, tuple) else n,
         *args,
         **kwargs
 ) -> List[List]:
@@ -263,12 +265,12 @@ def find_all_paths(
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     all_paths = []
-    def on_visit(node, steps, space):
+    def on_visit(node, *_):
         nd, path = node
         if nd == goal:
             all_paths.append(path)
 
-    def is_terminal(node, space, *args_, **kwargs_):
+    def is_terminal(*_):
         return False
 
     def neighbors(node, space, *args_, **kwargs_):
@@ -289,16 +291,16 @@ def find_all_paths(
 
 
 def a_star(
-        start: Any,
+        start: Node,
         search_space: Any,
         is_terminal: Callable[..., bool],
-        get_neighbors: Callable[..., Iterable[Any]],
-        heuristic: Callable[[Any, Any], int | float | Any],
-        on_visit: Optional[Callable[[Any, int, Any], None]] = None,
-        get_state: Callable[[Any], Any] = lambda n: n,
+        get_neighbors: NeighborFunction[Node],
+        heuristic: Callable[[Node, Any], int | float | Any],
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        get_state: Callable[[Node], Any] = lambda n: n,
         *args,
         **kwargs
-) -> Tuple[Optional[Any], int | float]:
+) -> Tuple[Optional[Node], int | float]:
     """
     Performs A* search to find the shortest path in a weighted graph.
 
@@ -342,14 +344,14 @@ def a_star(
 
 
 def dijkstra(
-        start: Any,
+        start: Node,
         search_space: Any,
         is_terminal: Callable[..., bool],
-        get_neighbors: Callable[..., Iterable[Any]],
-        on_visit: Optional[Callable[[Any, int, Any], None]] = None,
+        get_neighbors: NeighborFunction[Node],
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         *args,
         **kwargs
-) -> Tuple[Optional[Any], int | float]:
+) -> Tuple[Optional[Node], int | float]:
     """
     Performs Dijkstra's algorithm to find the shortest path in a weighted graph.
 
@@ -363,11 +365,18 @@ def dijkstra(
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
-    return a_star(start, search_space, is_terminal, get_neighbors, lambda n, s: 0, on_visit, *args, **kwargs)
+    return a_star(start,
+                  search_space,
+                  is_terminal,
+                  get_neighbors,
+                  lambda n, s: 0,
+                  on_visit,
+                  *args,
+                  **kwargs)
 
-def solve_tsp_a_star(destinations: List[Any],
-                     distance_func: Callable[[Any, Any], int | float | Any],
-                     on_visit: Optional[Callable[[Any, int, Any], None]] = None) -> Tuple[Optional[Any], int | float]:
+def solve_tsp_a_star(destinations: List[Node],
+                     distance_func: Callable[[Node, Any], int | float | Any],
+                     on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> Tuple[Optional[Node], int | float]:
     """
     Solves TSP using A*.
     State = (current_destination, frozenset(visited_destination))
@@ -386,7 +395,7 @@ def solve_tsp_a_star(destinations: List[Any],
         return len(visited) == len(destinations)
 
     # 2. Neighbors: Move to any unvisited destination
-    def get_neighbors(state_node, _):
+    def get_neighbors(state_node, *_):
         current_destination, visited = state_node
         for next_destination in destinations:
             if next_destination not in visited:
@@ -425,7 +434,7 @@ def solve_tsp_a_star(destinations: List[Any],
 
 def solve_tsp_optimized(destinations: List[Tuple[int, int]],
                         distance_matrix: Dict[Tuple[Tuple[int, int], Tuple[int, int]], int | float | Any],
-                        on_visit: Optional[Callable[[Any, int, Any], None]] = None) -> Tuple[Optional[Any], int | float]:
+                        on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> Tuple[Optional[Node], int | float]:
     """
     Solves TSP using A* to find the shortest path in a weighted graph.
 

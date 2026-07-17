@@ -2,16 +2,7 @@ import operator
 from collections import defaultdict
 from typing import Any, Callable, Dict, List, NamedTuple, Tuple, Protocol
 
-
-class Instruction(NamedTuple):
-    instruction: str
-    args: Tuple[Any, ...]
-
-
-# The "Resolved" or "Compiled" format
-class CompiledInstruction(NamedTuple):
-    func: Callable[..., Any]
-    args: Tuple[Any, ...]
+from santas_bag.types import Instruction, CompiledInstruction
 
 
 def execute_instructions(instructions: List[Instruction], operations: Dict[str, Callable]) -> None:

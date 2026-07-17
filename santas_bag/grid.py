@@ -1,9 +1,9 @@
 from collections.abc import Container
-from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Generator, Literal
+from typing import Iterable, List, Callable, Dict, Any, Set, Optional, Literal
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
-from santas_bag.types import Point
+from santas_bag.types import Point, NeighborFunction
 
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
@@ -43,7 +43,7 @@ def inbounds(grid: List[List], y, x: int) -> bool:
     return 0 <= y < len(grid) and 0 <= x < len(grid[y])
 
 
-def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Tuple[int, int], Any]:
+def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Point, Any]:
     """
     Converts a 2D grid into a coordinate-to-value dictionary.
 
@@ -90,7 +90,7 @@ def transform_grid(grid: Iterable[Iterable],
         case _:
             raise ValueError(f"Unknown transformation mode: {mode}")
 
-def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
+def neighbors4(y, x: int, grid: List[List]) -> List[Point]:
     """
     Returns a list of valid (y, x) coordinates adjacent (cardinal) to the given point.
 
@@ -103,7 +103,7 @@ def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
     return [(y + dy, x + dx) for dx, dy in CARDINAL_DIRECTIONS if inbounds(grid, y + dy, x + dx)]
 
 
-def neighbors8(y, x: int, grid: List[List])-> List[Tuple[int, int]]:
+def neighbors8(y, x: int, grid: List[List])-> List[Point]:
     """
     Returns a list of valid (y, x) coordinates adjacent (including diagonals) to the point.
 
@@ -130,29 +130,7 @@ def taxi_distance(y, x, y1, x1: int) -> int:
     return abs(y1 - y) + abs(x1 - x)
 
 
-def rotate_clockwise(grid: List[List]) -> List[List]:
-    """
-    Rotates a grid 90 degrees clockwise.
-
-    :param grid: The 2D grid context.
-
-    :return: A rotated 2D grid.
-    """
-    return [list(row) for row in zip(*grid[::-1])]
-
-
-def flip_horizontal(grid: List[List]) -> List[List]:
-    """
-    Flips the grid horizontally.
-
-    :param grid: The 2D grid context.
-
-    :return: A rotated 2D grid.
-    """
-    return [row[::-1] for row in grid]
-
-
-def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
+def find_all_in_grid(grid: List[List], target: Any) -> List[Point]:
     """
     Returns a list of all coordinates matching the target.
 
@@ -167,7 +145,7 @@ def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
 
 def get_is_enclosed(
         grid: List[List],
-        perimeter: Set[Tuple[int, int]],
+        perimeter: Set[Point],
         vertical_barriers: Container[str] = ('|', 'L', 'J')
     ) -> Callable[[int, int], bool]:
     """
@@ -184,7 +162,7 @@ def get_is_enclosed(
 
 def is_enclosed(
         grid: List[List],
-        perimeter: Set[Tuple[int, int]],
+        perimeter: Set[Point],
         y: int,
         x: int,
         vertical_barriers: Container[str] = ('|', 'L', 'J')
@@ -213,7 +191,7 @@ def is_enclosed(
     return cross_count % 2 == 1
 
 
-def area(loop: List[Tuple[int, int]]) -> int:
+def area(loop: List[Point]) -> int:
     """
     Calculates the number of interior tiles using the Shoelace Formula
     and Pick's Theorem.
@@ -242,12 +220,12 @@ def area(loop: List[Tuple[int, int]]) -> int:
     return int(interior_points)
 
 
-def _get_get_neighbors(
+def _get_get_neighbors_default(
         impassable: Container,
         cardinal_directions: bool
-) -> Callable[..., Generator[tuple[int, int], Any, None]]:
+) -> NeighborFunction[Point]:
     nghbr_f = neighbors4 if cardinal_directions else neighbors8
-    def get_neighbors(node, search_space, *args, **kwargs):
+    def get_neighbors(node, search_space, *_):
         y_, x_ = node
         for ny, nx in nghbr_f(y_, x_, search_space):
             if search_space[ny][nx] not in impassable:
@@ -274,11 +252,11 @@ def grid_bfs_from_point(
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
-    def is_terminal(node, search_space, *args, **kwargs):
+    def is_terminal(node, search_space, *_):
         y_, x_ = node
         return search_space[y_][x_] == goal
 
-    return bfs((start_y, start_x), grid, is_terminal, _get_get_neighbors(impassable, cardinal_directions))
+    return bfs((start_y, start_x), grid, is_terminal, _get_get_neighbors_default(impassable, cardinal_directions))
 
 
 def grid_bfs_from_value(
@@ -320,11 +298,11 @@ def grid_dfs_from_point(grid: List[List],
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
-    def is_terminal(node, search_space, *args, **kwargs):
+    def is_terminal(node, search_space, *_):
         y_, x_ = node
         return search_space[y_][x_] == goal
 
-    nghbr_f = _get_get_neighbors(impassable, cardinal_directions)
+    nghbr_f = _get_get_neighbors_default(impassable, cardinal_directions)
     def get_neighbors(node, search_space, *args, **kwargs):
         neighbors = list(nghbr_f(node, search_space, *args, **kwargs))
         for n in reversed(neighbors):
@@ -362,7 +340,7 @@ def grid_find_all_paths_from_point(
         goal: Any,
         impassable: Container=(),
         cardinal_directions=True
-) -> List[List[Tuple[int, int]]]:
+) -> List[List[Point]]:
     """
     Finds all paths from a starting point to a goal value in the grid.
 
@@ -401,7 +379,7 @@ def grid_find_all_paths_from_value(
         goal: Any,
         impassable: Container=(),
         cardinal_directions=True
-) -> List[List[Tuple[int, int]]]:
+) -> List[List[Point]]:
     """
     Finds all paths from a starting point to a goal value in the grid.
 
