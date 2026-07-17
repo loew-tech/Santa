@@ -10,7 +10,7 @@ from santas_bag.types import Graph, Node, Edge, WeightedEdge, Weight, ResidualMa
 def adjacency_matrix_to_dict(
         adjacency_lists: List[List[Node]],
         weighted=False
-) -> Graph:
+) -> Graph[Node]:
     """
     Transform a list of adjacency matrix into a graph dictionary mapping node -> neighbors.
 
@@ -65,7 +65,7 @@ def adjacency_lists_to_dict(
     return graph
 
 
-def edge_list_to_dict(edge_list: List[Edge  | WeightedEdge], undirected=True) -> Graph:
+def edge_list_to_dict(edge_list: List[Edge  | WeightedEdge], undirected=True) -> Graph[Node]:
     """
     Transform a list of edges into a graph dictionary mapping node -> neighbors.
     Supports unweighted graphs and weighted graphs in form (vertex1, vertex2, weight).
@@ -90,7 +90,7 @@ def edge_list_to_dict(edge_list: List[Edge  | WeightedEdge], undirected=True) ->
     return graph
 
 
-def transpose_graph(graph: Graph) -> Graph:
+def transpose_graph(graph: Graph[Node]) -> Graph[Node]:
     """
     Take a graph and reverse the edges
 
@@ -115,7 +115,7 @@ def transpose_graph(graph: Graph) -> Graph:
     return dict(transposed)
 
 
-def graph_bfs(graph: Graph,
+def graph_bfs(graph: Graph[Node],
               start: Node,
               goal: Node,
               get_neighbors: NeighborFunction | None = None) -> tuple[Node | None, int | float]:
@@ -136,7 +136,7 @@ def graph_bfs(graph: Graph,
     return bfs(start, graph, _get_is_terminal_default(goal), get_neighbors)
 
 
-def graph_dfs(graph: Graph,
+def graph_dfs(graph: Graph[Node],
               start: Node,
               goal: Node,
               get_neighbors: NeighborFunction | None = None) -> tuple[Node | None, int | float]:
@@ -161,7 +161,7 @@ def graph_dfs(graph: Graph,
                get_neighbors)
 
 
-def get_in_degrees(graph: Graph,
+def get_in_degrees(graph: Graph[Node],
               nodes: Iterable[Node]) -> Dict[Node, int]:
     """
     Returns a dictionary mapping node id to in degree
@@ -180,7 +180,7 @@ def get_in_degrees(graph: Graph,
     return in_degrees
 
 
-def topological_sort(graph: Graph, nodes: Iterable[Node]) -> List[Node]:
+def topological_sort(graph: Graph[Node], nodes: Iterable[Node]) -> List[Node]:
     """
     Kahn's Algorithm implementation using the search engine.
 
@@ -211,7 +211,7 @@ def topological_sort(graph: Graph, nodes: Iterable[Node]) -> List[Node]:
     return sorted_order
 
 
-def get_component_for_node(graph: Graph,
+def get_component_for_node(graph: Graph[Node],
                            start_node: Node,
                            get_neighbors: NeighborFunction | None = None) -> Set[Node]:
     """
@@ -238,7 +238,7 @@ def get_component_for_node(graph: Graph,
     return visited
 
 
-def get_components(graph: Graph,
+def get_components(graph: Graph[Node],
                    get_neighbors: NeighborFunction | None = None) -> List[Set[Node]]:
     """
     Returns a list of sets where each set is a connected component of the graph
@@ -265,7 +265,7 @@ def get_components(graph: Graph,
     return components
 
 
-def _get_neighbors_default(node: Node, graph: Graph, *_) -> Iterable[Node]:
+def _get_neighbors_default(node: Node, graph: Graph[Node], *_) -> Iterable[Node]:
     for neighbor in graph.get(node, []):
         yield neighbor[0] if isinstance(neighbor, tuple) else neighbor
 
@@ -312,7 +312,7 @@ def spanning_tree(graph: Dict[Any, List[Tuple[Node, Weight]]]) -> List[WeightedE
     return mst_edges
 
 
-def network_flow(graph: Graph, source: Node, sink: Node) -> Weight:
+def network_flow(graph: Graph[Node], source: Node, sink: Node) -> Weight:
     """
     Adapter function that transforms the standard graph representation
     into the format required by Edmonds-Karp.
@@ -405,7 +405,7 @@ def edmonds_karp(
 
 
 
-def min_cut(graph: Graph, source, sink: Node) -> List[Edge]:
+def min_cut(graph: Graph[Node], source, sink: Node) -> List[Edge]:
     """
     Return edges crossing a minimum s-t cut.
 
