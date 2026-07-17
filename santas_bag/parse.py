@@ -1,12 +1,12 @@
 import re
-from typing import List, Tuple, Callable, Union
+from typing import Callable
 
 from santas_bag.constants import REGEX_INTS, REGEX_NUMBERS
 from santas_bag.registers import Instruction
-from santas_bag.types import Interval
+from santas_bag.types import Interval, EdgeEntry
 
 
-def ints(s: str) -> List[int]:
+def ints(s: str) -> list[int]:
     """
     Extracts all integers from a string and returns them as a list.
 
@@ -17,7 +17,7 @@ def ints(s: str) -> List[int]:
     return list(map(int, re.findall(REGEX_INTS, s)))
 
 
-def nums(s: str) -> List[float]:
+def nums(s: str) -> list[float]:
     """
     Extracts all numbers from a string and returns them as a list.
 
@@ -63,12 +63,11 @@ def interval_tuple(s: str) -> Interval:
     return start, stop
 
 
-EdgeEntry = Union[str, Tuple[str, Union[int, float]]]
 def get_parse_adjacency_list(
         get_vertex: Callable[[str], str],
-        get_edges: Callable[[str], List[str]],
-        get_weights: Callable[[str], List[Union[int, float]]] | None = None,
-) -> Callable[[str], Tuple[str, List[EdgeEntry]]]:
+        get_edges: Callable[[str], list[str]],
+        get_weights: Callable[[str], list[int | float]] | None = None,
+) -> Callable[[str], tuple[str, list[EdgeEntry]]]:
     """
     Returns a function that parses a line and returns an EdgeEntry tuple  (Vertex followed by list of edges).
 
@@ -79,7 +78,7 @@ def get_parse_adjacency_list(
 
     :return: A function that parses a line and returns an EdgeEntry tuple (Vertex followed by list of edges).
     """
-    def parse(line: str) -> Tuple[str, List[EdgeEntry]]:
+    def parse(line: str) -> tuple[str, list[EdgeEntry]]:
         vertex = get_vertex(line)
         edges = get_edges(line)
         if get_weights is not None:
@@ -94,13 +93,13 @@ def _get_instruction_default(ln: str) -> str:
     return ln.split()[0]
 
 
-def _get_args_default(line: str) -> Tuple:
+def _get_args_default(line: str) -> tuple:
     _, *args = line.split()
     return tuple(args)
 
 def get_parse_instruction(
         get_instruction: Callable[[str], str] | None = None,
-        get_args: Callable[[str], Tuple] | None = None,
+        get_args: Callable[[str], tuple] | None = None,
 ) -> Callable[[str], Instruction]:
     """
     Returns a parse function that parses a line and returns an Instruction.

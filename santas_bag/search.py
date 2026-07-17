@@ -1,6 +1,6 @@
 import heapq
 from collections import deque
-from typing import Any, Tuple, Callable, Iterable, Deque, Dict, Optional, List
+from typing import Any, Callable, Iterable, Optional, Dict
 
 from santas_bag.types import Node, NeighborFunction
 
@@ -8,8 +8,8 @@ from santas_bag.types import Node, NeighborFunction
 def search(
         q: Iterable[Node],
         search_space: Any,
-        pop: Callable[[], Tuple[Node, int]],
-        push: Callable[[Tuple[Node, int]], None],
+        pop: Callable[[], tuple[Node, int]],
+        push: Callable[[tuple[Node, int]], None],
         is_terminal: Callable[[Node, Any, Any], bool],
         get_neighbors: NeighborFunction,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
@@ -17,7 +17,7 @@ def search(
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Node], int | float]:
+) -> tuple[Optional[Node], int | float]:
     """
     A polymorphic engine for state-space traversal.
 
@@ -59,11 +59,11 @@ def bidirectional_search(
         start: Node,
         goal: Node,
         search_space: Any,
-        q_f: Deque[Tuple[Node, int]],
-        pop_f: Callable[[], Tuple[Node, int]],
+        q_f: deque[tuple[Node, int]],
+        pop_f: Callable[[], tuple[Node, int]],
         push_f: Callable[[Node], None],
-        q_b: Deque[Tuple[Node, int]],
-        pop_b: Callable[[], Tuple[Node, int]],
+        q_b: deque[tuple[Node, int]],
+        pop_b: Callable[[], tuple[Node, int]],
         push_b: Callable[[Node], None],
         get_neighbors: NeighborFunction[Node],
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
@@ -71,7 +71,7 @@ def bidirectional_search(
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Node], int | float]:
+) -> tuple[Optional[Node], int | float]:
     """
     Performs a polymorphic bidirectional search to find the shortest path between start and goal.
 
@@ -133,7 +133,7 @@ def bfs(
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Node], int | float]:
+) -> tuple[Optional[Node], int | float]:
     """
     Performs a Breadth-First Search to find the shortest path in an unweighted graph.
 
@@ -172,7 +172,7 @@ def greedy_best_first_search(
     revisit=False,
     *args,
     **kwargs
-) -> Tuple[Optional[Node], int | float]:
+) -> tuple[Optional[Node], int | float]:
     """
     Performs a Greedy Best-First Search to find a path quickly.
 
@@ -217,7 +217,7 @@ def dfs(
         revisit=False,
         *args,
         **kwargs
-) -> Tuple[Optional[Node], int | float]:
+) -> tuple[Optional[Node], int | float]:
     """
     Performs an iterative Depth-First Search for pathfinding.
 
@@ -250,7 +250,7 @@ def find_all_paths(
         get_state: Callable[[Node], Any] = lambda n: n[0] if isinstance(n, tuple) else n,
         *args,
         **kwargs
-) -> List[List]:
+) -> list[list]:
     """
     Finds all paths from start to goal.
 
@@ -300,7 +300,7 @@ def a_star(
         get_state: Callable[[Node], Any] = lambda n: n,
         *args,
         **kwargs
-) -> Tuple[Optional[Node], int | float]:
+) -> tuple[Optional[Node], int | float]:
     """
     Performs A* search to find the shortest path in a weighted graph.
 
@@ -351,7 +351,7 @@ def dijkstra(
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         *args,
         **kwargs
-) -> Tuple[Optional[Node], int | float]:
+) -> tuple[Optional[Node], int | float]:
     """
     Performs Dijkstra's algorithm to find the shortest path in a weighted graph.
 
@@ -374,9 +374,9 @@ def dijkstra(
                   *args,
                   **kwargs)
 
-def solve_tsp_a_star(destinations: List[Node],
+def solve_tsp_a_star(destinations: list[Node],
                      distance_func: Callable[[Node, Any], int | float | Any],
-                     on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> Tuple[Optional[Node], int | float]:
+                     on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> tuple[Optional[Node], int | float]:
     """
     Solves TSP using A*.
     State = (current_destination, frozenset(visited_destination))
@@ -432,9 +432,9 @@ def solve_tsp_a_star(destinations: List[Node],
     )
 
 
-def solve_tsp_optimized(destinations: List[Tuple[int, int]],
-                        distance_matrix: Dict[Tuple[Tuple[int, int], Tuple[int, int]], int | float | Any],
-                        on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> Tuple[Optional[Node], int | float]:
+def solve_tsp_optimized(destinations: list[tuple[int, int]],
+                        distance_matrix: Dict[tuple[tuple[int, int], tuple[int, int]], int | float | Any],
+                        on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> tuple[Optional[Node], int | float]:
     """
     Solves TSP using A* to find the shortest path in a weighted graph.
 
@@ -449,9 +449,9 @@ def solve_tsp_optimized(destinations: List[Tuple[int, int]],
     return solve_tsp_a_star(destinations, dist_func, on_visit)
 
 
-def solve_tsp(destinations: List[Any],
+def solve_tsp(destinations: list[Any],
               distance_func: Callable[[Any, Any], int | float | Any],
-              on_visit: Optional[Callable[[Any, int, Any], None]] = None) -> Tuple[Optional[Any], int | float]:
+              on_visit: Optional[Callable[[Any, int, Any], None]] = None) -> tuple[Optional[Any], int | float]:
     """
     Solves TSP using floyd-warshall algorithm to find dictionary (start, stop): shortest_distance and then use
     that dictionary as distance_matrix for solve_tsp_optimized.
@@ -466,8 +466,8 @@ def solve_tsp(destinations: List[Any],
     return solve_tsp_optimized(destinations, distances, on_visit)
 
 
-def floyd_warshall(nodes: List[Any],
-                   get_weight: Callable[[Any, Any], int | float]) -> Dict[Tuple[Any, Any], int | float | Any]:
+def floyd_warshall(nodes: list[Any],
+                   get_weight: Callable[[Any, Any], int | float]) -> Dict[tuple[Any, Any], int | float | Any]:
     """
     Computes all-pairs shortest paths using the Floyd-Warshall algorithm.
 
