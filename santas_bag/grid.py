@@ -43,7 +43,7 @@ def inbounds(grid: List[List], y, x: int) -> bool:
     return 0 <= y < len(grid) and 0 <= x < len(grid[y])
 
 
-def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Tuple[int, int], Any]:
+def grid_to_dict(grid: Iterable[Iterable]) -> Dict[Point, Any]:
     """
     Converts a 2D grid into a coordinate-to-value dictionary.
 
@@ -90,7 +90,7 @@ def transform_grid(grid: Iterable[Iterable],
         case _:
             raise ValueError(f"Unknown transformation mode: {mode}")
 
-def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
+def neighbors4(y, x: int, grid: List[List]) -> List[Point]:
     """
     Returns a list of valid (y, x) coordinates adjacent (cardinal) to the given point.
 
@@ -103,7 +103,7 @@ def neighbors4(y, x: int, grid: List[List]) -> List[Tuple[int, int]]:
     return [(y + dy, x + dx) for dx, dy in CARDINAL_DIRECTIONS if inbounds(grid, y + dy, x + dx)]
 
 
-def neighbors8(y, x: int, grid: List[List])-> List[Tuple[int, int]]:
+def neighbors8(y, x: int, grid: List[List])-> List[Point]:
     """
     Returns a list of valid (y, x) coordinates adjacent (including diagonals) to the point.
 
@@ -130,7 +130,7 @@ def taxi_distance(y, x, y1, x1: int) -> int:
     return abs(y1 - y) + abs(x1 - x)
 
 
-def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
+def find_all_in_grid(grid: List[List], target: Any) -> List[Point]:
     """
     Returns a list of all coordinates matching the target.
 
@@ -145,7 +145,7 @@ def find_all_in_grid(grid: List[List], target: Any) -> List[Tuple[int, int]]:
 
 def get_is_enclosed(
         grid: List[List],
-        perimeter: Set[Tuple[int, int]],
+        perimeter: Set[Point],
         vertical_barriers: Container[str] = ('|', 'L', 'J')
     ) -> Callable[[int, int], bool]:
     """
@@ -162,7 +162,7 @@ def get_is_enclosed(
 
 def is_enclosed(
         grid: List[List],
-        perimeter: Set[Tuple[int, int]],
+        perimeter: Set[Point],
         y: int,
         x: int,
         vertical_barriers: Container[str] = ('|', 'L', 'J')
@@ -191,7 +191,7 @@ def is_enclosed(
     return cross_count % 2 == 1
 
 
-def area(loop: List[Tuple[int, int]]) -> int:
+def area(loop: List[Point]) -> int:
     """
     Calculates the number of interior tiles using the Shoelace Formula
     and Pick's Theorem.
@@ -340,7 +340,7 @@ def grid_find_all_paths_from_point(
         goal: Any,
         impassable: Container=(),
         cardinal_directions=True
-) -> List[List[Tuple[int, int]]]:
+) -> List[List[Point]]:
     """
     Finds all paths from a starting point to a goal value in the grid.
 
@@ -379,7 +379,7 @@ def grid_find_all_paths_from_value(
         goal: Any,
         impassable: Container=(),
         cardinal_directions=True
-) -> List[List[Tuple[int, int]]]:
+) -> List[List[Point]]:
     """
     Finds all paths from a starting point to a goal value in the grid.
 
