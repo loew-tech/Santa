@@ -1,3 +1,6 @@
+"""Grid helpers for bounds checks, neighbor generation, transformations, enclosed-area calculations, and grid-based traversal."""
+
+
 from collections.abc import Container
 from typing import Iterable, Callable, Any, Optional, Literal
 

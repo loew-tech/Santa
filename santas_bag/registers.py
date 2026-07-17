@@ -1,3 +1,6 @@
+"""Register-machine helpers for compiling and executing instruction lists with standard register operations."""
+
+
 import operator
 from collections import defaultdict
 from typing import Callable, Protocol, Mapping

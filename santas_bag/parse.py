@@ -1,3 +1,6 @@
+"""Parsing helpers for extracting integers and numbers from Advent of Code-style text and building simple line parsers."""
+
+
 import re
 from typing import Callable
 
