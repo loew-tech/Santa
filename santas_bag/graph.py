@@ -3,7 +3,8 @@ from collections import deque, defaultdict
 from typing import Iterable, Dict, List, Set, Callable, Tuple, Any
 
 from santas_bag.search import search, bfs, dfs
-from santas_bag.types import Graph, Node, Edge, WeightedEdge, Weight, ResidualMap, CapacityGraph, GraphNeighbor
+from santas_bag.types import Graph, Node, Edge, WeightedEdge, Weight, ResidualMap, CapacityGraph, GraphNeighbor, \
+    NeighborFunction
 
 
 def adjacency_matrix_to_dict(
@@ -117,7 +118,7 @@ def transpose_graph(graph: Graph) -> Graph:
 def graph_bfs(graph: Graph,
               start: Node,
               goal: Node,
-              get_neighbors: Callable[..., Iterable[Node]] | None = None) -> tuple[Node | None, int | float]:
+              get_neighbors: NeighborFunction | None = None) -> tuple[Node | None, int | float]:
     """
     Performs a BFS on the graph from start searching for goal.
     Returns the node for goal and the distance to get there
@@ -138,7 +139,7 @@ def graph_bfs(graph: Graph,
 def graph_dfs(graph: Graph,
               start: Node,
               goal: Node,
-              get_neighbors: Callable[..., Iterable[Node]] | None = None) -> tuple[Node | None, int | float]:
+              get_neighbors: NeighborFunction | None = None) -> tuple[Node | None, int | float]:
     """
     Performs a DFS on the graph from start searching for goal.
     Returns the node for goal and the distance to get there
@@ -199,7 +200,7 @@ def topological_sort(graph: Graph, nodes: Iterable[Node]) -> List[Node]:
         sorted_order.append(node)
         q.append(item)
 
-    def get_neighbors(node, graph_, *args, **kwargs):
+    def get_neighbors(node, graph_, *_):
         for neighbor in graph_.get(node, []):
             in_degrees[neighbor] -= 1
             if in_degrees[neighbor] == 0:
@@ -212,7 +213,7 @@ def topological_sort(graph: Graph, nodes: Iterable[Node]) -> List[Node]:
 
 def get_component_for_node(graph: Graph,
                            start_node: Node,
-                           get_neighbors: Callable[..., Iterable[Node]] | None = None) -> Set[Node]:
+                           get_neighbors: NeighborFunction | None = None) -> Set[Node]:
     """
     Returns the set of all nodes reachable from the start_node.
 
@@ -238,7 +239,7 @@ def get_component_for_node(graph: Graph,
 
 
 def get_components(graph: Graph,
-                   get_neighbors: Callable[..., Iterable[Node]] | None = None) -> List[Set[Node]]:
+                   get_neighbors: NeighborFunction | None = None) -> List[Set[Node]]:
     """
     Returns a list of sets where each set is a connected component of the graph
 

@@ -1,9 +1,9 @@
 from collections.abc import Container
-from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Generator, Literal
+from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Literal
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
-from santas_bag.types import Point
+from santas_bag.types import Point, NeighborFunction
 
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
@@ -220,12 +220,12 @@ def area(loop: List[Tuple[int, int]]) -> int:
     return int(interior_points)
 
 
-def _get_get_neighbors(
+def _get_get_neighbors_default(
         impassable: Container,
         cardinal_directions: bool
-) -> Callable[..., Generator[tuple[int, int], Any, None]]:
+) -> NeighborFunction:
     nghbr_f = neighbors4 if cardinal_directions else neighbors8
-    def get_neighbors(node, search_space, *args, **kwargs):
+    def get_neighbors(node, search_space, *_):
         y_, x_ = node
         for ny, nx in nghbr_f(y_, x_, search_space):
             if search_space[ny][nx] not in impassable:
@@ -252,11 +252,11 @@ def grid_bfs_from_point(
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
-    def is_terminal(node, search_space, *args, **kwargs):
+    def is_terminal(node, search_space, *_):
         y_, x_ = node
         return search_space[y_][x_] == goal
 
-    return bfs((start_y, start_x), grid, is_terminal, _get_get_neighbors(impassable, cardinal_directions))
+    return bfs((start_y, start_x), grid, is_terminal, _get_get_neighbors_default(impassable, cardinal_directions))
 
 
 def grid_bfs_from_value(
@@ -298,11 +298,11 @@ def grid_dfs_from_point(grid: List[List],
 
     :return: A tuple of ((goal_y, goal_x), steps). Returns (None, inf) if goal was not reached.
     """
-    def is_terminal(node, search_space, *args, **kwargs):
+    def is_terminal(node, search_space, *_):
         y_, x_ = node
         return search_space[y_][x_] == goal
 
-    nghbr_f = _get_get_neighbors(impassable, cardinal_directions)
+    nghbr_f = _get_get_neighbors_default(impassable, cardinal_directions)
     def get_neighbors(node, search_space, *args, **kwargs):
         neighbors = list(nghbr_f(node, search_space, *args, **kwargs))
         for n in reversed(neighbors):

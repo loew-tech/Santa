@@ -2,17 +2,16 @@ import heapq
 from collections import deque
 from typing import Any, Tuple, Callable, Iterable, Deque, Dict, Optional, List
 
-from santas_bag.types import Node
+from santas_bag.types import Node, SearchSpace, NeighborFunction
 
 
 def search(
-        q: Any,
-        search_space: Node,
+        q: Iterable[Node],
+        search_space: SearchSpace,
         pop: Callable[[], Tuple[Node, int]],
-        push: Callable[[Node], None],
+        push: Callable[[Tuple[Node, int]], None],
         is_terminal: Callable[[Node, Any, Any], bool],
-        # @TODO: is this better annotation than get_neighbors: Callable[..., Iterable[Node]]
-        get_neighbors: Callable[[Node, Any, Any, Any], Iterable[Node]],
+        get_neighbors: NeighborFunction,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
@@ -66,7 +65,7 @@ def bidirectional_search(
         q_b: Deque[Tuple[Node, int]],
         pop_b: Callable[[], Tuple[Node, int]],
         push_b: Callable[[Node], None],
-        get_neighbors: Callable[..., Iterable[Node]],
+        get_neighbors: NeighborFunction,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
@@ -128,7 +127,7 @@ def bfs(
         start: Node,
         search_space: Any,
         is_terminal: Callable[[Node, Any, Any], bool],
-        get_neighbors: Callable[..., Iterable[Node]],
+        get_neighbors: NeighborFunction,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
@@ -166,7 +165,7 @@ def greedy_best_first_search(
     start: Node,
     search_space: Any,
     is_terminal: Callable[..., bool],
-    get_neighbors: Callable[..., Iterable[Node]],
+    get_neighbors: NeighborFunction,
     heuristic: Callable[[Node, Any], int],
     on_visit: Optional[Callable[[Node, int, Any], None]] = None,
     get_state: Callable[[Node], Any] = lambda n: n,
@@ -212,7 +211,7 @@ def dfs(
         start: Node,
         search_space: Any,
         is_terminal: Callable[[Node, Any, Any], bool],
-        get_neighbors: Callable[..., Iterable[Node]],
+        get_neighbors: NeighborFunction,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
@@ -247,7 +246,7 @@ def find_all_paths(
         start: Node,
         search_space: Any,
         goal: Node,
-        get_neighbors: Callable[..., Iterable[Node]],
+        get_neighbors: NeighborFunction,
         get_state: Callable[[Node], Any] = lambda n: n[0] if isinstance(n, tuple) else n,
         *args,
         **kwargs
@@ -266,12 +265,12 @@ def find_all_paths(
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     all_paths = []
-    def on_visit(node, steps, space):
+    def on_visit(node, *_):
         nd, path = node
         if nd == goal:
             all_paths.append(path)
 
-    def is_terminal(node, space, *args_, **kwargs_):
+    def is_terminal(*_):
         return False
 
     def neighbors(node, space, *args_, **kwargs_):
@@ -295,7 +294,7 @@ def a_star(
         start: Node,
         search_space: Any,
         is_terminal: Callable[..., bool],
-        get_neighbors: Callable[..., Iterable[Node]],
+        get_neighbors: NeighborFunction,
         heuristic: Callable[[Node, Any], int | float | Any],
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
@@ -348,7 +347,7 @@ def dijkstra(
         start: Node,
         search_space: Any,
         is_terminal: Callable[..., bool],
-        get_neighbors: Callable[..., Iterable[Node]],
+        get_neighbors: NeighborFunction,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         *args,
         **kwargs
@@ -366,7 +365,14 @@ def dijkstra(
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
-    return a_star(start, search_space, is_terminal, get_neighbors, lambda n, s: 0, on_visit, *args, **kwargs)
+    return a_star(start,
+                  search_space,
+                  is_terminal,
+                  get_neighbors,
+                  lambda n, s: 0,
+                  on_visit,
+                  *args,
+                  **kwargs)
 
 def solve_tsp_a_star(destinations: List[Node],
                      distance_func: Callable[[Node, Any], int | float | Any],
@@ -389,7 +395,7 @@ def solve_tsp_a_star(destinations: List[Node],
         return len(visited) == len(destinations)
 
     # 2. Neighbors: Move to any unvisited destination
-    def get_neighbors(state_node, _):
+    def get_neighbors(state_node, *_):
         current_destination, visited = state_node
         for next_destination in destinations:
             if next_destination not in visited:

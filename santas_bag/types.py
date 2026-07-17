@@ -1,4 +1,4 @@
-from typing import Iterable, Mapping, Tuple, TypeAlias, TypeVar, NamedTuple
+from typing import Iterable, Mapping, Tuple, TypeVar, NamedTuple, Callable, Any
 
 type Interval = tuple[int, int]
 
@@ -6,10 +6,14 @@ type Point = tuple[int, int]
 type Point3D = tuple[int, int, int]
 
 Node = TypeVar("Node")
+SearchSpace = TypeVar("SearchSpace")
 type Weight = int | float
-type GraphNeighbor[Node] = Node | Tuple[Node, Weight]
+type GraphNeighbor[Node] = Node | tuple[Node, Weight]
 type Graph[Node] = Mapping[Node, Iterable[GraphNeighbor[Node]]]
-
+type NeighborFunction[Node, SearchSpace] = Callable[
+    [Node, SearchSpace, tuple[Any, ...], dict[str, Any]],
+    Iterable[Node]
+]
 
 class Edge[Node](NamedTuple):
     u: Node
