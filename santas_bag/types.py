@@ -6,12 +6,11 @@ type Point = tuple[int, int]
 type Point3D = tuple[int, int, int]
 
 Node = TypeVar("Node")
-SearchSpace = TypeVar("SearchSpace")
 type Weight = int | float
 type GraphNeighbor[Node] = Node | tuple[Node, Weight]
 type Graph[Node] = Mapping[Node, Iterable[GraphNeighbor[Node]]]
-type NeighborFunction[Node, SearchSpace] = Callable[
-    [Node, SearchSpace, tuple[Any, ...], dict[str, Any]],
+type NeighborFunction[Node] = Callable[
+    [Node, Any, tuple[Any, ...], dict[str, Any]],
     Iterable[Node]
 ]
 

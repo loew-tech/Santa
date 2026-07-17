@@ -3,7 +3,7 @@ from typing import Iterable, List, Callable, Dict, Tuple, Any, Set, Optional, Li
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
-from santas_bag.types import Point, NeighborFunction
+from santas_bag.types import Point, NeighborFunction, Node
 
 
 def print_grid(grid: Iterable[Iterable], sep='', end='') -> None:
@@ -223,7 +223,7 @@ def area(loop: List[Tuple[int, int]]) -> int:
 def _get_get_neighbors_default(
         impassable: Container,
         cardinal_directions: bool
-) -> NeighborFunction:
+) -> NeighborFunction[Point]:
     nghbr_f = neighbors4 if cardinal_directions else neighbors8
     def get_neighbors(node, search_space, *_):
         y_, x_ = node
