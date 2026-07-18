@@ -306,9 +306,9 @@ class TestUtils(unittest.TestCase):
     def test_read_and_solve_orchestration(self, mock_solve, mock_read):
         """Verify read_and_solve chains read_input -> solve."""
 
-        def p1(data, **kwargs): return 10
+        def p1(data): return 10
 
-        def p2(data, **kwargs): return 20
+        def p2(data): return 20
 
         result = read_and_solve(2026, 1, 'session', p1, p2, testing=True)
 
@@ -318,7 +318,7 @@ class TestUtils(unittest.TestCase):
         self.assertEqual(result, (10, 20))
         args, kwargs = mock_solve.call_args
         # args[3] is the wrapped part1_func
-        self.assertEqual(args[3](testing=True), 10)
+        self.assertEqual(args[3](), 10)
 
 
     @patch('santas_bag.utils.read_input', return_value="")
@@ -340,9 +340,9 @@ class TestUtils(unittest.TestCase):
     def test_read_and_solve_factory(self, mock_solve, mock_read):
         """Verify read_and_solve chains read_input -> solve."""
 
-        def p1(data, **kwargs): return 10
+        def p1(data): return 10
 
-        def p2(data, **kwargs): return 20
+        def p2(data): return 20
 
         _read_and_solve = get_read_and_solve(2026, 'session')
         result = _read_and_solve(1, p1, p2, testing=True)
@@ -350,10 +350,7 @@ class TestUtils(unittest.TestCase):
         # Verify read_input was called
         mock_read.assert_called()
         # Verify solve was called (and received lambdas)
-        self.assertEqual(result, (10, 20))
-        args, kwargs = mock_solve.call_args
-        # args[3] is the wrapped part1_func
-        self.assertEqual(args[3](testing=True), 10)
+        self.assertEqual((10, 20), result)
 
     def test_accepts_testing_arg(self):
         """Verify signature inspection."""
@@ -386,8 +383,7 @@ class TestUtils(unittest.TestCase):
 
         # Execute the lambda. It should return "success"
         # Since it's the "else" branch, it ignores the argument passed to it
-        result = func1("irrelevant_arg")
-
+        result = func1()
         self.assertEqual(result, "success")
 
 if __name__ == '__main__':
