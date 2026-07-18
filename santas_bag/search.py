@@ -14,7 +14,8 @@ def search(
         search_space: Any,
         pop: Callable[[], tuple[Node, int]],
         push: Callable[[tuple[Node, int]], None],
-        is_terminal: Callable[[Node, Any, Any], bool],
+        # @TODO: consider making this optional
+        is_terminal: Callable[[Node, Any, Any, Any], bool],
         get_neighbors: NeighborFunction,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
@@ -23,12 +24,20 @@ def search(
         **kwargs
 ) -> tuple[Optional[Node], int | float]:
     """
-    A polymorphic engine for state-space traversal.
+    The core polymorphic search engine driving all traversal utilities in this module.
+
+    This function implements a generic state-space search pattern. While it can be
+    used directly for highly custom traversal logic, most standard use cases are
+    better served by specialized abstractions provided in this module, such as
+    :func:`bfs`, :func:`dfs`, :func:`a_star`, or :func:`Dijkstra`.
 
     :param q: The frontier/queue data structure.
     :param search_space: The environment or graph to navigate.
-    :param pop: Function to extract the next (node, steps) from the frontier.
-    :param push: Function to insert (node, steps) into the frontier.
+    :param pop: Removes and returns the next ``(node, distance)`` from the frontier.
+        Together with ``push``, this defines the traversal strategy (BFS, DFS,
+        Dijkstra, A*, etc.).
+    :param push: Adds a ``(node, distance)`` pair to the frontier according to the chosen
+        traversal strategy.
     :param is_terminal: Predicate to identify the goal state.
     :param get_neighbors: Generator for adjacent nodes.
     :param on_visit: Function taking (node, steps, search_space) to call on visited state.
@@ -130,7 +139,7 @@ def bidirectional_search(
 def bfs(
         start: Node,
         search_space: Any,
-        is_terminal: Callable[[Node, Any, Any], bool],
+        is_terminal: Callable[[Node, Any, Any, Any], bool],
         get_neighbors: NeighborFunction[Node],
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
@@ -214,7 +223,7 @@ def greedy_best_first_search(
 def dfs(
         start: Node,
         search_space: Any,
-        is_terminal: Callable[[Node, Any, Any], bool],
+        is_terminal: Callable[[Node, Any, Any, Any], bool],
         get_neighbors: NeighborFunction[Node],
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
