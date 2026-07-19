@@ -2,7 +2,8 @@
 
 
 from collections.abc import Container
-from typing import Iterable, Callable, Any, Optional, Literal, Mapping
+from collections.abc import Callable, Mapping, Iterable
+from typing import Any, Literal
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
@@ -226,7 +227,7 @@ def area(loop: list[Point]) -> int:
 def _get_get_neighbors_default(
         impassable: Container,
         cardinal_directions: bool
-) -> NeighborFunction[Point]:
+) -> NeighborFunction[Point, list[list]]:
     nghbr_f = neighbors4 if cardinal_directions else neighbors8
     def get_neighbors(node, search_space, *_):
         y_, x_ = node
@@ -399,7 +400,7 @@ def grid_find_all_paths_from_value(
 
 
 class Grid:
-    def __init__(self, grid: list[list], impassable: Optional[Container] = None):
+    def __init__(self, grid: list[list], impassable: Container | None = None):
         self.data = grid
         self.height = len(grid)
         self.width = len(grid[0])

@@ -1,9 +1,9 @@
 """Register-machine helpers for compiling and executing instruction lists with standard register operations."""
 
 
-import operator
 from collections import defaultdict
-from typing import Callable, Protocol, Mapping
+from collections.abc import Callable, Mapping
+from typing import Protocol
 
 from santas_bag.types import Instruction, CompiledInstruction
 

@@ -4,19 +4,20 @@
 import heapq
 
 from collections import deque
-from typing import Any, Callable, Iterable, Dict, Optional
+from collections.abc import Callable, Iterable
+from typing import Any
 
-from santas_bag.types import Node, NeighborFunction, TerminalFunction
+from santas_bag.types import Node, NeighborFunction, TerminalFunction, OnVisitFunction, SearchSpace, Weight, Point
 
 
 def search(
         q: Iterable[Node],
-        search_space: Any,
+        search_space: SearchSpace,
         pop: Callable[[], tuple[Node, int]],
         push: Callable[[tuple[Node, int]], None],
-        get_neighbors: NeighborFunction[Node],
-        is_terminal: TerminalFunction[Node] | None = None,
-        on_visit: Callable[[Node, int, Any], None] | None = None,
+        get_neighbors: NeighborFunction[Node, SearchSpace],
+        is_terminal: TerminalFunction[Node, SearchSpace] | None = None,
+        on_visit: OnVisitFunction[Node, SearchSpace] | None = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
@@ -71,15 +72,15 @@ def search(
 def bidirectional_search(
         start: Node,
         goal: Node,
-        search_space: Any,
+        search_space: SearchSpace,
         q_f: deque[tuple[Node, int]],
         pop_f: Callable[[], tuple[Node, int]],
         push_f: Callable[[Node], None],
         q_b: deque[tuple[Node, int]],
         pop_b: Callable[[], tuple[Node, int]],
         push_b: Callable[[Node], None],
-        get_neighbors: NeighborFunction[Node],
-        on_visit: Callable[[Node, int, Any], None] | None = None,
+        get_neighbors: NeighborFunction[Node, SearchSpace],
+        on_visit: OnVisitFunction[Node, SearchSpace] | None = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
@@ -106,8 +107,8 @@ def bidirectional_search(
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
-    visited_f: Dict[Any, int] = {}  # {state: steps}
-    visited_b: Dict[Any, int] = {}  # {state: steps}
+    visited_f: dict[Any, int] = {}  # {state: steps}
+    visited_b: dict[Any, int] = {}  # {state: steps}
 
     # Initialize frontiers
     push_f((start, 0))
@@ -138,10 +139,10 @@ def bidirectional_search(
 
 def bfs(
         start: Node,
-        search_space: Any,
-        get_neighbors: NeighborFunction[Node],
-        is_terminal: TerminalFunction[Node] | None = None,
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        search_space: SearchSpace,
+        get_neighbors: NeighborFunction[Node, SearchSpace],
+        is_terminal: TerminalFunction[Node, SearchSpace] | None = None,
+        on_visit: OnVisitFunction[Node, SearchSpace] | None = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
@@ -174,11 +175,11 @@ def bfs(
 
 def greedy_best_first_search(
     start: Node,
-    search_space: Any,
-    get_neighbors: NeighborFunction[Node],
-    heuristic: Callable[[Node, Any], int],
-    is_terminal: TerminalFunction[Node] | None = None,
-    on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+    search_space: SearchSpace,
+    get_neighbors: NeighborFunction[Node, SearchSpace],
+    heuristic: Callable[[Node, SearchSpace], int],
+    is_terminal: TerminalFunction[Node, SearchSpace] | None = None,
+    on_visit: OnVisitFunction[Node, SearchSpace] | None = None,
     get_state: Callable[[Node], Any] = lambda n: n,
     revisit=False,
     *args,
@@ -222,10 +223,10 @@ def greedy_best_first_search(
 
 def dfs(
         start: Node,
-        search_space: Any,
-        get_neighbors: NeighborFunction[Node],
-        is_terminal: TerminalFunction[Node] | None = None,
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        search_space: SearchSpace,
+        get_neighbors: NeighborFunction[Node, SearchSpace],
+        is_terminal: TerminalFunction[Node, SearchSpace] | None = None,
+        on_visit: OnVisitFunction[Node, SearchSpace] | None = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
@@ -258,9 +259,9 @@ def dfs(
 
 def find_all_paths(
         start: Node,
-        search_space: Any,
+        search_space: SearchSpace,
         goal: Node,
-        get_neighbors: NeighborFunction[Node],
+        get_neighbors: NeighborFunction[Node, SearchSpace],
         get_state: Callable[[Node], Any] = lambda n: n[0] if isinstance(n, tuple) else n,
         *args,
         **kwargs
@@ -303,11 +304,11 @@ def find_all_paths(
 
 def a_star(
         start: Node,
-        search_space: Any,
-        get_neighbors: NeighborFunction[Node],
-        heuristic: Callable[[Node, Any], int | float | Any],
-        is_terminal: TerminalFunction[Node] | None = None,
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        search_space: SearchSpace,
+        get_neighbors: NeighborFunction[Node, SearchSpace],
+        heuristic: Callable[[Node, SearchSpace], Weight | Any],
+        is_terminal: TerminalFunction[Node, SearchSpace] | None = None,
+        on_visit: OnVisitFunction[Node, SearchSpace] | None = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         *args,
         **kwargs
@@ -354,10 +355,10 @@ def a_star(
 
 def dijkstra(
         start: Node,
-        search_space: Any,
-        get_neighbors: NeighborFunction[Node],
-        is_terminal: TerminalFunction[Node] | None = None,
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        search_space: SearchSpace,
+        get_neighbors: NeighborFunction[Node, SearchSpace],
+        is_terminal: TerminalFunction[Node, SearchSpace] | None = None,
+        on_visit: OnVisitFunction[Node, SearchSpace] | None = None,
         *args,
         **kwargs
 ) -> tuple[Node, float] | tuple[None, float]:
@@ -384,10 +385,11 @@ def dijkstra(
                   *args,
                   **kwargs)
 
+
 def solve_tsp_a_star(
         destinations: list[Node],
-        distance_func: Callable[[Node, Any], int | float | Any],
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None
+        distance_func: Callable[[Node, Node], Weight | Any],
+        on_visit: OnVisitFunction[Node, None] | None = None
 ) -> tuple[Node, float] | tuple[None, float]:
     """
     Solves TSP using A*.
@@ -445,10 +447,10 @@ def solve_tsp_a_star(
 
 
 def solve_tsp_optimized(
-        destinations: list[tuple[int, int]],
-        distance_matrix: Dict[tuple[tuple[int, int], tuple[int, int]], int | float | Any],
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None
-) -> tuple[Node, float] | tuple[None, float]:
+        destinations: list[Point],
+        distance_matrix: dict[tuple[Point, Point], Weight | Any],
+        on_visit: OnVisitFunction[Point, SearchSpace] | None = None
+) -> tuple[Point, float] | tuple[None, float]:
     """
     Solves TSP using A* to find the shortest path in a weighted graph.
 
@@ -464,9 +466,9 @@ def solve_tsp_optimized(
 
 
 def solve_tsp(
-        destinations: list[Any],
-        distance_func: Callable[[Any, Any], int | float | Any],
-        on_visit: Optional[Callable[[Any, int, Any], None]] = None
+        destinations: list[Node],
+        distance_func: Callable[[Node, Node], Weight | Any],
+        on_visit: OnVisitFunction[Node, SearchSpace] | None = None
 ) -> tuple[Node, float] | tuple[None, float]:
     """
     Solves TSP using floyd-warshall algorithm to find dictionary (start, stop): shortest_distance and then use
@@ -482,8 +484,8 @@ def solve_tsp(
     return solve_tsp_optimized(destinations, distances, on_visit)
 
 
-def floyd_warshall(nodes: list[Any],
-                   get_weight: Callable[[Any, Any], int | float]) -> Dict[tuple[Any, Any], int | float | Any]:
+def floyd_warshall(nodes: list[Node],
+                   get_weight: Callable[[Node, Node], int | float]) -> dict[tuple[Node, Node], Weight | Any]:
     """
     Computes all-pairs shortest paths using the Floyd-Warshall algorithm.
 

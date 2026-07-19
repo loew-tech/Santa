@@ -6,7 +6,8 @@ import time
 from functools import wraps
 from http import HTTPStatus
 from pathlib import Path
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 from bs4 import BeautifulSoup
 import requests

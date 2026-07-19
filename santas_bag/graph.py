@@ -120,7 +120,7 @@ def transpose_graph(graph: Graph[Node]) -> Graph[Node]:
 def graph_bfs(graph: Graph[Node],
               start: Node,
               goal: Node,
-              get_neighbors: NeighborFunction[Node] | None = None) -> tuple[Node | None, int | float]:
+              get_neighbors: NeighborFunction[Node, Graph[Node]] | None = None) -> tuple[Node | None, int | float]:
     """
     Performs a BFS on the graph from start searching for goal.
     Returns the node for goal and the distance to get there
@@ -141,7 +141,7 @@ def graph_bfs(graph: Graph[Node],
 def graph_dfs(graph: Graph[Node],
               start: Node,
               goal: Node,
-              get_neighbors: NeighborFunction[Node] | None = None) -> tuple[Node | None, int | float]:
+              get_neighbors: NeighborFunction[Node, Graph[Node]] | None = None) -> tuple[Node | None, int | float]:
     """
     Performs a DFS on the graph from start searching for goal.
     Returns the node for goal and the distance to get there
@@ -215,7 +215,7 @@ def topological_sort(graph: Graph[Node], nodes: Iterable[Node]) -> list[Node]:
 
 def get_component_for_node(graph: Graph[Node],
                            start_node: Node,
-                           get_neighbors: NeighborFunction[Node] | None = None) -> set[Node]:
+                           get_neighbors: NeighborFunction[Node, Graph[Node]] | None = None) -> set[Node]:
     """
     Returns the set of all nodes reachable from the start_node.
 
@@ -240,7 +240,7 @@ def get_component_for_node(graph: Graph[Node],
 
 
 def get_components(graph: Graph[Node],
-                   get_neighbors: NeighborFunction[Node] | None = None) -> list[set[Node]]:
+                   get_neighbors: NeighborFunction[Node, Graph[Node]] | None = None) -> list[set[Node]]:
     """
     Returns a list of sets where each set is a connected component of the graph
 
