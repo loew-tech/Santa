@@ -331,7 +331,7 @@ class TestGraph(unittest.TestCase):
     def test_get_component_for_node_not_in_graph(self):
         """Verify that a node not present in the graph returns an empty set."""
         graph = {"A": ["B"], "B": []}
-        get_neighbors = lambda node, g: g.get(node, [])
+        get_neighbors = lambda node, g, *_: g.get(node, [])
 
         # Act
         actual = get_component_for_node(graph, "Z", get_neighbors)
@@ -351,7 +351,7 @@ class TestGraph(unittest.TestCase):
         nodes = [(0, 0), (0, 1), (1, 0), (1, 1)]
 
         # Custom logic: neighbors are nodes with Manhattan distance of 1
-        def get_grid_neighbors(node, graph):
+        def get_grid_neighbors(node, graph, *_):
             r, c = node
             possible = [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
             # Only return neighbors that actually exist in our defined node set

@@ -135,7 +135,7 @@ def graph_bfs(graph: Graph[Node],
     if get_neighbors is None:
         get_neighbors = _get_neighbors_default
 
-    return bfs(start, graph, _get_is_terminal_default(goal), get_neighbors)
+    return bfs(start, graph, get_neighbors, _get_is_terminal_default(goal))
 
 
 def graph_dfs(graph: Graph[Node],
@@ -159,8 +159,8 @@ def graph_dfs(graph: Graph[Node],
 
     return dfs(start,
                graph,
-               _get_is_terminal_default(goal),
-               get_neighbors)
+               get_neighbors,
+               _get_is_terminal_default(goal))
 
 
 def get_in_degrees(graph: Graph[Node],
@@ -208,7 +208,7 @@ def topological_sort(graph: Graph[Node], nodes: Iterable[Node]) -> list[Node]:
             if in_degrees[neighbor] == 0:
                 yield neighbor
 
-    search(q, graph, q.popleft, push, lambda *args: False, get_neighbors)
+    search(q, graph, q.popleft, push, get_neighbors)
 
     return sorted_order
 
@@ -234,9 +234,8 @@ def get_component_for_node(graph: Graph[Node],
     visited = set()
     bfs(start_node,
         graph,
-        lambda n, s, *args_, **kwargs_: False,
         get_neighbors,
-        lambda n, steps, s: visited.add(n))
+        on_visit=lambda n, steps, s: visited.add(n))
     return visited
 
 
