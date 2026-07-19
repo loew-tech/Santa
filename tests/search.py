@@ -20,24 +20,24 @@ class TestSearch(unittest.TestCase):
         }
 
     @staticmethod
-    def get_neighbors(node, search_space, *args, **kwargs):
+    def get_neighbors(node, search_space, *_):
         return search_space.get(node, [])
 
     @staticmethod
-    def make_is_terminal(target_node):
-        return lambda node, search_space, *args, **kwargs: node == target_node
+    def make_is_terminal(target_node, ):
+        return lambda node, space, *args, **kwargs: node == target_node
 
     def test_on_visit_callback(self):
         """Verify that on_visit is called for each unique node visited."""
         visited_nodes = []
 
-        def track_visits(node, steps, space):
+        def track_visits(node, *_):
             visited_nodes.append(node)
 
         is_terminal = self.make_is_terminal(3)
         # Using BFS on the graph: 0 -> 1 -> 2 -> 3
         # Should visit 0, 1, 2, 3
-        result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors, on_visit=track_visits)
+        result, steps = bfs(0, self.graph, self.get_neighbors, is_terminal=is_terminal, on_visit=track_visits)
 
         self.assertEqual(3, result)
         # Check that we recorded visits for the path
@@ -49,13 +49,13 @@ class TestSearch(unittest.TestCase):
 
     def test_bfs_shortest_path(self):
         is_terminal = self.make_is_terminal(3)
-        result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors)
+        result, steps = bfs(0, self.graph, self.get_neighbors, is_terminal)
         self.assertEqual(3, result)
         self.assertEqual(2, steps)
 
     def test_bfs_start_is_terminal(self):
         is_terminal = self.make_is_terminal(0)
-        result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors)
+        result, steps = bfs(0, self.graph, self.get_neighbors, is_terminal)
         self.assertEqual(0, result)
         self.assertEqual(0, steps)
 
@@ -78,8 +78,8 @@ class TestSearch(unittest.TestCase):
         result, steps = greedy_best_first_search(
             start=0,
             search_space=graph,
-            is_terminal=is_terminal,
             get_neighbors=self.get_neighbors,
+            is_terminal=is_terminal,
             heuristic=heuristic
         )
 
@@ -88,19 +88,19 @@ class TestSearch(unittest.TestCase):
 
     def test_dfs_start_is_terminal(self):
         is_terminal = self.make_is_terminal(0)
-        result, steps = dfs(0, self.graph, is_terminal, self.get_neighbors)
+        result, steps = dfs(0, self.graph, self.get_neighbors, is_terminal)
         self.assertEqual(0, result)
         self.assertEqual(0, steps)
 
     def test_dfs_finds_path(self):
         is_terminal = self.make_is_terminal(3)
-        result, steps = dfs(0, self.graph, is_terminal, self.get_neighbors)
+        result, steps = dfs(0, self.graph, self.get_neighbors, is_terminal)
         self.assertEqual(3, result)
         self.assertEqual(2, steps)
 
     def test_no_path(self):
         is_terminal = self.make_is_terminal(99)
-        result, steps = bfs(0, self.graph, is_terminal, self.get_neighbors)
+        result, steps = bfs(0, self.graph, self.get_neighbors, is_terminal)
         self.assertIsNone(result)
         self.assertEqual(float('inf'), steps)
 
@@ -108,7 +108,7 @@ class TestSearch(unittest.TestCase):
         is_terminal = self.make_is_terminal(3)
         # Manhattan-style heuristic: simple absolute difference distance estimate
         heuristic = lambda node, space: abs(3 - node)
-        result, steps = a_star(0, self.graph, is_terminal, self.get_neighbors, heuristic)
+        result, steps = a_star(0, self.graph, self.get_neighbors, heuristic, is_terminal)
         self.assertEqual(3, result)
         self.assertEqual(2, steps)
 
@@ -117,7 +117,7 @@ class TestSearch(unittest.TestCase):
         # A* needs a heuristic; 0 distance is always 0.
         is_terminal = self.make_is_terminal(0)
         heuristic = lambda node, space: 0
-        result, steps = a_star(0, self.graph, is_terminal, self.get_neighbors, heuristic)
+        result, steps = a_star(0, self.graph, self.get_neighbors, heuristic, is_terminal)
         self.assertEqual(0, result)
         self.assertEqual(0, steps)
 
@@ -130,7 +130,7 @@ class TestSearch(unittest.TestCase):
         # BFS will find 1, then fail to find 2 because state 'X' is already in visited.
         # get_state = lambda n: n
 
-        result, steps = bfs(0, graph, is_terminal, self.get_neighbors)
+        result, steps = bfs(0, graph, self.get_neighbors, is_terminal)
         self.assertEqual(3, result)
         self.assertEqual(2, steps)
 
@@ -146,7 +146,7 @@ class TestSearch(unittest.TestCase):
         is_terminal = self.make_is_terminal(3)
 
         # Pass reverse=True as a kwarg through BFS to the neighbor generator
-        result, steps = bfs(0, self.graph, is_terminal, get_neighbors_with_modifier, reverse=True)
+        result, steps = bfs(0, self.graph, get_neighbors_with_modifier, is_terminal, reverse=True)
         self.assertEqual(3, result)
 
     def test_dijkstra_weighted_path(self):
@@ -170,7 +170,7 @@ class TestSearch(unittest.TestCase):
 
         is_terminal = self.make_is_terminal(2)
 
-        result, steps = dijkstra(0, graph, is_terminal, get_weighted_neighbors)
+        result, steps = dijkstra(0, graph, get_weighted_neighbors, is_terminal)
 
         self.assertEqual(2, result)
         self.assertEqual(2, steps)  # 0->1 (1) + 1->2 (1) = 2
@@ -348,6 +348,33 @@ class TestSearch(unittest.TestCase):
 
         results = floyd_warshall(nodes, get_weight)
         self.assertEqual(float('inf'), results[('A', 'C')])
+
+    def test_is_terminal_is_none(self):
+        """
+        Verify that search terminates correctly when is_terminal is None
+        (i.e., it visits all reachable nodes until the queue is exhausted).
+        """
+        # Graph: 0 -> 1 -> 2
+        # If we set is_terminal=None, it should finish visiting all nodes.
+        graph = {0: [1], 1: [2], 2: []}
+        visited_nodes = []
+
+        def track_visits(node, *_):
+            visited_nodes.append(node)
+
+        # BFS with is_terminal=None
+        # The search will finish because the queue will eventually be empty.
+        # The search function returns (None, float('inf')) because it never
+        # hits a "terminal" condition.
+        result, steps = bfs(0, graph, self.get_neighbors, on_visit=track_visits)
+
+        self.assertIsNone(result)
+        self.assertEqual(steps, float('inf'))
+        self.assertIn(0, visited_nodes)
+        self.assertIn(1, visited_nodes)
+        self.assertIn(2, visited_nodes)
+        self.assertEqual(len(visited_nodes), 3)
+
 
 if __name__ == '__main__':
     unittest.main()

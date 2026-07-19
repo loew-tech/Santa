@@ -13,6 +13,10 @@ type NeighborFunction[Node] = Callable[
     [Node, Any, tuple[Any, ...], dict[str, Any]],
     Iterable[Node]
 ]
+type TerminalFunction[Node] = Callable[
+    [Node, Any, tuple[Any, ...], dict[str, Any]],
+    bool
+]
 
 type EdgeEntry = str | tuple[str, Weight]
 

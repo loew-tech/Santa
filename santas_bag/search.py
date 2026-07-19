@@ -4,9 +4,9 @@
 import heapq
 
 from collections import deque
-from typing import Any, Callable, Iterable, Optional, Dict
+from typing import Any, Callable, Iterable, Dict, Optional
 
-from santas_bag.types import Node, NeighborFunction
+from santas_bag.types import Node, NeighborFunction, TerminalFunction
 
 
 def search(
@@ -14,15 +14,14 @@ def search(
         search_space: Any,
         pop: Callable[[], tuple[Node, int]],
         push: Callable[[tuple[Node, int]], None],
-        # @TODO: consider making this optional
-        is_terminal: Callable[[Node, Any, Any, Any], bool],
-        get_neighbors: NeighborFunction,
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        get_neighbors: NeighborFunction[Node],
+        is_terminal: TerminalFunction[Node] | None = None,
+        on_visit: Callable[[Node, int, Any], None] | None = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> tuple[Optional[Node], int | float]:
+) -> tuple[Node, float] | tuple[None, float]:
     """
     The core polymorphic search engine driving all traversal utilities in this module.
 
@@ -38,10 +37,11 @@ def search(
         Dijkstra, A*, etc.).
     :param push: Adds a ``(node, distance)`` pair to the frontier according to the chosen
         traversal strategy.
-    :param is_terminal: Predicate to identify the goal state.
     :param get_neighbors: Generator for adjacent nodes.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
-    :param get_state: Function to map a node to a hashable state for pruning.
+    :param is_terminal: Optional Function taking node, search_space, args, and kwargs that determines whether the search
+        should terminate. Defaults to ``None`` and search terminates when search queue is empty.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
+    :param get_state: Optional function to map a node to a hashable state for pruning.
     :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
@@ -59,7 +59,7 @@ def search(
         if on_visit is not None:
             on_visit(node, steps, search_space)
 
-        if is_terminal(node, search_space, *args, **kwargs):
+        if is_terminal is not None and is_terminal(node, search_space, *args, **kwargs):
             return node, steps
 
         for nghbr in get_neighbors(node, search_space, *args, **kwargs):
@@ -79,12 +79,12 @@ def bidirectional_search(
         pop_b: Callable[[], tuple[Node, int]],
         push_b: Callable[[Node], None],
         get_neighbors: NeighborFunction[Node],
-        on_visit: Optional[Callable[[Node, int, Any], None]] = None,
+        on_visit: Callable[[Node, int, Any], None] | None = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> tuple[Optional[Node], int | float]:
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Performs a polymorphic bidirectional search to find the shortest path between start and goal.
 
@@ -139,63 +139,63 @@ def bidirectional_search(
 def bfs(
         start: Node,
         search_space: Any,
-        is_terminal: Callable[[Node, Any, Any, Any], bool],
         get_neighbors: NeighborFunction[Node],
+        is_terminal: TerminalFunction[Node] | None = None,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> tuple[Optional[Node], int | float]:
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Performs a Breadth-First Search to find the shortest path in an unweighted graph.
 
     :param start: The starting node.
     :param search_space: The environment or graph to navigate.
-    :param is_terminal: Predicate to identify the goal state.
     :param get_neighbors: Generator for adjacent nodes.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
-    :param get_state: Function to map a node to a hashable state.
+    :param is_terminal: Optional Function taking node, search_space, args, and kwargs that determines whether the search
+        should terminate. Defaults to ``None`` and search terminates when search queue is empty.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
+    :param get_state: Optional function to map a node to a hashable state for pruning.
     :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
-    if is_terminal(start, search_space, *args, **kwargs):
-        return start, 0
-
     q = deque([(start, 0)])
     def push(item):
         neighbor, steps = item
         q.append((neighbor, steps + 1))
 
-    return search(q, search_space, q.popleft, push, is_terminal,
-                  get_neighbors, on_visit, get_state, revisit, *args, **kwargs)
+    return search(q, search_space, q.popleft, push, get_neighbors,
+                  is_terminal, on_visit, get_state, revisit, *args, **kwargs)
 
 
 def greedy_best_first_search(
     start: Node,
     search_space: Any,
-    is_terminal: Callable[..., bool],
     get_neighbors: NeighborFunction[Node],
     heuristic: Callable[[Node, Any], int],
+    is_terminal: TerminalFunction[Node] | None = None,
     on_visit: Optional[Callable[[Node, int, Any], None]] = None,
     get_state: Callable[[Node], Any] = lambda n: n,
     revisit=False,
     *args,
     **kwargs
-) -> tuple[Optional[Node], int | float]:
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Performs a Greedy Best-First Search to find a path quickly.
 
+    :param heuristic:
     :param start: The starting node.
     :param search_space: The environment or graph to navigate.
-    :param is_terminal: Predicate to identify the goal state.
     :param get_neighbors: Generator for adjacent nodes.
     :param heuristic: A function calculating the estimated cost to the goal.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
-    :param get_state: Function to map a node to a hashable state.
+    :param is_terminal: Optional Function taking node, search_space, args, and kwargs that determines whether the search
+        should terminate. Defaults to ``None`` and search terminates when search queue is empty.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
+    :param get_state: Optional function to map a node to a hashable state for pruning.
     :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
@@ -216,30 +216,31 @@ def greedy_best_first_search(
 
     return search(
         q, search_space, priority_pop, priority_push,
-        is_terminal, get_neighbors, on_visit, get_state, revisit, *args, **kwargs
+        get_neighbors, is_terminal, on_visit, get_state, revisit, *args, **kwargs
     )
 
 
 def dfs(
         start: Node,
         search_space: Any,
-        is_terminal: Callable[[Node, Any, Any, Any], bool],
         get_neighbors: NeighborFunction[Node],
+        is_terminal: TerminalFunction[Node] | None = None,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         revisit=False,
         *args,
         **kwargs
-) -> tuple[Optional[Node], int | float]:
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Performs an iterative Depth-First Search for pathfinding.
 
     :param start: The starting node.
     :param search_space: The environment or graph to navigate.
-    :param is_terminal: Predicate to identify the goal state.
     :param get_neighbors: Generator for adjacent nodes.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
-    :param get_state: Function to map a node to a hashable state.
+    :param is_terminal: Optional Function taking node, search_space, args, and kwargs that determines whether the search
+        should terminate. Defaults to ``None`` and search terminates when search queue is empty.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
+    :param get_state: Optional function to map a node to a hashable state for pruning.
     :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
@@ -251,8 +252,8 @@ def dfs(
         neighbor, steps = item
         q.append((neighbor, steps + 1))
 
-    return search(q, search_space, q.pop, push, is_terminal,
-                  get_neighbors, on_visit, get_state, revisit,*args, **kwargs)
+    return search(q, search_space, q.pop, push, get_neighbors,
+                  is_terminal, on_visit, get_state, revisit,*args, **kwargs)
 
 
 def find_all_paths(
@@ -283,9 +284,6 @@ def find_all_paths(
         if nd == goal:
             all_paths.append(path)
 
-    def is_terminal(*_):
-        return False
-
     def neighbors(node, space, *args_, **kwargs_):
         nd, path = node
         if nd == goal:
@@ -298,40 +296,38 @@ def find_all_paths(
         return ret
 
     q = deque([((start, [start]), 0)])
-    search(q, search_space, q.pop, q.append, is_terminal,
-                  neighbors, on_visit, get_state, revisit=True,*args, **kwargs)
+    search(q, search_space, q.pop, q.append, neighbors, on_visit=on_visit,
+           get_state=get_state, revisit=True,*args, **kwargs)
     return all_paths
 
 
 def a_star(
         start: Node,
         search_space: Any,
-        is_terminal: Callable[..., bool],
         get_neighbors: NeighborFunction[Node],
         heuristic: Callable[[Node, Any], int | float | Any],
+        is_terminal: TerminalFunction[Node] | None = None,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         get_state: Callable[[Node], Any] = lambda n: n,
         *args,
         **kwargs
-) -> tuple[Optional[Node], int | float]:
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Performs A* search to find the shortest path in a weighted graph.
 
     :param start: The starting node.
     :param search_space: The environment or graph to navigate.
-    :param is_terminal: Predicate to identify the goal state.
     :param get_neighbors: Generator for adjacent nodes.
     :param heuristic: A function calculating the estimated cost from a node to the goal.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
-    :param get_state: Function to map a node to a hashable state.
+    :param is_terminal: Optional Function taking node, search_space, args, and kwargs that determines whether the search
+        should terminate. Defaults to ``None`` and search terminates when search queue is empty.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
+    :param get_state: Optional function to map a node to a hashable state for pruning.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
-    if is_terminal(start, search_space, *args, **kwargs):
-        return start, 0
-
     q = [(heuristic(start, search_space), 0, start)]
     heapq.heapify(q)
 
@@ -353,43 +349,46 @@ def a_star(
         heapq.heappush(q, (f, new_total_steps, neighbor))
 
     return search(q, search_space, priority_pop, priority_push,
-                  is_terminal, get_neighbors, on_visit, get_state, *args, **kwargs)
+                  get_neighbors, is_terminal, on_visit, get_state, *args, **kwargs)
 
 
 def dijkstra(
         start: Node,
         search_space: Any,
-        is_terminal: Callable[..., bool],
         get_neighbors: NeighborFunction[Node],
+        is_terminal: TerminalFunction[Node] | None = None,
         on_visit: Optional[Callable[[Node, int, Any], None]] = None,
         *args,
         **kwargs
-) -> tuple[Optional[Node], int | float]:
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Performs Dijkstra's algorithm to find the shortest path in a weighted graph.
 
     :param start: The starting node.
     :param search_space: The environment or graph to navigate.
-    :param is_terminal: Predicate to identify the goal state.
     :param get_neighbors: Generator for adjacent nodes.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
-    :param args: Additional positional arguments for callbacks.
+    :param is_terminal: Optional Function taking node, search_space, args, and kwargs that determines whether the search
+        should terminate. Defaults to ``None`` and search terminates when search queue is empty.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
+     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
     """
     return a_star(start,
                   search_space,
-                  is_terminal,
                   get_neighbors,
-                  lambda n, s: 0,
+                  lambda n, s, *_: 0,
+                  is_terminal,
                   on_visit,
                   *args,
                   **kwargs)
 
-def solve_tsp_a_star(destinations: list[Node],
-                     distance_func: Callable[[Node, Any], int | float | Any],
-                     on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> tuple[Optional[Node], int | float]:
+def solve_tsp_a_star(
+        destinations: list[Node],
+        distance_func: Callable[[Node, Any], int | float | Any],
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Solves TSP using A*.
     State = (current_destination, frozenset(visited_destination))
@@ -403,7 +402,7 @@ def solve_tsp_a_star(destinations: list[Node],
     start_destination = destinations[0]
 
     # 1. Terminal condition: Visited all destinations and returned to start (or just visited all)
-    def is_terminal(state_node, _):
+    def is_terminal(state_node, *_):
         current_destination, visited = state_node
         return len(visited) == len(destinations)
 
@@ -437,17 +436,19 @@ def solve_tsp_a_star(destinations: list[Node],
     return a_star(
         start_state,
         None,
-        is_terminal,
         get_neighbors,
         heuristic,
+        is_terminal,
         on_visit,
         get_state
     )
 
 
-def solve_tsp_optimized(destinations: list[tuple[int, int]],
-                        distance_matrix: Dict[tuple[tuple[int, int], tuple[int, int]], int | float | Any],
-                        on_visit: Optional[Callable[[Node, int, Any], None]] = None) -> tuple[Optional[Node], int | float]:
+def solve_tsp_optimized(
+        destinations: list[tuple[int, int]],
+        distance_matrix: Dict[tuple[tuple[int, int], tuple[int, int]], int | float | Any],
+        on_visit: Optional[Callable[[Node, int, Any], None]] = None
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Solves TSP using A* to find the shortest path in a weighted graph.
 
@@ -462,9 +463,11 @@ def solve_tsp_optimized(destinations: list[tuple[int, int]],
     return solve_tsp_a_star(destinations, dist_func, on_visit)
 
 
-def solve_tsp(destinations: list[Any],
-              distance_func: Callable[[Any, Any], int | float | Any],
-              on_visit: Optional[Callable[[Any, int, Any], None]] = None) -> tuple[Optional[Any], int | float]:
+def solve_tsp(
+        destinations: list[Any],
+        distance_func: Callable[[Any, Any], int | float | Any],
+        on_visit: Optional[Callable[[Any, int, Any], None]] = None
+) -> tuple[Node, float] | tuple[None, float]:
     """
     Solves TSP using floyd-warshall algorithm to find dictionary (start, stop): shortest_distance and then use
     that dictionary as distance_matrix for solve_tsp_optimized.
