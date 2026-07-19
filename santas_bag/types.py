@@ -13,17 +13,14 @@ type NeighborFunction[Node] = Callable[
     [Node, Any, tuple[Any, ...], dict[str, Any]],
     Iterable[Node]
 ]
+type TerminalFunction[Node] = Callable[
+    [Node, Any, tuple[Any, ...], dict[str, Any]],
+    bool
+]
 
 type EdgeEntry = str | tuple[str, Weight]
-
-class Edge[Node](NamedTuple):
-    u: Node
-    v: Node
-
-class WeightedEdge[Node](NamedTuple):
-    u: Node
-    v: Node
-    weight: Weight
+type Edge[Node] = tuple[Node, Node]
+type WeightedEdge = tuple[Node, Node, Weight]
 
 type ResidualMap[Node] = Mapping[Node, Mapping[Node, Weight]]
 type CapacityGraph[Node] = Mapping[Node, Mapping[Node, Weight]]

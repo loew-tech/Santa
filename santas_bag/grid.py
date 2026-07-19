@@ -2,7 +2,7 @@
 
 
 from collections.abc import Container
-from typing import Iterable, Callable, Any, Optional, Literal
+from typing import Iterable, Callable, Any, Optional, Literal, Mapping
 
 from santas_bag.constants import CARDINAL_DIRECTIONS, ALL_DIRECTIONS
 from santas_bag.search import bfs, dfs
@@ -259,7 +259,7 @@ def grid_bfs_from_point(
         y_, x_ = node
         return search_space[y_][x_] == goal
 
-    return bfs((start_y, start_x), grid, is_terminal, _get_get_neighbors_default(impassable, cardinal_directions))
+    return bfs((start_y, start_x), grid, _get_get_neighbors_default(impassable, cardinal_directions), is_terminal)
 
 
 def grid_bfs_from_value(
@@ -311,7 +311,7 @@ def grid_dfs_from_point(grid: list[list],
         for n in reversed(neighbors):
             yield n
 
-    return dfs((start_y, start_x), grid, is_terminal, get_neighbors)
+    return dfs((start_y, start_x), grid, get_neighbors, is_terminal)
 
 
 def grid_dfs_from_value(
