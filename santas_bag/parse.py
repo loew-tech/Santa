@@ -2,7 +2,7 @@
 
 
 import re
-from typing import Callable
+from collections.abc import Callable
 
 from santas_bag.constants import REGEX_INTS, REGEX_NUMBERS
 from santas_bag.registers import Instruction

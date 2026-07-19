@@ -386,5 +386,68 @@ class TestUtils(unittest.TestCase):
         result = func1()
         self.assertEqual(result, "success")
 
+    @patch('santas_bag.utils.get_naughty_or_nice')
+    @patch('santas_bag.utils._accepts_testing_arg')
+    def test_solve_orchestration(self, mock_accepts, mock_get_non):
+        """Verify solve correctly wraps functions and handles part2 optionality."""
+        mock_decorator_factory = MagicMock()
+        mock_get_non.return_value = mock_decorator_factory
+
+        # 1. Create a mock that acts like a decorator return value
+        # We need this to return a different value each time it's called
+        mock_wrapped_func = MagicMock()
+        mock_wrapped_func.side_effect = ["p1_res", "p2_res"]
+
+        # Configure the decorator factory chain to return our mock
+        mock_decorator_factory.return_value.return_value = mock_wrapped_func
+
+        def p1(data=None): return "p1_res"
+
+        def p2(data=None): return "p2_res"
+
+        mock_accepts.return_value = True
+
+        # 2. Call solve
+        res1, res2 = solve(2026, 1, "session", p1, p2, testing=True)
+
+        # 3. Verify orchestration
+        self.assertEqual(res1, "p1_res")
+        self.assertEqual(res2, "p2_res")
+
+
+    @patch('santas_bag.utils.get_naughty_or_nice')
+    def test_solve_no_part2(self, mock_get_non):
+        """Verify solve returns None for part2 if no function is provided."""
+        # Setup mocks
+        mock_decorator_factory = MagicMock()
+        mock_get_non.return_value = mock_decorator_factory
+        mock_wrapped = MagicMock(return_value="p1_res")
+        mock_decorator_factory.return_value.return_value = mock_wrapped
+
+        def p1(): return "p1_res"
+
+        res1, res2 = solve(2026, 1, "session", p1, part2_func=None)
+
+        self.assertEqual(res1, "p1_res")
+        self.assertIsNone(res2)
+        # Should only be called once for part 1
+        self.assertEqual(mock_decorator_factory.call_count, 1)
+
+
+    @patch('santas_bag.utils.get_naughty_or_nice')
+    @patch('santas_bag.utils._accepts_testing_arg', return_value=False)
+    def test_solve_ignores_testing_arg(self, mock_accepts, mock_get_non):
+        """Verify if function doesn't accept testing arg, we call it without kwargs."""
+        mock_decorator_factory = MagicMock()
+        mock_get_non.return_value = mock_decorator_factory
+        mock_wrapped = MagicMock(return_value="result")
+        mock_decorator_factory.return_value.return_value = mock_wrapped
+
+        solve(2026, 1, "session", lambda: "res", testing=True)
+
+        # verify the wrapped function was called with 0 arguments (no testing=True)
+        mock_wrapped.assert_called_once_with()
+
+
 if __name__ == '__main__':
     unittest.main()
