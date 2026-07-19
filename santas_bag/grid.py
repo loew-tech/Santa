@@ -400,18 +400,58 @@ def grid_find_all_paths_from_value(
 
 
 class Grid:
+    """
+    Convenience wrapper around a 2D grid providing common grid operations.
+
+    Stores the underlying grid along with its dimensions and an optional
+    collection of impassable cell values for pathfinding and traversal.
+    """
+
     def __init__(self, grid: list[list], impassable: Container | None = None):
+        """
+        Initializes a Grid.
+
+        :param grid: Two-dimensional grid of values.
+        :param impassable: Optional collection of values considered impassable.
+            Defaults to an empty set.
+        """
         self.data = grid
         self.height = len(grid)
         self.width = len(grid[0])
         self.impassable = impassable if impassable is not None else set()
 
     def __getitem__(self, pos: Point) -> Any:
+        """
+        Returns the value at the given grid position.
+
+        :param pos: ``(y, x)`` coordinate.
+
+        :return: The value stored at the specified position.
+        """
         y, x = pos
         return self.data[y][x]
 
-    def is_inbounds(self, y, x: int) -> bool:
+    def is_inbounds(self, y: int, x: int) -> bool:
+        """
+        Determines whether a coordinate lies within the grid bounds.
+
+        :param y: Row index.
+        :param x: Column index.
+
+        :return: ``True`` if the coordinate is inside the grid, otherwise ``False``.
+        """
         return inbounds(self.data, y, x)
 
-    def is_valid(self, y, x: int) -> bool:
+    def is_valid(self, y: int, x: int) -> bool:
+        """
+        Determines whether a coordinate is traversable.
+
+        A coordinate is considered valid if it lies within the grid bounds
+        and its value is not contained in ``impassable``.
+
+        :param y: Row index.
+        :param x: Column index.
+
+        :return: ``True`` if the coordinate is valid for traversal, otherwise ``False``.
+        """
         return self.is_inbounds(y, x) and self.data[y][x] not in self.impassable

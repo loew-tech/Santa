@@ -99,8 +99,9 @@ def bidirectional_search(
     :param pop_b: Function to extract from backward frontier.
     :param push_b: Function to insert into backward frontier.
     :param get_neighbors: Generator for adjacent nodes.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state. Note steps is steps from start
-    :param get_state: Function to map a node to a hashable state.
+    :param on_visit: Optional Function taking (node, steps, search_space) to call on visited state.
+        Note steps is steps from start
+    :param get_state: Optional function to map a node to a hashable state.
     :param revisit: Flag indicating if nodes should be revisited.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
@@ -273,7 +274,7 @@ def find_all_paths(
     :param search_space: The environment or graph to navigate.
     :param goal: Terminal node to reach.
     :param get_neighbors: Generator for adjacent nodes.
-    :param get_state: Function to map a node to a hashable state.
+    :param get_state: Optional function to map a node to a hashable state.
     :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
@@ -371,7 +372,7 @@ def dijkstra(
     :param is_terminal: Optional Function taking node, search_space, args, and kwargs that determines whether the search
         should terminate. Defaults to ``None`` and search terminates when search queue is empty.
     :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
-     :param args: Additional positional arguments for callbacks.
+    :param args: Additional positional arguments for callbacks.
     :param kwargs: Additional keyword arguments for callbacks.
 
     :return a tuple of (terminal_node, total_steps). Returns (None, inf) if no path exists.
@@ -397,7 +398,7 @@ def solve_tsp_a_star(
 
     :param destinations: List of destinations to visit.
     :param distance_func: Function to calculate the distance between two destinations.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
+    :param on_visit:  Optional Function taking (node, steps, search_space) to call on visited state.
 
     :return: A tuple of (terminal_node, total_steps). Returns (None, inf) if no path
     """
@@ -456,7 +457,7 @@ def solve_tsp_optimized(
 
     :param destinations: List of destinations to visit.
     :param distance_matrix: Dictionary mapping (start, end) to distance.
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
 
     :return A tuple of (terminal_node, total_steps). Returns (None, inf) if no path
     """
@@ -476,7 +477,7 @@ def solve_tsp(
 
     :param destinations: list of destinations to visit.
     :param distance_func:
-    :param on_visit: Function taking (node, steps, search_space) to call on visited state.
+    :param on_visit: Optional function taking (node, steps, search_space) to call on visited state.
 
     :return: A tuple of (terminal_node, total_steps). Returns (None, inf) if no path
     """

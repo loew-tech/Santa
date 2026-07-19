@@ -108,6 +108,8 @@ class RegisterDict(defaultdict, RegisterMixin, RegisterProtocol):
     def __init__(self, registers: Mapping | None = None, **kwargs):
         """
         Initializes the register dictionary by merging initial data and keyword arguments.
+
+        :param registers: An optional initial dictionary of register assignments.
         """
         data = {**dict(registers or {}), **kwargs}
         super().__init__(int, data)
