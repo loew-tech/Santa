@@ -403,7 +403,7 @@ def read_and_solve(year: str | int,
     if not data:
         raise ValueError(f"Failed to load or parse input for Day {day}, Year {year}. Data is empty.")
 
-    def part_1():
+    def part_1(testing=testing):
         return part1_func(data)
 
     data2 = data if not testing else \
@@ -411,8 +411,8 @@ def read_and_solve(year: str | int,
     if not data2:
         raise ValueError(f'Failed to load or parse input for Day {day} part 2. Data is empty.')
 
-    def part_2():
-        return part2_func(data)
+    def part_2(testing=testing):
+        return part2_func(data2)
 
     return solve(year,
                  day,

@@ -28,6 +28,37 @@ def part1(data):
 run_day(day=1, part1_func=part1, testing=True)
 ```
 
+## Example Solving a Puzzle
+
+```python
+from santas_bag.parse import ints
+from santas_bag.search import dfs
+from santas_bag.utils import get_read_and_solve
+
+def day_5(data: list[int], part=1) -> int | float:
+
+    def is_terminal(indx, space, *_):
+        return not (0 <= indx < len(space))
+
+    def get_neighbors(indx, space, *_):
+        val = space[indx]
+        if not part == 1 and val >= 3:
+            space[indx] -= 1
+        else:
+            space[indx] += 1
+        yield indx + val
+
+    _, steps = dfs(0, data, is_terminal, get_neighbors, revisit=True)
+    return steps
+
+read*and_solve* = get*read_and_solve(2023, "123")
+res1, res2 = read_and_solve*(5,
+                            day_5,
+                            lambda data: day_5(data, part=2),
+                            parse=ints)
+print(f"part 1: {res1}, part 2: {res2}")
+```
+
 ## Solve helpers
 
 The library provides a small set of entry points whose names include `solve` and are intended for running Advent of Code solutions end to end:
