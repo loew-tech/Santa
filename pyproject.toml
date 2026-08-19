@@ -3,8 +3,8 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "santas_bag"
-version = "0.14.0"
+name = "santas-bag"
+version = "1.0.0"
 description = "Common utilities for Advent of Code"
 authors = [
     { name = "Steve Marek-Loew", email = "loew.technology@gmail.com" }
