@@ -258,6 +258,95 @@ def dfs(
                   is_terminal, on_visit, get_state, revisit,*args, **kwargs)
 
 
+def postorder_fold(
+        start: Node,
+        search_space: SearchSpace,
+        get_neighbors: NeighborFunction[Node, SearchSpace],
+        fold: Callable[..., Any],
+        is_terminal: TerminalFunction[Node, SearchSpace] | None = None,
+        get_state: Callable[[Node], Any] = lambda n: n,
+        *args,
+        **kwargs
+) -> dict[Any, Any]:
+    """Fold node values after folding their descendants.
+
+    Traversal is performed with :func:`dfs`, then its discovered dependencies
+    are evaluated bottom-up. This supports trees and directed acyclic graphs;
+    cycles have no topological fold order and raise ``ValueError``.
+
+    ``fold`` is called as ``fold(node, child_values, search_space, *args,
+    **kwargs)``. ``child_values`` follows the order returned by
+    ``get_neighbors``. The result maps each ``get_state(node)`` value to its
+    folded value. A terminal node is folded as a leaf, and its neighbors are
+    not visited.
+
+    :param start: The node at which to begin traversal.
+    :param search_space: The environment or graph being traversed.
+    :param get_neighbors: Function yielding adjacent nodes.
+    :param fold: Function combining a node with its children's folded values.
+    :param is_terminal: Optional predicate that treats a node as a leaf.
+    :param get_state: Optional mapping from nodes to hashable state keys.
+    :param args: Additional arguments passed to callbacks.
+    :param kwargs: Additional keyword arguments passed to callbacks.
+
+    :return: Mapping from state keys to folded values, including the start node.
+
+    :raises ValueError: If the reachable graph contains a cycle.
+    """
+    nodes: dict[Any, Node] = {}
+    children_by_state: dict[Any, tuple[Node, ...]] = {}
+
+    def record_node(node: Node, *_):
+        nodes.setdefault(get_state(node), node)
+
+    def fold_neighbors(node: Node, space: SearchSpace, *callback_args, **callback_kwargs):
+        state = get_state(node)
+        nodes.setdefault(state, node)
+        if is_terminal is not None and is_terminal(node, space, *callback_args, **callback_kwargs):
+            children = ()
+        else:
+            children = tuple(get_neighbors(node, space, *callback_args, **callback_kwargs))
+        children_by_state[state] = children
+        return children
+
+    # search() treats is_terminal as a global stop condition, while a fold
+    # needs terminal nodes to stop only their own branch. Apply it in the
+    # neighbor wrapper instead.
+    dfs(start, search_space, fold_neighbors, None, record_node, get_state, False, *args, **kwargs)
+
+    remaining_children = {
+        state: len(children_by_state[state])
+        for state in nodes
+    }
+    parents: dict[Any, list[Any]] = {state: [] for state in nodes}
+    for parent_state, children in children_by_state.items():
+        for child in children:
+            child_state = get_state(child)
+            if child_state not in nodes:
+                raise ValueError(f"Neighbor state {child_state!r} was not discovered during traversal")
+            parents[child_state].append(parent_state)
+
+    ready = deque(state for state, count in remaining_children.items() if count == 0)
+    postorder = []
+    while ready:
+        state = ready.popleft()
+        postorder.append(state)
+        for parent_state in parents[state]:
+            remaining_children[parent_state] -= 1
+            if remaining_children[parent_state] == 0:
+                ready.append(parent_state)
+
+    if len(postorder) != len(nodes):
+        raise ValueError("postorder_fold requires an acyclic reachable graph")
+
+    folded: dict[Any, Any] = {}
+    for state in postorder:
+        child_values = [folded[get_state(child)] for child in children_by_state[state]]
+        folded[state] = fold(nodes[state], child_values, search_space, *args, **kwargs)
+
+    return folded
+
+
 def find_all_paths(
         start: Node,
         search_space: SearchSpace,

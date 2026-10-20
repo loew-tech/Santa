@@ -32,31 +32,19 @@ run_day(day=1, part1_func=part1, testing=True)
 
 ```python
 from santas_bag.parse import ints
-from santas_bag.search import dfs
 from santas_bag.utils import get_read_and_solve
 
-def day_5(data: list[int], part=1) -> int | float:
+def part1(data: list[int]) -> int:
+    return sum(data)
 
-    def is_terminal(indx, space, *_):
-        return not (0 <= indx < len(space))
 
-    def get_neighbors(indx, space, *_):
-        val = space[indx]
-        if not part == 1 and val >= 3:
-            space[indx] -= 1
-        else:
-            space[indx] += 1
-        yield indx + val
+def part2(data: list[int]) -> int:
+    return max(data)
 
-    _, steps = dfs(0, data, is_terminal, get_neighbors, revisit=True)
-    return steps
 
-read*and_solve* = get*read_and_solve(2023, "123")
-res1, res2 = read_and_solve*(5,
-                            day_5,
-                            lambda data: day_5(data, part=2),
-                            parse=ints)
-print(f"part 1: {res1}, part 2: {res2}")
+run_day = get_read_and_solve(2023, session_id="your-aoc-session-cookie")
+result1, result2 = run_day(5, part1, part2, parse=ints)
+print(f"part 1: {result1}, part 2: {result2}")
 ```
 
 ## Solve helpers
@@ -148,10 +136,18 @@ The search module in `santas_bag.search` provides a reusable set of pathfinding 
 
 - `bfs(...)` performs breadth-first search for shortest paths in unweighted spaces.
 - `dfs(...)` performs iterative depth-first search for exploring paths without maintaining a priority queue.
+- `postorder_fold(...)` combines each node with its children's results and returns the folded value for every state. It supports acyclic graphs and treats terminal nodes as leaves.
 - `greedy_best_first_search(...)` uses a heuristic to prioritize promising nodes.
 - `a_star(...)` is the weighted-search variant that balances path cost and heuristic estimate.
 - `dijkstra(...)` is exposed as a convenience wrapper around A\* with a zero heuristic.
 - `bidirectional_search(...)` searches from both the start and the goal to meet in the middle.
+
+`postorder_fold(start, search_space, get_neighbors, fold, is_terminal=None)`
+evaluates nodes after their descendants. The `fold` callback receives the node,
+its child results in neighbor order, and the search space. It returns a mapping
+from each state key to its folded result, so callers can use both the root
+aggregate and intermediate subtree values. Terminal nodes are folded as leaves.
+The reachable graph must be acyclic.
 
 ### Puzzle-specific helpers
 
